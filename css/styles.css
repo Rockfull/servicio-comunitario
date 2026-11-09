@@ -149,15 +149,15 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
 
 /* Badge con logos oficiales en el header */
 .auth-brand-badge {
-  display: inline-flex; align-items: center; gap: 16px;
-  background: rgba(255, 255, 255, 0.96); padding: 9px 22px 9px 18px;
+  display: inline-flex; align-items: center; gap: 18px;
+  background: rgba(255, 255, 255, 0.96); padding: 10px 24px 10px 20px;
   border-radius: 999px; border: 1px solid rgba(56, 182, 255, 0.45);
   box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
-.auth-brand-logos { display: flex; align-items: center; gap: 14px; }
-.auth-header-logo { height: 46px; width: auto; max-width: 65px; object-fit: contain; }
-.auth-header-sep { width: 1.5px; height: 32px; background: rgba(102, 102, 102, 0.25); }
+.auth-brand-logos { display: flex; align-items: center; gap: 16px; }
+.auth-header-logo { height: 56px; width: auto; max-width: 82px; object-fit: contain; }
+.auth-header-sep { width: 1.5px; height: 38px; background: rgba(102, 102, 102, 0.25); }
 .auth-header-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
 .auth-header-text strong { font-size: 14.5px; font-weight: 600; color: var(--gray-dark); letter-spacing: -.01em; }
 .auth-header-text small { font-size: 11.5px; font-weight: 500; color: var(--blue-royal); letter-spacing: .02em; }
@@ -211,9 +211,9 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   display: flex; flex-wrap: wrap; gap: 10px;
 }
 .program-tag {
-  display: inline-flex; align-items: center; gap: 12px;
+  display: inline-flex; align-items: center; gap: 14px;
   background: rgba(255, 255, 255, 0.95); color: var(--gray-dark);
-  padding: 8px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 500;
+  padding: 10px 22px; border-radius: 999px; font-size: 14px; font-weight: 500;
   border: 1px solid rgba(56, 182, 255, 0.35);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
   transition: transform .25s var(--ease), box-shadow .25s var(--ease);
@@ -222,7 +222,7 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 150, 242, 0.25);
 }
-.program-tag img { height: 32px; width: 32px; object-fit: contain; }
+.program-tag img { height: 40px; width: 40px; object-fit: contain; }
 
 /* Contador de cédula */
 .odo-wrap { margin-top: 40px; }
@@ -261,12 +261,12 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   padding-bottom: 16px; border-bottom: 1px solid rgba(0, 150, 242, 0.12);
 }
 .auth-card-logos {
-  display: flex; align-items: center; gap: 16px;
-  background: #f4f8fd; padding: 8px 20px; border-radius: 999px;
+  display: flex; align-items: center; gap: 18px;
+  background: #f4f8fd; padding: 10px 24px; border-radius: 999px;
   border: 1px solid rgba(0, 150, 242, 0.18);
 }
-.auth-card-logo { height: 42px; width: auto; max-width: 58px; object-fit: contain; }
-.auth-card-sep { width: 1.5px; height: 28px; background: rgba(102, 102, 102, 0.25); }
+.auth-card-logo { height: 50px; width: auto; max-width: 72px; object-fit: contain; }
+.auth-card-sep { width: 1.5px; height: 34px; background: rgba(102, 102, 102, 0.25); }
 
 .auth-card .eyebrow { margin-bottom: 10px; color: var(--blue-royal); }
 .auth-title { font-family: var(--display); font-size: 34px; font-weight: 500; letter-spacing: -.03em; line-height: 1.1; color: var(--gray-dark); }
@@ -442,8 +442,8 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
    ========================================================= */
 .navbar-wrap { position: sticky; top: 0; z-index: 50; padding: 16px 20px 0; }
 .navbar {
-  position: relative; max-width: 1200px; margin: 0 auto; height: 74px;
-  display: flex; align-items: center; gap: 24px; padding: 0 14px 0 16px;
+  position: relative; max-width: 1200px; margin: 0 auto; height: 82px;
+  display: flex; align-items: center; gap: 24px; padding: 0 16px 0 18px;
   border-radius: 22px; color: #f4f8fc;
   background: rgba(5, 14, 34, .92);
   -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
@@ -451,17 +451,17 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   transition: height .5s var(--ease), box-shadow .5s var(--ease);
 }
 .navbar-wrap.scrolled .navbar {
-  height: 64px; box-shadow: 0 24px 50px -18px rgba(0, 20, 60, .65), inset 0 0 0 1px rgba(56, 182, 255, .32);
+  height: 70px; box-shadow: 0 24px 50px -18px rgba(0, 20, 60, .65), inset 0 0 0 1px rgba(56, 182, 255, .32);
 }
 
 .nav-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; flex: none; }
 .nav-brand-pill {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: rgba(255, 255, 255, 0.96); padding: 6px 14px;
+  display: inline-flex; align-items: center; gap: 12px;
+  background: rgba(255, 255, 255, 0.96); padding: 7px 18px;
   border-radius: 999px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
 }
-.nav-logo-img { height: 34px; width: auto; max-width: 48px; object-fit: contain; }
-.nav-logo-sep { width: 1.5px; height: 24px; background: rgba(102, 102, 102, 0.3); }
+.nav-logo-img { height: 44px; width: auto; max-width: 62px; object-fit: contain; }
+.nav-logo-sep { width: 1.5px; height: 30px; background: rgba(102, 102, 102, 0.3); }
 
 .nav-brand-text { display: flex; flex-direction: column; font-family: var(--display); font-size: 15px; font-weight: 600; letter-spacing: -.015em; line-height: 1.15; }
 .nav-brand-text small {
@@ -572,7 +572,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: none;
 }
 .banner-logo-badge {
-  background: #ffffff; padding: 12px 18px; border-radius: 16px;
+  background: #ffffff; padding: 14px 22px; border-radius: 18px;
   border: 1px solid #dce7f5; box-shadow: 0 4px 14px rgba(0, 79, 200, 0.06);
   display: grid; place-items: center;
   transition: transform .25s var(--ease), border-color .25s, box-shadow .25s;
@@ -582,7 +582,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   border-color: var(--blue-vibrant);
   box-shadow: 0 8px 18px rgba(0, 150, 242, 0.15);
 }
-.banner-logo-badge img { height: 54px; width: auto; max-width: 78px; object-fit: contain; }
+.banner-logo-badge img { height: 68px; width: auto; max-width: 98px; object-fit: contain; }
 .banner-info { min-width: 0; }
 .banner-info h4 { font-family: var(--display); font-size: 19px; font-weight: 600; color: var(--blue-royal); margin-bottom: 6px; letter-spacing: -.02em; }
 .banner-info p { margin: 0; font-size: 14px; color: var(--gray-medium); line-height: 1.5; }
@@ -698,7 +698,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   box-shadow: 0 0 0 3px rgba(0, 79, 200, 0.15);
 }
 .preset-thumbs { display: flex; align-items: center; gap: 8px; }
-.preset-thumb { height: 34px; width: auto; max-width: 46px; object-fit: contain; }
+.preset-thumb { height: 44px; width: auto; max-width: 58px; object-fit: contain; }
 .preset-btn span { font-size: 13px; font-weight: 500; color: var(--gray-dark); }
 .preset-btn.active span { color: var(--blue-royal); font-weight: 600; }
 
@@ -751,7 +751,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
 }
 .app-footer-brand { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
 .app-footer-logos { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.app-footer-logo { height: 48px; width: auto; max-width: 70px; object-fit: contain; }
+.app-footer-logo { height: 60px; width: auto; max-width: 88px; object-fit: contain; }
 .app-footer-info strong { display: block; font-size: 14.5px; font-weight: 600; color: var(--blue-royal); }
 .app-footer-info p { margin: 3px 0 0; font-size: 13px; color: var(--gray-medium); }
 .app-footer-meta { text-align: right; }
@@ -923,10 +923,10 @@ body:not(.has-gsap) .toast { animation: fade .3s ease; }
 
 /* Contenedor elegante para los logos */
 .cert-logos {
-  display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 34px; margin-bottom: 12px;
 }
-.cert-logo { max-height: 92px; width: auto; max-width: 280px; object-fit: contain; }
-.cert-logo-divider { width: 2px; height: 64px; background: linear-gradient(to bottom, transparent, var(--blue-vibrant) 30%, var(--blue-vibrant) 70%, transparent); }
+.cert-logo { max-height: 108px; width: auto; max-width: 320px; object-fit: contain; }
+.cert-logo-divider { width: 2px; height: 74px; background: linear-gradient(to bottom, transparent, var(--blue-vibrant) 30%, var(--blue-vibrant) 70%, transparent); }
 
 .cert-inst { font-size: 13.5px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--gray-medium); }
 .cert-title {
