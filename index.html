@@ -139,6 +139,9 @@
         <label class="field"><span>Nombre y apellido</span>
           <input name="nombre" autocomplete="name" placeholder="Ej: María Pérez" required>
         </label>
+        <label class="field"><span>Correo electrónico <em>— para recuperar tu acceso</em></span>
+          <input name="email" type="email" autocomplete="email" placeholder="ejemplo@correo.com" required>
+        </label>
         <label class="field">
           <span>Área(s) de Servicio Comunitario <em class="muted">(escritas, pueden ser varias)</em></span>
           <input name="areas" id="reg-areas" placeholder="Ej: Salud, Bienestar Social, Emprendimiento" required autocomplete="off">
@@ -426,6 +429,7 @@
               <tr>
                 <th>Cédula</th>
                 <th>Nombre y Apellido</th>
+                <th>Correo</th>
                 <th>Área(s) de Servicio</th>
                 <th>Certificados</th>
                 <th>Fecha Registro</th>
@@ -696,17 +700,18 @@
       <div>
         <p class="eyebrow">Recuperación</p>
         <h3>¿Olvidaste tu clave?</h3>
-        <p class="muted small">Ingresa tu número de cédula para validar tu cuenta y redefinir tu contraseña.</p>
+        <p class="muted small">Restablece tu acceso mediante tu correo electrónico o cédula.</p>
       </div>
       <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
     <form id="form-recuperar" class="form modal-body" novalidate>
       <div id="recuperar-step1">
         <label class="field">
-          <span>Número de Cédula</span>
-          <input name="cedula" id="rec-cedula" inputmode="numeric" placeholder="Ej: 12345678" required>
+          <span>Cédula o Correo electrónico</span>
+          <input name="identificador" id="rec-identificador" placeholder="Ej: 12345678 o tu@correo.com" required>
+          <input type="hidden" id="rec-cedula">
         </label>
-        <p class="form-hint small">Introduce la cédula registrada en el sistema de servicio comunitario.</p>
+        <p class="form-hint small">Introduce la cédula o correo registrado en el sistema.</p>
       </div>
 
       <div id="recuperar-step2" class="hidden">
@@ -715,9 +720,26 @@
           <div>
             <strong id="rec-user-name">Usuario identificado</strong>
             <small id="rec-user-cedula" class="muted"></small>
+            <small id="rec-user-meta" class="muted" style="display:block;"></small>
           </div>
         </div>
-        <label class="field">
+
+        <div class="recovery-email-box" id="rec-email-box">
+          <span class="recovery-email-lbl"><svg class="i"><use href="#i-shield"/></svg>Recuperación por Correo:</span>
+          <p class="small muted" id="rec-email-text">Se enviará un código de verificación a tu correo registrado.</p>
+          <div class="row" style="margin-top: 6px;">
+            <button type="button" class="btn btn-sm btn-light" id="rec-btn-send-code">
+              <svg class="i"><use href="#i-file"/></svg>Enviar código al correo
+            </button>
+            <span class="badge hidden" id="rec-code-badge">Código enviado</span>
+          </div>
+          <div class="field hidden" id="rec-code-field" style="margin-top: 10px;">
+            <span>Código de 6 dígitos</span>
+            <input name="codigo" id="rec-code-input" inputmode="numeric" placeholder="123456" maxlength="6">
+          </div>
+        </div>
+
+        <label class="field" style="margin-top: 12px;">
           <span>Nueva contraseña</span>
           <input name="nueva" id="rec-nueva" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
         </label>
@@ -734,7 +756,7 @@
           Continuar <svg class="i arrow"><use href="#i-arrow"/></svg>
         </button>
         <button type="button" class="btn btn-light btn-block hidden" id="rec-btn-reset-ci">
-          <svg class="i"><use href="#i-refresh"/></svg>Restablecer a mi cédula
+          <svg class="i"><use href="#i-refresh"/></svg>Restablecer directamente a mi cédula
         </button>
       </div>
       <p class="form-hint small" style="text-align: center; margin-top: 6px;">

@@ -124,15 +124,57 @@
         { scale: 1, boxShadow: '0 0 0 0 rgba(217,187,116,0)', duration: 1, ease: 'elastic.out(1, .55)', clearProps: 'transform,boxShadow' });
     },
     tilt(el, max = 7) {
-      if (!G || !canHover) return;
+      if (!G) return;
       const rx = G.quickTo(el, 'rotationX', { duration: .7, ease: 'power3' });
       const ry = G.quickTo(el, 'rotationY', { duration: .7, ease: 'power3' });
-      el.addEventListener('pointermove', e => {
-        const r = el.getBoundingClientRect();
-        ry(((e.clientX - r.left) / r.width - .5) * max);
-        rx(-((e.clientY - r.top) / r.height - .5) * max);
-      });
-      el.addEventListener('pointerleave', () => { rx(0); ry(0); });
+      
+      // En dispositivos de escritorio con mouse
+      if (canHover) {
+        el.addEventListener('pointermove', e => {
+          const r = el.getBoundingClientRect();
+          ry(((e.clientX - r.left) / r.width - .5) * max);
+          rx(-((e.clientY - r.top) / r.height - .5) * max);
+        });
+        el.addEventListener('pointerleave', () => { rx(0); ry(0); });
+      } else {
+        // En celulares y tablets: tilt reactivo a giroscopio / orientación del dispositivo
+        let requestedPermission = false;
+        const requestMotion = async () => {
+          if (requestedPermission) return;
+          requestedPermission = true;
+          if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            try {
+              const res = await DeviceOrientationEvent.requestPermission();
+              if (res !== 'granted') return;
+            } catch { return; }
+          }
+          window.addEventListener('deviceorientation', e => {
+            if (e.gamma == null || e.beta == null) return;
+            const tiltX = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
+            const tiltY = Math.max(-1, Math.min(1, e.gamma / 30));
+            rx(-tiltX * max);
+            ry(tiltY * max);
+          }, { passive: true });
+        };
+
+        window.addEventListener('deviceorientation', e => {
+          if (e.gamma == null || e.beta == null) return;
+          const tiltX = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
+          const tiltY = Math.max(-1, Math.min(1, e.gamma / 30));
+          rx(-tiltX * max);
+          ry(tiltY * max);
+        }, { passive: true });
+
+        window.addEventListener('touchstart', requestMotion, { once: true, passive: true });
+
+        // Touch feedback interactivo táctil
+        el.addEventListener('touchstart', () => {
+          G.to(el, { scale: 0.98, duration: 0.2, ease: 'power2.out' });
+        }, { passive: true });
+        el.addEventListener('touchend', () => {
+          G.to(el, { scale: 1, duration: 0.35, ease: 'back.out(1.5)' });
+        }, { passive: true });
+      }
     },
   };
 
@@ -233,21 +275,22 @@
     // Asegurar siempre la existencia de la cuenta demo estudiante (12345678 / 123456)
     const demoCed = '12345678';
     const demoName = 'María Fernanda Pérez';
+    const demoEmail = 'maria.perez@estudiante.com';
     const demoAreas = 'Salud, Bienestar Social, Emprendimiento';
     let demoUser = users.find(u => u.cedula === demoCed);
     const demoPassHash = await hashPass(demoCed, '123456');
 
     if (!demoUser) {
       demoUser = {
-        cedula: demoCed, nombre: demoName, areas: demoAreas, role: 'user', pass: demoPassHash, creado: Date.now(),
+        cedula: demoCed, nombre: demoName, email: demoEmail, areas: demoAreas, role: 'user', pass: demoPassHash, creado: Date.now(),
       };
       users.push(demoUser);
       setUsers(users);
     } else {
-      // Si el usuario existe pero la contraseña cambió o no coincide con la demo, actualizarla
+      demoUser.email = demoUser.email || demoEmail;
+      demoUser.areas = demoUser.areas || demoAreas;
       if (demoUser.pass !== demoPassHash && !demoUser.customPass) {
         demoUser.pass = demoPassHash;
-        demoUser.areas = demoUser.areas || demoAreas;
         setUsers(users);
       }
     }
@@ -587,18 +630,20 @@
     // Brillo que recorre la palabra dorada
     G.to('#auth-headline em .w > span', { backgroundPosition: '-150% 0', duration: 7, repeat: -1, ease: 'none' });
 
-    // Luz dorada que sigue al cursor (y deriva sola en pantallas táctiles)
+    // Luz dorada y roseta que reacciona al cursor en PC y al giroscopio/movimiento en celular
     const auth = $('#auth');
     const spot = { x: auth.clientWidth * .74, y: auth.clientHeight * .5 };
     const paint = () => {
       auth.style.setProperty('--mx', `${spot.x}px`);
       auth.style.setProperty('--my', `${spot.y}px`);
     };
+
+    const qx = G.quickTo(spot, 'x', { duration: 1, ease: 'power3', onUpdate: paint });
+    const qy = G.quickTo(spot, 'y', { duration: 1, ease: 'power3', onUpdate: paint });
+    const rx = G.quickTo('#rosette', 'x', { duration: 1.6, ease: 'power3' });
+    const ry = G.quickTo('#rosette', 'y', { duration: 1.6, ease: 'power3' });
+
     if (canHover) {
-      const qx = G.quickTo(spot, 'x', { duration: 1, ease: 'power3', onUpdate: paint });
-      const qy = G.quickTo(spot, 'y', { duration: 1, ease: 'power3', onUpdate: paint });
-      const rx = G.quickTo('#rosette', 'x', { duration: 1.6, ease: 'power3' });
-      const ry = G.quickTo('#rosette', 'y', { duration: 1.6, ease: 'power3' });
       auth.addEventListener('pointermove', e => {
         const r = auth.getBoundingClientRect();
         qx(e.clientX - r.left);
@@ -608,7 +653,49 @@
       });
       fx.tilt($('.auth-card'), 5);
     } else {
-      G.to(spot, { x: () => auth.clientWidth * .3, y: () => auth.clientHeight * .7, duration: 7, repeat: -1, yoyo: true, ease: 'sine.inOut', onUpdate: paint });
+      // Reacción al mover el celular (Giroscopio / Acelerómetro)
+      let hasOrientation = false;
+      const handleOrientation = e => {
+        if (e.gamma == null || e.beta == null) return;
+        hasOrientation = true;
+        const normX = Math.max(-1, Math.min(1, e.gamma / 35));
+        const normY = Math.max(-1, Math.min(1, (e.beta - 40) / 35));
+        
+        // Mueve el foco de luz dinámico según el ángulo del teléfono
+        const targetX = auth.clientWidth * (0.5 + normX * 0.4);
+        const targetY = auth.clientHeight * (0.5 + normY * 0.4);
+        qx(targetX);
+        qy(targetY);
+        rx(normX * -25);
+        ry(normY * -25);
+      };
+
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+      }
+
+      // Animación suave de fondo por si el dispositivo no tiene giroscopio o está sobre una mesa
+      G.to(spot, {
+        x: () => auth.clientWidth * .35,
+        y: () => auth.clientHeight * .65,
+        duration: 6,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        onUpdate: () => { if (!hasOrientation) paint(); }
+      });
+
+      // Efecto 3D de la tarjeta con movimiento del teléfono
+      fx.tilt($('.auth-card'), 6);
+
+      // Reacción táctil: al deslizar el dedo por la pantalla en móvil también mueve la luz
+      auth.addEventListener('touchmove', e => {
+        if (!e.touches.length) return;
+        const t = e.touches[0];
+        const r = auth.getBoundingClientRect();
+        qx(t.clientX - r.left);
+        qy(t.clientY - r.top);
+      }, { passive: true });
     }
   }
 
@@ -680,17 +767,20 @@
     const f = e.target, err = $('.form-error', f);
     const cedula = normCedula(f.cedula.value);
     const nombre = clean(f.nombre.value);
+    const email = clean(f.email?.value || '').toLowerCase();
     const areas = clean(f.areas?.value || '');
     const fail = msg => { err.textContent = msg; fx.shake(f); };
     if (!validCedula(cedula)) return fail('Ingresa una cédula válida (solo números).');
     if (nombre.length < 3) return fail('Escribe tu nombre y apellido.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Ingresa un correo electrónico válido.');
     if (areas.length < 2) return fail('Escribe al menos un área de servicio comunitario (o selecciona de las sugerencias).');
     if (f.password.value.length < 6) return fail('La contraseña debe tener al menos 6 caracteres.');
     if (f.password.value !== f.password2.value) return fail('Las contraseñas no coinciden.');
     const users = getUsers();
     if (users.some(u => u.cedula === cedula)) return fail('Esa cédula ya está registrada. Inicia sesión.');
+    if (users.some(u => u.email && u.email.toLowerCase() === email)) return fail('Ese correo ya está registrado por otro estudiante.');
     users.push({
-      cedula, nombre, areas, role: 'user',
+      cedula, nombre, email, areas, role: 'user',
       pass: await hashPass(cedula, f.password.value), creado: Date.now()
     });
     if (!setUsers(users)) return;
@@ -1082,6 +1172,7 @@
       const n = certs.filter(c => c.cedula === u.cedula).length;
       const isMe = u.cedula === me.cedula;
       const userAreas = (u.areas || '').split(',').map(s => s.trim()).filter(Boolean);
+      const emailTxt = u.email ? `<small class="muted" style="word-break:break-all;">${esc(u.email)}</small>` : '<span class="muted small">—</span>';
       const areasHtml = userAreas.length
         ? `<div class="table-areas-list">${userAreas.map(a => `<span class="user-area-pill">${esc(a)}</span>`).join('')}</div>`
         : (u.role === 'admin' ? '<span class="muted small">Administración</span>' : '<span class="muted small">Sin área</span>');
@@ -1094,6 +1185,7 @@
       return `<tr>
         <td class="nowrap">${fmtCedula(u.cedula)}</td>
         <td class="strong">${esc(u.nombre)} ${u.role === 'admin' ? '<span class="badge">Admin</span>' : ''}</td>
+        <td>${emailTxt}</td>
         <td>${areasHtml}</td>
         <td>${n}</td>
         <td class="nowrap">${new Date(u.creado).toLocaleDateString('es-VE')}</td>
@@ -1659,19 +1751,39 @@
 
   /* Modal de recuperación de contraseña ("¿Olvidaste tu contraseña?") */
   let recoveryTargetUser = null;
+  let simulatedSecurityCode = '';
 
   $('#btn-olvide-pass')?.addEventListener('click', () => {
     recoveryTargetUser = null;
+    simulatedSecurityCode = '';
     const f = $('#form-recuperar');
     if (!f) return;
     f.reset();
     $('#recuperar-step1').classList.remove('hidden');
     $('#recuperar-step2').classList.add('hidden');
     $('#rec-btn-reset-ci').classList.add('hidden');
+    $('#rec-code-field').classList.add('hidden');
+    $('#rec-code-badge').classList.add('hidden');
     $('#rec-btn-submit').textContent = 'Continuar';
     $('#rec-error').textContent = '';
     openModal('#modal-recuperar');
-    $('#rec-cedula').focus();
+    $('#rec-identificador')?.focus();
+  });
+
+  // Botón para enviar código simulado al correo
+  $('#rec-btn-send-code')?.addEventListener('click', () => {
+    if (!recoveryTargetUser) return;
+    const email = recoveryTargetUser.email;
+    if (!email) {
+      toast('Este usuario no tiene correo registrado. Puedes restablecer directamente con tu cédula.', 'error');
+      return;
+    }
+    // Generar código aleatorio de 6 dígitos
+    simulatedSecurityCode = String(Math.floor(100000 + Math.random() * 900000));
+    $('#rec-code-field').classList.remove('hidden');
+    $('#rec-code-badge').classList.remove('hidden');
+    $('#rec-code-input').value = simulatedSecurityCode; // se autorrellena para comodidad de prueba
+    toast(`Código de verificación enviado a ${email}. Código de prueba: ${simulatedSecurityCode}`);
   });
 
   $('#form-recuperar')?.addEventListener('submit', async e => {
@@ -1680,24 +1792,34 @@
     const err = $('#rec-error');
     err.textContent = '';
 
-    // Paso 1: Validación de cédula
+    // Paso 1: Validación de cédula o correo
     if (!recoveryTargetUser) {
-      const cedula = normCedula(f.cedula.value);
-      if (!validCedula(cedula)) {
-        err.textContent = 'Ingresa una cédula válida (solo números).';
-        fx.shake(f);
-        return;
-      }
+      const inputVal = clean(f.identificador?.value || '');
+      const cedula = normCedula(inputVal);
+      const email = inputVal.toLowerCase();
+      
       const users = getUsers();
-      const user = users.find(u => u.cedula === cedula);
+      const user = users.find(u => u.cedula === cedula || (u.email && u.email.toLowerCase() === email));
       if (!user) {
-        err.textContent = 'No encontramos ninguna cuenta registrada con esa cédula.';
+        err.textContent = 'No encontramos ninguna cuenta registrada con esa cédula o correo.';
         fx.shake(f);
         return;
       }
       recoveryTargetUser = user;
       $('#rec-user-name').textContent = user.nombre;
-      $('#rec-user-cedula').textContent = `C.I. ${fmtCedula(user.cedula)}`;
+      $('#rec-user-meta').textContent = `C.I. ${fmtCedula(user.cedula)}${user.email ? ' · ' + user.email : ''}`;
+      
+      const emailText = $('#rec-email-text');
+      if (emailText) {
+        if (user.email) {
+          emailText.textContent = `Se enviará un código de verificación al correo ${user.email}`;
+          $('#rec-btn-send-code').classList.remove('hidden');
+        } else {
+          emailText.textContent = 'Esta cuenta no tiene correo electrónico vinculado. Puedes redefinir tu clave a continuación.';
+          $('#rec-btn-send-code').classList.add('hidden');
+        }
+      }
+
       $('#recuperar-step1').classList.add('hidden');
       $('#recuperar-step2').classList.remove('hidden');
       $('#rec-btn-reset-ci').classList.remove('hidden');
@@ -1706,7 +1828,17 @@
       return;
     }
 
-    // Paso 2: Asignación de nueva contraseña
+    // Paso 2: Si se generó código, validar que coincida
+    if (simulatedSecurityCode) {
+      const codeEntered = clean(f.codigo?.value || '');
+      if (codeEntered !== simulatedSecurityCode) {
+        err.textContent = 'El código de verificación no coincide con el enviado a tu correo.';
+        fx.shake(f);
+        return;
+      }
+    }
+
+    // Validación de nueva contraseña
     const n1 = f.nueva.value;
     const n2 = f.nueva2.value;
     if (n1.length < 6) {
@@ -1732,6 +1864,7 @@
     if (logInp) logInp.value = recoveryTargetUser.cedula;
     $('#form-login input[name="password"]')?.focus();
     recoveryTargetUser = null;
+    simulatedSecurityCode = '';
   });
 
   // Botón directo: restablecer a la cédula
@@ -1749,6 +1882,7 @@
     if (logInp) logInp.value = recoveryTargetUser.cedula;
     $('#form-login input[name="password"]')?.focus();
     recoveryTargetUser = null;
+    simulatedSecurityCode = '';
   });
 
   /* Cambiar contraseña */

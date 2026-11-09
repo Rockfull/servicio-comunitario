@@ -42,7 +42,70 @@
 }
 
 * { box-sizing: border-box; }
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 79, 200, 0.28) transparent;
+}
 html, body { margin: 0; }
+
+/* Scrollbar minimalista, ultra delgado y premium (Estilo Apple / Linear) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 79, 200, 0.22);
+  border-radius: 999px;
+  transition: background .25s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 79, 200, 0.55);
+}
+
+/* En la pantalla de autenticación oscura */
+#auth::-webkit-scrollbar-thumb,
+.auth::-webkit-scrollbar-thumb {
+  background: rgba(56, 182, 255, 0.25);
+}
+#auth::-webkit-scrollbar-thumb:hover,
+.auth::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 182, 255, 0.6);
+}
+
+/* Scrollbar en modales, tablas y áreas internas */
+.modal-box::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar,
+textarea::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.modal-box::-webkit-scrollbar-track,
+.table-wrap::-webkit-scrollbar-track,
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-box::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(0, 150, 242, 0.25);
+  border-radius: 999px;
+}
+.modal-box::-webkit-scrollbar-thumb:hover,
+.table-wrap::-webkit-scrollbar-thumb:hover,
+textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 79, 200, 0.6);
+}
+
+.modal-box,
+.table-wrap,
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 150, 242, 0.25) transparent;
+}
 body {
   font-family: var(--sans);
   background: var(--bg);
@@ -311,17 +374,45 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
 }
 @media (max-width: 600px) {
   .auth-top { padding: 18px 16px; justify-content: center; }
-  .auth-header-logo { height: 38px; }
+  .auth-header-logo { height: 42px; }
+  .auth-brand-badge { padding: 8px 16px; gap: 12px; }
   .auth-meta { display: none; }
-  .auth-grid { padding: 8px 16px 0; }
-  #auth-headline { font-size: clamp(36px, 11vw, 56px); }
-  .auth-lead { font-size: 15px; margin-top: 16px; }
-  .odo { font-size: 10.5vw; }
-  .auth-card { padding: 28px 20px 24px; border-radius: 22px; }
-  .auth-card::before { border-radius: 15px; inset: 7px; }
-  .auth-title { font-size: 30px; }
-  .auth-bottom { padding: 26px 16px 24px; }
+  .auth-grid { padding: 8px 16px 0; gap: 24px; }
+  #auth-headline { font-size: clamp(34px, 10vw, 52px); }
+  .auth-lead { font-size: 14.5px; margin-top: 14px; }
+  .auth-programs { padding: 14px; margin-top: 22px; }
+  .program-tag { padding: 8px 14px; font-size: 13px; }
+  .program-tag img { height: 30px; width: 30px; }
+  .odo-wrap { margin-top: 22px; }
+  .odo { font-size: 9.5vw; }
+  .auth-card { padding: 24px 18px 20px; border-radius: 20px; }
+  .auth-card::before { border-radius: 14px; inset: 6px; }
+  .auth-title { font-size: 28px; }
+  .auth-sub { font-size: 13.5px; margin-bottom: 18px; }
+  .auth-bottom { padding: 24px 16px 20px; }
   .auth-steps { flex-direction: column; gap: 8px; }
+
+  /* Ajustes responsivos móviles para elementos de la app */
+  .page-head { margin-bottom: 22px; padding-bottom: 18px; }
+  .user-profile-bar { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .user-profile-bar .btn { width: 100%; }
+  .cert-generator-card { padding: 18px 16px; }
+  .generator-header { flex-direction: column; gap: 10px; }
+  .generator-footer { flex-direction: column; align-items: stretch; gap: 12px; }
+  .generator-footer .btn { width: 100%; }
+
+  /* Modales en celulares ocupan pantalla completa de manera cómoda */
+  .modal { padding: 10px; }
+  .modal-box { border-radius: 20px; max-height: calc(100vh - 20px); }
+  .modal-head { padding: 18px 18px 14px; }
+  .modal-body { padding: 4px 18px 18px; }
+  .modal-foot { padding: 0 18px 18px; }
+  .modal-foot .btn { width: 100%; }
+
+  /* Adaptación de tablas en teléfonos pequeños */
+  .table th, .table td { padding: 12px 14px; font-size: 13px; }
+  .t-actions { flex-direction: column; gap: 4px; }
+  .t-actions .btn { width: 100%; justify-content: flex-start; }
 }
 
 /* =========================================================
@@ -360,6 +451,7 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   width: 100%; padding: 13px 15px;
   border: 1px solid var(--line-2); border-radius: 12px;
   background: var(--paper); outline: none; color: var(--gray-dark);
+  font-size: 16px; /* Evita zoom automático en iPhone/Safari móvil */
   transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
 }
 .field input::placeholder, .field textarea::placeholder, .search::placeholder { color: #94a3b8; }
@@ -865,6 +957,19 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
 }
 .recovery-user-banner strong { display: block; font-size: 14px; color: var(--gray-dark); }
 .recovery-user-banner small { font-size: 12px; }
+
+/* Caja de verificación por correo */
+.recovery-email-box {
+  background: #f4f8fd; border: 1px solid rgba(0, 150, 242, 0.22);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+}
+.recovery-email-lbl {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; color: var(--blue-royal); margin-bottom: 4px;
+}
+.recovery-email-lbl .i { width: 14px; height: 14px; color: var(--blue-vibrant); }
+.recovery-email-box p { margin: 0 0 6px; }
+
 .recovery-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 
 /* =========================================================
