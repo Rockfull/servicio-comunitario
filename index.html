@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Certificados</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Sora:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ================= ICONOS ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+
+<!-- ================= LOGIN / REGISTRO ================= -->
+<section id="auth" class="auth hidden">
+
+  <!-- Roseta guilloché (se genera en JS) + luz que sigue al cursor -->
+  <div class="rosette-wrap" aria-hidden="true"><svg class="rosette" id="rosette" viewBox="-500 -500 1000 1000"></svg></div>
+  <div class="auth-spot" aria-hidden="true"></div>
+
+  <header class="auth-top">
+    <div class="auth-brand-badge">
+      <div class="auth-brand-logos">
+        <img src="assets/logo-alcaldia.png" alt="Alcaldía de Chacao" class="auth-header-logo">
+        <span class="auth-header-sep"></span>
+        <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social Chacao" class="auth-header-logo">
+      </div>
+      <div class="auth-header-text">
+        <strong>Alcaldía de Chacao</strong>
+        <small>Desarrollo y Apoyo Social</small>
+      </div>
+    </div>
+    <div class="auth-meta">
+      <span class="pulse-dot"></span>
+      <span>Portal Oficial · <span id="year"></span></span>
+    </div>
+  </header>
+
+  <div class="auth-grid">
+    <div class="auth-left">
+      <div class="brand-pill">
+        <img src="assets/logo-alcaldia.png" alt="" class="brand-mini-icon">
+        <span>Gestión Gustavo Duque · Municipio Chacao</span>
+      </div>
+      <p class="eyebrow">Certificación digital</p>
+      <h1 class="display" id="auth-headline">Tu servicio, <em>certificado.</em></h1>
+      <p class="auth-lead">Consulta y descarga tus certificados oficiales del Servicio Comunitario emitidos por la Dirección de Desarrollo y Apoyo Social.</p>
+
+      <div class="auth-programs">
+        <span class="auth-programs-label">Programas de Formación Comunitaria</span>
+        <div class="auth-programs-list">
+          <div class="program-tag" title="Programa Chacao Bienestar">
+            <img src="assets/logo-bienestar.png" alt="Chacao Bienestar">
+            <span>Chacao Bienestar</span>
+          </div>
+          <div class="program-tag" title="Programa Chacao Emprende">
+            <img src="assets/logo-emprende.png" alt="Chacao Emprende">
+            <span>Chacao Emprende</span>
+          </div>
+          <div class="program-tag" title="Desarrollo y Apoyo Social">
+            <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social">
+            <span>Desarrollo Social</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="odo-wrap" aria-hidden="true">
+        <div class="odo-label">C.I.</div>
+        <div class="odo" id="odo"></div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-card-brand">
+        <div class="auth-card-logos">
+          <img src="assets/logo-alcaldia.png" alt="Alcaldía de Chacao" class="auth-card-logo">
+          <span class="auth-card-sep"></span>
+          <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social" class="auth-card-logo">
+        </div>
+      </div>
+      <p class="eyebrow">Portal de Certificados</p>
+      <h2 class="auth-title" id="auth-title">Inicia sesión</h2>
+      <p class="muted auth-sub" id="auth-sub">Ingresa con tu cédula y contraseña.</p>
+
+      <div class="tabs" data-active="login">
+        <span class="tab-pill"></span>
+        <button type="button" class="tab active" data-tab="login">Iniciar sesión</button>
+        <button type="button" class="tab" data-tab="register">Registrarse</button>
+      </div>
+
+      <form id="form-login" class="form" novalidate>
+        <label class="field"><span>Cédula</span>
+          <input name="cedula" inputmode="numeric" autocomplete="username" placeholder="Ej: 12345678" required>
+        </label>
+        <label class="field">
+          <div class="field-label-row">
+            <span>Contraseña</span>
+            <button type="button" class="link-btn" id="btn-olvide-pass">¿Olvidaste tu contraseña?</button>
+          </div>
+          <input name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        </label>
+        <p class="form-error" aria-live="polite"></p>
+        <button class="btn btn-primary btn-block" type="submit">Entrar
+          <svg class="i arrow"><use href="#i-arrow"/></svg>
+        </button>
+        <p class="form-hint" style="text-align: center; font-size: 12px; margin-top: 4px;">
+          Acceso demo: <b>ADMIN</b> / <b>admin123</b> · Estudiante: <b>12345678</b> / <b>123456</b>
+        </p>
+      </form>
+
+      <form id="form-register" class="form hidden" novalidate>
+        <label class="field"><span>Cédula</span>
+          <input name="cedula" inputmode="numeric" autocomplete="username" placeholder="Ej: 12345678" required>
+        </label>
+        <label class="field"><span>Nombre y apellido</span>
+          <input name="nombre" autocomplete="name" placeholder="Ej: María Pérez" required>
+        </label>
+        <label class="field">
+          <span>Área(s) de Servicio Comunitario <em class="muted">(escritas, pueden ser varias)</em></span>
+          <input name="areas" id="reg-areas" placeholder="Ej: Salud, Bienestar Social, Emprendimiento" required autocomplete="off">
+          <div class="area-tag-chips" id="reg-area-chips">
+            <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
+            <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
+            <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
+            <button type="button" class="area-chip" data-tag="Educación">+ Educación</button>
+            <button type="button" class="area-chip" data-tag="Ambiente">+ Ambiente</button>
+            <button type="button" class="area-chip" data-tag="Deportes">+ Deportes</button>
+            <button type="button" class="area-chip" data-tag="Atención Ciudadana">+ Atención</button>
+          </div>
+          <p class="form-hint small">Escribe tus áreas o pulsa las sugerencias para agregarlas separadas por coma.</p>
+        </label>
+        <div class="grid-2">
+          <label class="field"><span>Contraseña</span>
+            <input name="password" type="password" autocomplete="new-password" placeholder="Mínimo 6" required>
+          </label>
+          <label class="field"><span>Repetir</span>
+            <input name="password2" type="password" autocomplete="new-password" required>
+          </label>
+        </div>
+        <p class="form-hint">Usa la misma cédula con la que hiciste el curso; así tus certificados aparecerán solos.</p>
+        <p class="form-error" aria-live="polite"></p>
+        <button class="btn btn-primary btn-block" type="submit">Crear cuenta
+          <svg class="i arrow"><use href="#i-arrow"/></svg>
+        </button>
+      </form>
+    </div>
+    </div>
+  </div>
+
+  <footer class="auth-bottom">
+    <ol class="auth-steps">
+      <li><span>01</span>Regístrate con tu cédula</li>
+      <li><span>02</span>Encuentra tus certificados</li>
+      <li><span>03</span>Descárgalos en PDF</li>
+    </ol>
+    <div class="auth-institution">
+      <span>Alcaldía del Municipio Chacao · Dirección de Desarrollo y Apoyo Social</span>
+    </div>
+  </footer>
+</section>
+
+<!-- ================= APLICACIÓN ================= -->
+<div id="app" class="hidden">
+  <header class="navbar-wrap" id="navbar-wrap">
+    <div class="navbar">
+      <a href="#" class="nav-brand" id="nav-home">
+        <div class="nav-brand-pill">
+          <img src="assets/logo-alcaldia.png" alt="Alcaldía de Chacao" class="nav-logo-img">
+          <span class="nav-logo-sep"></span>
+          <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social Chacao" class="nav-logo-img">
+        </div>
+        <span class="nav-brand-text">Certificados<small>Alcaldía de Chacao · Desarrollo Social</small></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+
+      <div class="nav-menu" id="nav-menu">
+        <nav class="nav-links">
+          <span class="nav-indicator" aria-hidden="true"></span>
+          <a href="#" class="nav-link user-only" data-view="mis"><svg class="i"><use href="#i-file"/></svg><span>Mis certificados</span></a>
+          <a href="#" class="nav-link admin-only" data-view="emitir"><svg class="i"><use href="#i-pen"/></svg><span>Emitir</span></a>
+          <a href="#" class="nav-link admin-only" data-view="lista"><svg class="i"><use href="#i-list"/></svg><span>Certificados</span></a>
+          <a href="#" class="nav-link admin-only" data-view="usuarios"><svg class="i"><use href="#i-users"/></svg><span>Usuarios</span></a>
+          <a href="#" class="nav-link admin-only" data-view="config"><svg class="i"><use href="#i-layout"/></svg><span>Diseño</span></a>
+        </nav>
+        <div class="nav-user">
+          <div class="avatar" id="nav-avatar"></div>
+          <div class="nav-user-info"><strong id="nav-name"></strong><small id="nav-role"></small></div>
+          <button class="icon-btn" id="btn-pass" title="Cambiar contraseña" aria-label="Cambiar contraseña">
+            <svg class="i"><use href="#i-key"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+            <svg class="i"><use href="#i-logout"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===== Usuario: mis certificados ===== -->
+    <section id="view-mis" class="view">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Mi espacio</p>
+          <h2>Hola, <em id="hello-name"></em></h2>
+          <p class="lead">Aquí están tus certificados oficiales y puedes generar nuevos certificados según tus áreas de servicio comunitario.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong id="mis-count">0</strong><span>Certificados</span></div>
+        </div>
+      </div>
+
+      <!-- Banner de acreditación institucional con logos -->
+      <div class="institution-banner">
+        <div class="banner-logos">
+          <div class="banner-logo-badge" title="Alcaldía de Chacao">
+            <img src="assets/logo-alcaldia.png" alt="Alcaldía de Chacao">
+          </div>
+          <div class="banner-logo-badge" title="Dirección de Desarrollo y Apoyo Social">
+            <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social">
+          </div>
+          <div class="banner-logo-badge" title="Programa Chacao Bienestar">
+            <img src="assets/logo-bienestar.png" alt="Chacao Bienestar">
+          </div>
+          <div class="banner-logo-badge" title="Programa Chacao Emprende">
+            <img src="assets/logo-emprende.png" alt="Chacao Emprende">
+          </div>
+        </div>
+        <div class="banner-info">
+          <h4>Certificación Oficial de Servicio Comunitario</h4>
+          <p>Documentos emitidos por la <strong>Alcaldía del Municipio Chacao</strong> a través de la <strong>Dirección de Desarrollo y Apoyo Social</strong>, válidos para trámites académicos y comunitarios.</p>
+        </div>
+      </div>
+
+      <!-- Barra de Áreas Asignadas al Usuario -->
+      <div class="user-profile-bar">
+        <div class="user-areas-info">
+          <span class="user-areas-label"><svg class="i"><use href="#i-shield"/></svg>Tus áreas registradas:</span>
+          <div class="user-areas-list" id="mis-areas-list">
+            <!-- Badges renderizados dinámicamente -->
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-light" id="btn-editar-mis-areas">
+          <svg class="i"><use href="#i-pen"/></svg>Modificar mis áreas
+        </button>
+      </div>
+
+      <!-- Generador de Certificados por Área -->
+      <div class="card cert-generator-card">
+        <div class="generator-header">
+          <div class="generator-icon-badge">
+            <svg class="i"><use href="#i-award"/></svg>
+          </div>
+          <div>
+            <h3 class="card-title">Generar Certificado por Área</h3>
+            <p class="muted small">Selecciona una de tus áreas comunitarias y la actividad o motivo realizado para generar y descargar inmediatamente tu certificado oficial.</p>
+          </div>
+        </div>
+
+        <form id="form-user-generar" class="form generator-form" novalidate>
+          <div class="grid-2">
+            <label class="field">
+              <span>Área de Servicio Comunitario</span>
+              <select name="area" id="sel-user-area" required>
+                <!-- Opciones dinámicas según las áreas registradas del usuario -->
+              </select>
+            </label>
+            <label class="field">
+              <span>De qué fue el certificado (Actividad / Taller / Proyecto)</span>
+              <input name="curso" placeholder="Ej: Jornada de Atención Social Comunitaria" required>
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field">
+              <span>Mes de culminación</span>
+              <select name="mes" class="sel-mes"></select>
+            </label>
+            <label class="field">
+              <span>Año</span>
+              <input name="anio" type="number" min="2000" max="2100" class="in-anio" required>
+            </label>
+          </div>
+          <div class="generator-footer">
+            <button class="btn btn-primary" type="submit">
+              <svg class="i"><use href="#i-check"/></svg>Generar y Obtener Certificado
+            </button>
+            <span class="muted small">El certificado se emitirá con tu nombre, cédula, fecha y el modelo oficial activo.</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="section-title-row">
+        <h3 class="section-heading">Tus Certificados Emitidos</h3>
+      </div>
+      <div id="mis-grid" class="cert-grid"></div>
+    </section>
+
+    <!-- ===== Admin: emitir ===== -->
+    <section id="view-emitir" class="view hidden">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Administración</p>
+          <h2>Emitir <em>certificados</em></h2>
+          <p class="lead">Escribe los datos y el certificado se genera automáticamente con el diseño configurado.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong id="st-users">0</strong><span>Registrados</span></div>
+          <div class="stat"><strong id="st-certs">0</strong><span>Certificados</span></div>
+          <div class="stat"><strong id="st-cursos">0</strong><span>Cursos</span></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="stack reveal">
+          <form id="form-emitir" class="card form" novalidate>
+            <h3 class="card-title"><span class="num">01</span>Un certificado</h3>
+            <div class="grid-2">
+              <label class="field"><span>Cédula</span>
+                <input name="cedula" list="dl-cedulas" inputmode="numeric" placeholder="12345678" required>
+              </label>
+              <label class="field"><span>Nombre en el certificado</span>
+                <input name="nombre" placeholder="Nombre y apellido" required>
+              </label>
+            </div>
+            <label class="field"><span>Curso</span>
+              <input name="curso" list="dl-cursos" placeholder="Ej: Primeros auxilios comunitarios" required>
+            </label>
+            <div class="grid-2">
+              <label class="field"><span>Mes</span><select name="mes" class="sel-mes"></select></label>
+              <label class="field"><span>Año</span><input name="anio" type="number" min="2000" max="2100" class="in-anio" required></label>
+            </div>
+            <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Emitir certificado</button>
+          </form>
+
+          <form id="form-lote" class="card form" novalidate>
+            <h3 class="card-title"><span class="num">02</span>Varios a la vez <span class="badge">Un curso completo</span></h3>
+            <label class="field"><span>Curso</span>
+              <input name="curso" list="dl-cursos" placeholder="Ej: Primeros auxilios comunitarios" required>
+            </label>
+            <div class="grid-2">
+              <label class="field"><span>Mes</span><select name="mes" class="sel-mes"></select></label>
+              <label class="field"><span>Año</span><input name="anio" type="number" min="2000" max="2100" class="in-anio" required></label>
+            </div>
+            <label class="field"><span>Participantes <em>— una persona por línea: cédula, nombre</em></span>
+              <textarea name="lista" rows="7" placeholder="12345678, María Pérez&#10;23456789, José Rodríguez&#10;34567890, Ana Gómez"></textarea>
+            </label>
+            <div class="lote-tools">
+              <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Cargar CSV
+                <input type="file" id="in-csv" accept=".csv,.txt,text/csv,text/plain" hidden>
+              </label>
+              <span class="muted small" id="lote-info">También puedes copiar y pegar las dos columnas desde Excel.</span>
+            </div>
+            <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Emitir certificados</button>
+          </form>
+        </div>
+
+        <aside class="card sticky reveal">
+          <h3 class="card-title">Vista previa</h3>
+          <div class="cert-frame" id="emitir-preview"></div>
+          <p class="muted small">Así lo verá el participante al iniciar sesión.</p>
+        </aside>
+      </div>
+      <datalist id="dl-cedulas"></datalist>
+      <datalist id="dl-cursos"></datalist>
+    </section>
+
+    <!-- ===== Admin: lista de certificados ===== -->
+    <section id="view-lista" class="view hidden">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Administración</p>
+          <h2>Certificados <em>emitidos</em></h2>
+          <p class="lead" id="lista-count"></p>
+        </div>
+        <input id="lista-buscar" class="search" type="search" placeholder="Buscar por cédula, nombre o curso…">
+      </div>
+      <div class="card no-pad reveal">
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Cédula</th><th>Nombre</th><th>Curso</th><th>Fecha</th><th></th></tr></thead>
+            <tbody id="lista-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Admin: usuarios ===== -->
+    <section id="view-usuarios" class="view hidden">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Administración</p>
+          <h2>Control de <em>Usuarios</em></h2>
+          <p class="lead">Administra los accesos, asigna o edita las áreas de servicio comunitario y restablece contraseñas si un usuario la olvidó.</p>
+        </div>
+      </div>
+      <div class="card no-pad reveal">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cédula</th>
+                <th>Nombre y Apellido</th>
+                <th>Área(s) de Servicio</th>
+                <th>Certificados</th>
+                <th>Fecha Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usuarios-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Admin: diseño ===== -->
+    <section id="view-config" class="view hidden">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Administración</p>
+          <h2>Diseño del <em>certificado</em></h2>
+          <p class="lead">Usa el diseño institucional predeterminado o sube tu modelo genérico en PDF: los datos de cada estudiante se sustituyen automáticamente.</p>
+        </div>
+      </div>
+
+      <div class="split">
+        <form id="form-config" class="card form reveal" novalidate>
+          <div class="tpl-box">
+            <h3 class="card-title">Modelo Genérico de Certificado <span class="badge">PDF o Imagen</span></h3>
+            <p class="muted small">Sube el PDF base o genérico de tu institución. Sobre este modelo se estamparán dinámicamente las variables de cada persona.</p>
+            
+            <div class="generic-vars-card">
+              <span class="gvar-label">Variables que se reemplazan automáticamente:</span>
+              <ul class="gvar-list">
+                <li><span class="gvar-tag">{{nombre}}</span> <strong>Nombre y Apellido</strong> del participante</li>
+                <li><span class="gvar-tag">{{curso}}</span> <strong>De qué fue el certificado</strong> (actividad, taller, área)</li>
+                <li><span class="gvar-tag">{{fecha}}</span> <strong>Mes y Año</strong> de culminación</li>
+                <li><span class="gvar-tag">{{cedula}}</span> <strong>Cédula de Identidad</strong> (C.I.)</li>
+              </ul>
+              <p class="muted small" style="margin-top: 8px;">Si tu PDF ya tiene estos textos escritos, el sistema detecta sus coordenadas de forma automática. Si no, puedes arrastrar cada campo a su posición.</p>
+            </div>
+
+            <div class="row">
+              <label class="btn btn-light btn-file"><svg class="i"><use href="#i-image"/></svg>Subir modelo genérico (PDF o imagen)
+                <input type="file" id="in-plantilla" accept="application/pdf,image/*" hidden>
+              </label>
+              <button type="button" class="btn btn-danger hidden" id="btn-quitar-plantilla"><svg class="i"><use href="#i-trash"/></svg>Quitar modelo</button>
+            </div>
+          </div>
+
+          <fieldset id="tpl-controls" class="hidden">
+            <legend>Posición y estilo de las variables</legend>
+            <div class="campo-chips" id="campo-chips">
+              <button type="button" class="campo-chip" data-campo="nombre">Nombre y Apellido</button>
+              <button type="button" class="campo-chip" data-campo="curso">De qué fue (Curso/Área)</button>
+              <button type="button" class="campo-chip" data-campo="fecha">Mes y Año</button>
+              <button type="button" class="campo-chip" data-campo="cedula">Cédula</button>
+            </div>
+            <label class="check"><input type="checkbox" data-f="visible"> Mostrar este dato en el certificado</label>
+            <div class="grid-2">
+              <label class="field"><span>Tamaño de letra <output data-out="size"></output></span><input type="range" data-f="size" min="8" max="130" step="1"></label>
+              <label class="field"><span>Ancho máximo <output data-out="ancho"></output></span><input type="range" data-f="ancho" min="10" max="100" step="1"></label>
+              <label class="field"><span>Letra</span>
+                <select data-f="fuente">
+                  <option value="script">Manuscrita</option>
+                  <option value="serif">Clásica (Playfair)</option>
+                  <option value="times">Times New Roman</option>
+                  <option value="sans">Moderna (Geist)</option>
+                  <option value="arial">Arial</option>
+                </select>
+              </label>
+              <label class="field"><span>Alineación</span>
+                <select data-f="align">
+                  <option value="center">Centrado</option>
+                  <option value="left">Izquierda</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </label>
+              <label class="field"><span>Color</span><input type="color" data-f="color"></label>
+              <label class="field"><span>Texto delante <em>— opcional</em></span><input data-f="prefijo" placeholder="Ej: C.I. o Caracas,"></label>
+            </div>
+            <label class="check"><input type="checkbox" data-f="mayus"> Escribir en MAYÚSCULAS</label>
+            <label class="check"><input type="checkbox" data-f="tapar"> Tapar lo que el modelo tiene debajo <em class="muted small">(para modelos con un texto de ejemplo)</em></label>
+            <label class="field" id="campo-parche"><span>Alto de la zona tapada <output data-out="taparEscala"></output></span><input type="range" data-f="taparEscala" min="60" max="400" step="10"></label>
+          </fieldset>
+
+          <fieldset id="default-controls">
+            <legend>Diseño incluido</legend>
+            <div class="field">
+              <span>Logos institucionales en el certificado</span>
+              <div class="logo-preset-grid" id="logo-presets">
+                <button type="button" class="preset-btn active" data-preset="duo">
+                  <div class="preset-thumbs">
+                    <img src="assets/logo-alcaldia.png" alt="" class="preset-thumb">
+                    <img src="assets/logo-desarrollo-social.png" alt="" class="preset-thumb">
+                  </div>
+                  <span>Alcaldía + Desarrollo</span>
+                </button>
+                <button type="button" class="preset-btn" data-preset="bienestar">
+                  <div class="preset-thumbs">
+                    <img src="assets/logo-bienestar.png" alt="" class="preset-thumb">
+                  </div>
+                  <span>Chacao Bienestar</span>
+                </button>
+                <button type="button" class="preset-btn" data-preset="emprende">
+                  <div class="preset-thumbs">
+                    <img src="assets/logo-emprende.png" alt="" class="preset-thumb">
+                  </div>
+                  <span>Chacao Emprende</span>
+                </button>
+                <button type="button" class="preset-btn" data-preset="alcaldia">
+                  <div class="preset-thumbs">
+                    <img src="assets/logo-alcaldia.png" alt="" class="preset-thumb">
+                  </div>
+                  <span>Solo Alcaldía</span>
+                </button>
+              </div>
+            </div>
+            <div class="row">
+              <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Subir otro logo
+                <input type="file" id="in-logo" accept="image/*" hidden>
+              </label>
+              <button type="button" class="btn btn-danger btn-sm hidden" id="btn-quitar-logo"><svg class="i"><use href="#i-trash"/></svg>Quitar logo subido</button>
+            </div>
+            <label class="field"><span>Institución</span><input name="institucion"></label>
+            <div class="grid-2">
+              <label class="field"><span>Título</span><input name="titulo"></label>
+              <label class="field"><span>Subtítulo</span><input name="subtitulo"></label>
+            </div>
+            <label class="field"><span>Texto antes del nombre</span><input name="textoA"></label>
+            <label class="field"><span>Texto antes del curso</span><input name="textoB"></label>
+            <label class="field"><span>Lugar <em>— aparece antes de la fecha</em></span><input name="lugar" placeholder="Ej: Caracas"></label>
+            <div class="grid-2">
+              <label class="field"><span>Firma 1 — nombre</span><input name="firma1Nombre"></label>
+              <label class="field"><span>Firma 1 — cargo</span><input name="firma1Cargo"></label>
+              <label class="field"><span>Firma 2 — nombre</span><input name="firma2Nombre" placeholder="Opcional"></label>
+              <label class="field"><span>Firma 2 — cargo</span><input name="firma2Cargo"></label>
+            </div>
+            <label class="field"><span>Letra del nombre</span>
+              <select name="fuenteNombre">
+                <option value="script">Manuscrita (elegante)</option>
+                <option value="serif">Clásica</option>
+                <option value="sans">Moderna</option>
+              </select>
+            </label>
+            <label class="check"><input type="checkbox" name="mostrarCedula"> Mostrar la cédula debajo del nombre</label>
+          </fieldset>
+
+          <div class="row">
+            <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Guardar diseño</button>
+            <button type="button" class="btn btn-light" id="btn-restablecer"><svg class="i"><use href="#i-refresh"/></svg>Restablecer textos</button>
+          </div>
+        </form>
+
+        <aside class="stack sticky reveal">
+          <div class="card">
+            <h3 class="card-title">Vista previa</h3>
+            <div class="cert-frame" id="config-preview"></div>
+            <p class="muted small hidden" id="editor-ayuda">Arrastra cada dato a su lugar. Haz clic en uno para cambiar su letra, tamaño y color.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Respaldo de datos</h3>
+            <p class="muted small">Los datos se guardan en este navegador. Descarga un respaldo de vez en cuando para no perderlos.</p>
+            <div class="row">
+              <button type="button" class="btn btn-light btn-sm" id="btn-export"><svg class="i"><use href="#i-download"/></svg>Descargar respaldo</button>
+              <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Restaurar respaldo
+                <input type="file" id="in-import" accept=".json,application/json" hidden>
+              </label>
+            </div>
+          </div>
+          <div class="card palette-card">
+            <h3 class="card-title">Paleta de Colores Oficial</h3>
+            <p class="muted small">Identidad corporativa e institucional de la Alcaldía de Chacao aplicada en esta plataforma.</p>
+            <div class="palette-swatches">
+              <div class="swatch" style="--swatch:#38b6ff" title="Celeste Brillante">
+                <span class="swatch-color"></span>
+                <span class="swatch-hex">#38b6ff</span>
+                <span class="swatch-name">Celeste</span>
+              </div>
+              <div class="swatch" style="--swatch:#0096f2" title="Azul Chacao">
+                <span class="swatch-color"></span>
+                <span class="swatch-hex">#0096f2</span>
+                <span class="swatch-name">Azul Chacao</span>
+              </div>
+              <div class="swatch" style="--swatch:#004fc8" title="Azul Institucional">
+                <span class="swatch-color"></span>
+                <span class="swatch-hex">#004fc8</span>
+                <span class="swatch-name">Azul Real</span>
+              </div>
+              <div class="swatch" style="--swatch:#00bf63" title="Verde Acción">
+                <span class="swatch-color"></span>
+                <span class="swatch-hex">#00bf63</span>
+                <span class="swatch-name">Verde Éxito</span>
+              </div>
+              <div class="swatch" style="--swatch:#666666" title="Gris Neutro">
+                <span class="swatch-color"></span>
+                <span class="swatch-hex">#666666</span>
+                <span class="swatch-name">Gris Medio</span>
+              </div>
+              <div class="swatch" style="--swatch:#353535" title="Gris Carbón">
+                <span class="swatch-color"></span>
+                <span class="swatch-hex">#353535</span>
+                <span class="swatch-name">Carbón</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="app-footer-inner">
+      <div class="app-footer-brand">
+        <div class="app-footer-logos">
+          <img src="assets/logo-alcaldia.png" alt="Alcaldía de Chacao" class="app-footer-logo" title="Alcaldía de Chacao">
+          <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social" class="app-footer-logo" title="Desarrollo y Apoyo Social">
+          <img src="assets/logo-bienestar.png" alt="Chacao Bienestar" class="app-footer-logo" title="Chacao Bienestar">
+          <img src="assets/logo-emprende.png" alt="Chacao Emprende" class="app-footer-logo" title="Chacao Emprende">
+        </div>
+        <div class="app-footer-info">
+          <strong>Alcaldía del Municipio Chacao · Gestión Gustavo Duque</strong>
+          <p>Dirección de Desarrollo y Apoyo Social · Coordinación de Servicio Comunitario</p>
+        </div>
+      </div>
+      <div class="app-footer-meta">
+        <span class="badge-chacao"><svg class="i"><use href="#i-shield"/></svg>Plataforma Oficial Verificada</span>
+        <p class="muted small">Caracas, Venezuela · Certificación digital comunitaria</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ================= MODAL: certificado ================= -->
+<div class="modal hidden" id="modal-cert">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div><p class="eyebrow" id="mc-date"></p><h3 id="mc-title"></h3><p class="muted small" id="mc-sub"></p></div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body"><div class="cert-frame shadow" id="mc-frame"></div></div>
+    <div class="modal-foot">
+      <span class="muted small foot-hint">En la ventana de impresión elige <b>“Guardar como PDF”</b>.</span>
+      <button class="btn btn-light" data-close>Cerrar</button>
+      <button class="btn btn-primary" id="mc-pdf"><svg class="i"><use href="#i-download"/></svg>Descargar PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: contraseña ================= -->
+<div class="modal hidden" id="modal-pass">
+  <div class="modal-box sm">
+    <div class="modal-head">
+      <div><p class="eyebrow">Seguridad</p><h3>Cambiar contraseña</h3></div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="form-pass" class="form modal-body" novalidate>
+      <label class="field"><span>Contraseña actual</span><input name="actual" type="password" autocomplete="current-password" required></label>
+      <label class="field"><span>Nueva contraseña</span><input name="nueva" type="password" autocomplete="new-password" required></label>
+      <label class="field"><span>Repetir nueva contraseña</span><input name="nueva2" type="password" autocomplete="new-password" required></label>
+      <p class="form-error" aria-live="polite"></p>
+      <button class="btn btn-primary btn-block" type="submit">Guardar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: recuperar contraseña ================= -->
+<div class="modal hidden" id="modal-recuperar">
+  <div class="modal-box sm">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Recuperación</p>
+        <h3>¿Olvidaste tu clave?</h3>
+        <p class="muted small">Ingresa tu número de cédula para validar tu cuenta y redefinir tu contraseña.</p>
+      </div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="form-recuperar" class="form modal-body" novalidate>
+      <div id="recuperar-step1">
+        <label class="field">
+          <span>Número de Cédula</span>
+          <input name="cedula" id="rec-cedula" inputmode="numeric" placeholder="Ej: 12345678" required>
+        </label>
+        <p class="form-hint small">Introduce la cédula registrada en el sistema de servicio comunitario.</p>
+      </div>
+
+      <div id="recuperar-step2" class="hidden">
+        <div class="recovery-user-banner">
+          <svg class="i"><use href="#i-check"/></svg>
+          <div>
+            <strong id="rec-user-name">Usuario identificado</strong>
+            <small id="rec-user-cedula" class="muted"></small>
+          </div>
+        </div>
+        <label class="field">
+          <span>Nueva contraseña</span>
+          <input name="nueva" id="rec-nueva" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+        </label>
+        <label class="field">
+          <span>Confirmar nueva contraseña</span>
+          <input name="nueva2" id="rec-nueva2" type="password" placeholder="Repite tu contraseña" autocomplete="new-password">
+        </label>
+      </div>
+
+      <p class="form-error" id="rec-error" aria-live="polite"></p>
+
+      <div class="recovery-actions">
+        <button class="btn btn-primary btn-block" type="submit" id="rec-btn-submit">
+          Continuar <svg class="i arrow"><use href="#i-arrow"/></svg>
+        </button>
+        <button type="button" class="btn btn-light btn-block hidden" id="rec-btn-reset-ci">
+          <svg class="i"><use href="#i-refresh"/></svg>Restablecer a mi cédula
+        </button>
+      </div>
+      <p class="form-hint small" style="text-align: center; margin-top: 6px;">
+        También puedes pedir a la administración que restablezca tu contraseña en el panel de usuarios.
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: editar áreas ================= -->
+<div class="modal hidden" id="modal-edit-areas">
+  <div class="modal-box sm">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Servicio Comunitario</p>
+        <h3 id="mea-title">Áreas Asignadas</h3>
+        <p class="muted small" id="mea-sub">Actualiza las áreas de servicio comunitario para este estudiante.</p>
+      </div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="form-edit-areas" class="form modal-body" novalidate>
+      <input type="hidden" name="cedula" id="mea-cedula">
+      <label class="field">
+        <span>Área(s) de Servicio Comunitario (escritas)</span>
+        <input name="areas" id="mea-areas" placeholder="Ej: Salud, Bienestar Social, Emprendimiento" required autocomplete="off">
+        <div class="area-tag-chips" id="mea-chips">
+          <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
+          <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
+          <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
+          <button type="button" class="area-chip" data-tag="Educación">+ Educación</button>
+          <button type="button" class="area-chip" data-tag="Ambiente">+ Ambiente</button>
+          <button type="button" class="area-chip" data-tag="Deportes">+ Deportes</button>
+          <button type="button" class="area-chip" data-tag="Atención Ciudadana">+ Atención</button>
+        </div>
+        <p class="form-hint small">Puedes escribir cualquier área libremente o hacer clic en las sugerencias.</p>
+      </label>
+      <p class="form-error" aria-live="polite"></p>
+      <button class="btn btn-primary btn-block" type="submit">Guardar Áreas</button>
+    </form>
+  </div>
+</div>
+
+<div id="print-area"></div>
+<div id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
