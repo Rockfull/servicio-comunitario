@@ -44,67 +44,88 @@
 * { box-sizing: border-box; }
 html {
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 79, 200, 0.28) transparent;
 }
 html, body { margin: 0; }
 
-/* Scrollbar minimalista, ultra delgado y premium (Estilo Apple / Linear) */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 79, 200, 0.22);
-  border-radius: 999px;
-  transition: background .25s ease;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 79, 200, 0.55);
+/* Scrollbar ultra fino y elegante para PC (Desaparece y se oculta automáticamente) */
+@media (min-width: 769px) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 79, 200, 0.18) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 79, 200, 0.16);
+    border-radius: 999px;
+    transition: background .3s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 79, 200, 0.45);
+  }
+
+  #auth::-webkit-scrollbar-thumb,
+  .auth::-webkit-scrollbar-thumb {
+    background: rgba(56, 182, 255, 0.2);
+  }
+  #auth::-webkit-scrollbar-thumb:hover,
+  .auth::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 182, 255, 0.5);
+  }
+
+  .modal-box::-webkit-scrollbar,
+  .table-wrap::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .modal-box::-webkit-scrollbar-track,
+  .table-wrap::-webkit-scrollbar-track,
+  textarea::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .modal-box::-webkit-scrollbar-thumb,
+  .table-wrap::-webkit-scrollbar-thumb,
+  textarea::-webkit-scrollbar-thumb {
+    background: rgba(0, 150, 242, 0.18);
+    border-radius: 999px;
+  }
+  .modal-box::-webkit-scrollbar-thumb:hover,
+  .table-wrap::-webkit-scrollbar-thumb:hover,
+  textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 79, 200, 0.45);
+  }
+
+  .modal-box,
+  .table-wrap,
+  textarea {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 150, 242, 0.18) transparent;
+  }
 }
 
-/* En la pantalla de autenticación oscura */
-#auth::-webkit-scrollbar-thumb,
-.auth::-webkit-scrollbar-thumb {
-  background: rgba(56, 182, 255, 0.25);
-}
-#auth::-webkit-scrollbar-thumb:hover,
-.auth::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 182, 255, 0.6);
-}
-
-/* Scrollbar en modales, tablas y áreas internas */
-.modal-box::-webkit-scrollbar,
-.table-wrap::-webkit-scrollbar,
-textarea::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-.modal-box::-webkit-scrollbar-track,
-.table-wrap::-webkit-scrollbar-track,
-textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-.modal-box::-webkit-scrollbar-thumb,
-.table-wrap::-webkit-scrollbar-thumb,
-textarea::-webkit-scrollbar-thumb {
-  background: rgba(0, 150, 242, 0.25);
-  border-radius: 999px;
-}
-.modal-box::-webkit-scrollbar-thumb:hover,
-.table-wrap::-webkit-scrollbar-thumb:hover,
-textarea::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 79, 200, 0.6);
-}
-
-.modal-box,
-.table-wrap,
-textarea {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 150, 242, 0.25) transparent;
+/* En celulares y tablets: el scrollbar se oculta 100% manteniendo el deslizamiento táctil nativo fluido */
+@media (max-width: 768px) {
+  html, body, .modal-box, .table-wrap, textarea, .view {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE y Edge antiguo */
+  }
+  ::-webkit-scrollbar,
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .modal-box::-webkit-scrollbar,
+  .table-wrap::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
 }
 body {
   font-family: var(--sans);
@@ -194,15 +215,19 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   position: absolute; z-index: -1; top: 50%; left: 74%;
   width: min(120vh, 1060px); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none;
 }
-.rosette { width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--blue-sky); stroke-width: .55; }
-.rosette .band-1 { stroke: var(--blue-sky); opacity: .45; }
-.rosette .band-2 { stroke: var(--blue-vibrant); opacity: .32; }
-.rosette .band-3 { stroke: var(--blue-royal); opacity: .22; }
-.rosette .band-4 { stroke: var(--blue-sky); opacity: .14; }
+.rosette { width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--blue-sky); stroke-width: .65; }
+.rosette .band-1 { stroke: var(--blue-sky); opacity: .55; }
+.rosette .band-2 { stroke: var(--blue-vibrant); opacity: .42; }
+.rosette .band-3 { stroke: var(--blue-royal); opacity: .30; }
+.rosette .band-4 { stroke: var(--blue-sky); opacity: .20; }
 
 .auth-spot {
-  position: absolute; inset: 0; z-index: -1; pointer-events: none; mix-blend-mode: color-dodge;
-  background: radial-gradient(340px circle at var(--mx) var(--my), rgba(56, 182, 255, .3), rgba(0, 150, 242, .08) 50%, transparent 72%);
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(480px circle at var(--mx, 74%) var(--my, 50%), rgba(56, 182, 255, .38), rgba(0, 150, 242, .18) 45%, transparent 72%),
+    radial-gradient(850px circle at var(--mx, 74%) var(--my, 50%), rgba(0, 79, 200, .24), transparent 65%);
+  mix-blend-mode: screen;
+  transition: opacity .35s ease;
 }
 
 .auth-top {
@@ -369,7 +394,22 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   .auth-grid { grid-template-columns: 1fr; gap: 36px; padding: 12px 24px 0; }
   .auth-left { max-width: none; }
   .odo-wrap { margin-top: 28px; }
-  .rosette-wrap { left: 50%; top: 72%; width: max(760px, 130vw); }
+  .rosette-wrap {
+    left: 50% !important;
+    top: 38% !important;
+    width: min(85vh, max(540px, 115vw)) !important;
+    opacity: 0.95;
+  }
+  .rosette { stroke-width: 0.92px !important; }
+  .rosette .band-1 { stroke: var(--blue-sky); opacity: .72 !important; }
+  .rosette .band-2 { stroke: var(--blue-vibrant); opacity: .56 !important; }
+  .rosette .band-3 { stroke: var(--blue-royal); opacity: .42 !important; }
+  .rosette .band-4 { stroke: var(--blue-sky); opacity: .28 !important; }
+  .auth-spot {
+    background:
+      radial-gradient(420px circle at var(--mx, 50%) var(--my, 38%), rgba(56, 182, 255, .48), rgba(0, 150, 242, .24) 45%, transparent 75%),
+      radial-gradient(780px circle at var(--mx, 50%) var(--my, 38%), rgba(0, 79, 200, .32), transparent 70%);
+  }
   .auth-bottom { padding: 32px 24px 28px; }
 }
 @media (max-width: 600px) {
@@ -383,9 +423,19 @@ body:not(.has-gsap) .modal { animation: fade .2s ease; }
   .auth-programs { padding: 14px; margin-top: 22px; }
   .program-tag { padding: 8px 14px; font-size: 13px; }
   .program-tag img { height: 30px; width: 30px; }
+  .program-tag:active { transform: scale(0.96); background: #eef7ff; border-color: var(--blue-vibrant); }
   .odo-wrap { margin-top: 22px; }
   .odo { font-size: 9.5vw; }
-  .auth-card { padding: 24px 18px 20px; border-radius: 20px; }
+  .rosette-wrap {
+    top: 34% !important;
+    width: min(80vh, max(460px, 125vw)) !important;
+  }
+  .auth-right { perspective: 1100px; width: 100%; }
+  .auth-card {
+    padding: 24px 18px 20px; border-radius: 20px;
+    transform-style: preserve-3d;
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, .65), 0 0 0 1px rgba(56, 182, 255, .32);
+  }
   .auth-card::before { border-radius: 14px; inset: 6px; }
   .auth-title { font-size: 28px; }
   .auth-sub { font-size: 13.5px; margin-bottom: 18px; }
@@ -492,7 +542,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   cursor: pointer; white-space: nowrap; text-decoration: none;
   transition: background .35s var(--ease), color .35s, border-color .35s, box-shadow .35s, transform .2s;
 }
-.btn:active { transform: translateY(1px); }
+.btn:active { transform: scale(0.972) translateY(1px); }
 .btn .i { width: 16px; height: 16px; margin-left: -2px; }
 .btn .arrow { margin: 0 -4px 0 0; transition: transform .45s var(--ease); }
 .btn:hover .arrow { transform: translateX(5px); }
@@ -513,6 +563,8 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   transform: skewX(-20deg); transition: left .8s var(--ease);
 }
 .btn-primary:hover::after { left: 130%; }
+.btn-primary:active::after { left: 130%; transition: left .35s ease; }
+.btn-primary:active { box-shadow: 0 6px 18px -4px rgba(0, 79, 200, 0.75); }
 
 .btn-light {
   background: var(--paper); border-color: var(--line-2); color: var(--text);
@@ -868,10 +920,59 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   position: relative; display: flex; flex-direction: column; padding: 14px;
   background: var(--paper); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow);
   transition: box-shadow .5s var(--ease), border-color .5s var(--ease), transform .3s var(--ease); will-change: transform;
+  transform-style: preserve-3d;
 }
 .cert-card:hover {
   box-shadow: var(--shadow-lg); border-color: rgba(56, 182, 255, .45);
   transform: translateY(-4px);
+}
+.cert-card:active {
+  transform: scale(0.982) translateY(-2px);
+  box-shadow: 0 16px 36px -8px rgba(0, 150, 242, 0.32), 0 0 0 2px rgba(56, 182, 255, 0.45);
+  border-color: var(--blue-vibrant);
+}
+.cert-card::after, .auth-card::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 36%,
+    rgba(56, 182, 255, .15) 44%,
+    rgba(255, 255, 255, .52) 50%,
+    rgba(0, 150, 242, .15) 56%,
+    transparent 64%,
+    transparent 100%
+  );
+  background-size: 280% 280%;
+  opacity: 0; transition: opacity .4s ease;
+}
+.cert-card:hover::after, .auth-card:hover::after {
+  opacity: 0.85;
+  animation: holoSheenMobile 2.5s ease-in-out;
+}
+@media (max-width: 768px) {
+  .cert-card {
+    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 150, 242, 0.08);
+  }
+  .cert-card::after {
+    opacity: 0.72;
+    animation: holoSheenMobile 7s ease-in-out infinite;
+  }
+  .auth-card::after {
+    opacity: 0.62;
+    animation: holoSheenMobile 8.5s ease-in-out infinite 1.2s;
+  }
+  .btn-primary::after {
+    animation: btnShineSweep 5s ease-in-out infinite;
+  }
+}
+@keyframes holoSheenMobile {
+  0% { background-position: 230% 0%; }
+  40%, 100% { background-position: -80% 0%; }
+}
+@keyframes btnShineSweep {
+  0%, 75% { left: -70%; }
+  90%, 100% { left: 130%; }
 }
 .cert-card .cert-frame { border-radius: 12px; cursor: zoom-in; box-shadow: 0 0 0 1px var(--line); }
 .cert-card-body { padding: 20px 8px 6px; display: flex; flex-direction: column; flex: 1; }

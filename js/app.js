@@ -97,6 +97,56 @@
   const ic = name => `<svg class="i"><use href="#i-${name}"/></svg>`;
   const toArr = t => t == null ? [] : t instanceof Element ? [t] : [...t];
 
+  /* ---------------- Sistema unificado de movimiento físico (giroscopio y acelerómetro) ---------------- */
+  const Motion = {
+    x: 0,
+    y: 0,
+    hasSensor: false,
+    listeners: new Set(),
+    subscribe(fn) {
+      this.listeners.add(fn);
+      if (this.hasSensor) fn(this.x, this.y);
+      return () => this.listeners.delete(fn);
+    },
+    emit() {
+      this.listeners.forEach(fn => {
+        try { fn(this.x, this.y); } catch (e) {}
+      });
+    },
+    init() {
+      let requested = false;
+      const requestSensor = async () => {
+        if (requested) return;
+        requested = true;
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          try {
+            const res = await DeviceOrientationEvent.requestPermission();
+            if (res !== 'granted') return;
+          } catch (e) { return; }
+        }
+        window.addEventListener('deviceorientation', e => this.handleOrientation(e), { passive: true });
+      };
+
+      if (typeof window.DeviceOrientationEvent !== 'undefined') {
+        window.addEventListener('deviceorientation', e => this.handleOrientation(e), { passive: true });
+      }
+
+      window.addEventListener('touchstart', requestSensor, { once: true, passive: true });
+      window.addEventListener('click', requestSensor, { once: true, passive: true });
+    },
+    handleOrientation(e) {
+      if (e.beta == null || e.gamma == null) return;
+      this.hasSensor = true;
+      // Inclinación suave y responsiva: un leve giro de mano (±20°) genera efecto visible inmediato
+      const pitch = Math.max(-1, Math.min(1, (e.beta - 48) / 22));
+      const roll = Math.max(-1, Math.min(1, e.gamma / 20));
+      this.x = roll;
+      this.y = pitch;
+      this.emit();
+    }
+  };
+  Motion.init();
+
   const fx = {
     // Entrada: sube y aparece, en cascada
     in(targets, o = {}) {
@@ -123,57 +173,83 @@
       G.fromTo(el, { scale: .95, boxShadow: '0 0 0 10px rgba(217,187,116,.55)' },
         { scale: 1, boxShadow: '0 0 0 0 rgba(217,187,116,0)', duration: 1, ease: 'elastic.out(1, .55)', clearProps: 'transform,boxShadow' });
     },
-    tilt(el, max = 7) {
-      if (!G) return;
-      const rx = G.quickTo(el, 'rotationX', { duration: .7, ease: 'power3' });
-      const ry = G.quickTo(el, 'rotationY', { duration: .7, ease: 'power3' });
+    tilt(el, max = 8) {
+      if (!G || !el) return;
+      const rx = G.quickTo(el, 'rotationX', { duration: .65, ease: 'power3' });
+      const ry = G.quickTo(el, 'rotationY', { duration: .65, ease: 'power3' });
       
-      // En dispositivos de escritorio con mouse
+      let isInteracting = false;
+      let ambientTween = null;
+
+      // 1. Escritorio con mouse: tilt preciso con el cursor
       if (canHover) {
         el.addEventListener('pointermove', e => {
-          const r = el.getBoundingClientRect();
-          ry(((e.clientX - r.left) / r.width - .5) * max);
-          rx(-((e.clientY - r.top) / r.height - .5) * max);
+          if (e.pointerType === 'mouse') {
+            const r = el.getBoundingClientRect();
+            ry(((e.clientX - r.left) / r.width - .5) * max);
+            rx(-((e.clientY - r.top) / r.height - .5) * max);
+          }
         });
         el.addEventListener('pointerleave', () => { rx(0); ry(0); });
-      } else {
-        // En celulares y tablets: tilt reactivo a giroscopio / orientación del dispositivo
-        let requestedPermission = false;
-        const requestMotion = async () => {
-          if (requestedPermission) return;
-          requestedPermission = true;
-          if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            try {
-              const res = await DeviceOrientationEvent.requestPermission();
-              if (res !== 'granted') return;
-            } catch { return; }
-          }
-          window.addEventListener('deviceorientation', e => {
-            if (e.gamma == null || e.beta == null) return;
-            const tiltX = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
-            const tiltY = Math.max(-1, Math.min(1, e.gamma / 30));
-            rx(-tiltX * max);
-            ry(tiltY * max);
-          }, { passive: true });
-        };
+      }
 
-        window.addEventListener('deviceorientation', e => {
-          if (e.gamma == null || e.beta == null) return;
-          const tiltX = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
-          const tiltY = Math.max(-1, Math.min(1, e.gamma / 30));
-          rx(-tiltX * max);
-          ry(tiltY * max);
-        }, { passive: true });
+      // 2. Dispositivos móviles y táctiles:
+      // A) Inclinación 3D táctil directa al tocar o arrastrar el dedo sobre el elemento
+      const handleTouchTilt = e => {
+        const t = e.touches ? e.touches[0] : e;
+        if (!t) return;
+        isInteracting = true;
+        if (ambientTween) ambientTween.pause();
+        const r = el.getBoundingClientRect();
+        const cx = Math.max(-1, Math.min(1, ((t.clientX - r.left) / r.width) - 0.5));
+        const cy = Math.max(-1, Math.min(1, ((t.clientY - r.top) / r.height) - 0.5));
+        ry(cx * max * 1.5);
+        rx(-cy * max * 1.5);
+      };
 
-        window.addEventListener('touchstart', requestMotion, { once: true, passive: true });
+      el.addEventListener('touchstart', e => {
+        handleTouchTilt(e);
+        G.to(el, { scale: 0.982, duration: 0.18, ease: 'power2.out' });
+      }, { passive: true });
 
-        // Touch feedback interactivo táctil
-        el.addEventListener('touchstart', () => {
-          G.to(el, { scale: 0.98, duration: 0.2, ease: 'power2.out' });
-        }, { passive: true });
-        el.addEventListener('touchend', () => {
-          G.to(el, { scale: 1, duration: 0.35, ease: 'back.out(1.5)' });
-        }, { passive: true });
+      el.addEventListener('touchmove', handleTouchTilt, { passive: true });
+
+      el.addEventListener('touchend', () => {
+        isInteracting = false;
+        G.to(el, { scale: 1, duration: 0.45, ease: 'back.out(1.6)' });
+        if (!Motion.hasSensor) {
+          rx(0); ry(0);
+          if (ambientTween) ambientTween.resume();
+        } else {
+          rx(-Motion.y * max);
+          ry(Motion.x * max);
+        }
+      }, { passive: true });
+
+      // B) Reacción física al giroscopio del teléfono
+      Motion.subscribe((roll, pitch) => {
+        if (isInteracting) return;
+        rx(-pitch * max);
+        ry(roll * max);
+      });
+
+      // C) Reacción al scroll vertical en móvil (profundidad 3D dinámica al deslizar)
+      const handleScrollTilt = () => {
+        if (isInteracting || Motion.hasSensor) return;
+        const r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) return;
+        const viewCenter = window.innerHeight / 2;
+        const cardCenter = r.top + r.height / 2;
+        const offsetNorm = Math.max(-1, Math.min(1, (cardCenter - viewCenter) / (window.innerHeight * 0.6)));
+        rx(offsetNorm * (max * 0.75));
+      };
+      window.addEventListener('scroll', handleScrollTilt, { passive: true });
+
+      // D) Movimiento 3D sutil continuo ("respiración / flotación") para que el elemento siempre luzca vivo
+      if (!canHover) {
+        ambientTween = G.timeline({ repeat: -1, yoyo: true })
+          .to(el, { rotationY: max * 0.35, rotationX: -max * 0.25, duration: 3.2, ease: 'sine.inOut' })
+          .to(el, { rotationY: -max * 0.35, rotationX: max * 0.25, duration: 3.8, ease: 'sine.inOut' });
       }
     },
   };
@@ -276,7 +352,7 @@
     const demoCed = '12345678';
     const demoName = 'María Fernanda Pérez';
     const demoEmail = 'maria.perez@estudiante.com';
-    const demoAreas = 'Salud, Bienestar Social, Emprendimiento';
+    const demoAreas = 'Emprendimiento, Oficio, Servicio Comunitario';
     let demoUser = users.find(u => u.cedula === demoCed);
     const demoPassHash = await hashPass(demoCed, '123456');
 
@@ -302,11 +378,20 @@
         id: uid(),
         cedula: demoCed,
         nombre: demoName,
-        curso: 'Primeros Auxilios Comunitarios (Salud)',
-        area: 'Salud',
+        curso: 'Formación Comunitaria Chacao (Servicio Comunitario)',
+        area: 'Servicio Comunitario',
         mes: now.getMonth() + 1,
         anio: now.getFullYear(),
         creado: Date.now() - 86400000,
+      }, {
+        id: uid(),
+        cedula: demoCed,
+        nombre: demoName,
+        curso: 'Taller de Oficio y Capacitación Técnica (Oficio)',
+        area: 'Oficio',
+        mes: now.getMonth() + 1,
+        anio: now.getFullYear(),
+        creado: Date.now() - 43200000,
       }, {
         id: uid(),
         cedula: demoCed,
@@ -624,90 +709,107 @@
       .from('.auth-steps li', { y: 14, opacity: 0, duration: .8, stagger: .08 }, 1.2)
       .from('.auth-institution', { opacity: 0, duration: .9 }, 1.3);
 
-    // Movimiento continuo: la roseta gira y una banda gira en sentido contrario
-    G.to('#rosette', { rotation: 360, duration: 260, repeat: -1, ease: 'none' });
-    G.to('#rosette .band-2', { rotation: -360, svgOrigin: '0 0', duration: 180, repeat: -1, ease: 'none' });
+    // Movimiento continuo hipnótico: la roseta gira elegantemente y la banda interior en sentido opuesto
+    G.to('#rosette', { rotation: 360, duration: 90, repeat: -1, ease: 'none', transformOrigin: '50% 50%' });
+    G.to('#rosette .band-2', { rotation: -360, svgOrigin: '0 0', duration: 60, repeat: -1, ease: 'none' });
     // Brillo que recorre la palabra dorada
     G.to('#auth-headline em .w > span', { backgroundPosition: '-150% 0', duration: 7, repeat: -1, ease: 'none' });
 
-    // Luz dorada y roseta que reacciona al cursor en PC y al giroscopio/movimiento en celular
+    // Luz dinámica y roseta reactiva a cursor en PC, tacto continuo y movimiento físico del celular
     const auth = $('#auth');
-    const spot = { x: auth.clientWidth * .74, y: auth.clientHeight * .5 };
+    const isMobile = window.innerWidth <= 1000;
+    const spot = {
+      x: isMobile ? auth.clientWidth * 0.5 : auth.clientWidth * 0.74,
+      y: isMobile ? auth.clientHeight * 0.38 : auth.clientHeight * 0.5
+    };
     const paint = () => {
       auth.style.setProperty('--mx', `${spot.x}px`);
       auth.style.setProperty('--my', `${spot.y}px`);
     };
+    paint();
 
-    const qx = G.quickTo(spot, 'x', { duration: 1, ease: 'power3', onUpdate: paint });
-    const qy = G.quickTo(spot, 'y', { duration: 1, ease: 'power3', onUpdate: paint });
-    const rx = G.quickTo('#rosette', 'x', { duration: 1.6, ease: 'power3' });
-    const ry = G.quickTo('#rosette', 'y', { duration: 1.6, ease: 'power3' });
+    const qx = G.quickTo(spot, 'x', { duration: 0.8, ease: 'power3', onUpdate: paint });
+    const qy = G.quickTo(spot, 'y', { duration: 0.8, ease: 'power3', onUpdate: paint });
+    const rx = G.quickTo('#rosette', 'x', { duration: 1.4, ease: 'power3' });
+    const ry = G.quickTo('#rosette', 'y', { duration: 1.4, ease: 'power3' });
 
-    if (canHover) {
-      auth.addEventListener('pointermove', e => {
+    // 1. Escritorio con mouse: seguimiento fluido del cursor
+    auth.addEventListener('pointermove', e => {
+      if (e.pointerType === 'mouse' || canHover) {
         const r = auth.getBoundingClientRect();
-        qx(e.clientX - r.left);
-        qy(e.clientY - r.top);
-        rx(((e.clientX - r.left) / r.width - .5) * -30);
-        ry(((e.clientY - r.top) / r.height - .5) * -30);
-      });
-      fx.tilt($('.auth-card'), 5);
-    } else {
-      // Reacción al mover el celular (Giroscopio / Acelerómetro)
-      let hasOrientation = false;
-      const handleOrientation = e => {
-        if (e.gamma == null || e.beta == null) return;
-        hasOrientation = true;
-        const normX = Math.max(-1, Math.min(1, e.gamma / 35));
-        const normY = Math.max(-1, Math.min(1, (e.beta - 40) / 35));
-        
-        // Mueve el foco de luz dinámico según el ángulo del teléfono
-        const targetX = auth.clientWidth * (0.5 + normX * 0.4);
-        const targetY = auth.clientHeight * (0.5 + normY * 0.4);
-        qx(targetX);
-        qy(targetY);
-        rx(normX * -25);
-        ry(normY * -25);
-      };
-
-      if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+        const px = e.clientX - r.left;
+        const py = e.clientY - r.top;
+        qx(px);
+        qy(py);
+        rx(((px / r.width) - .5) * -34);
+        ry(((py / r.height) - .5) * -34);
       }
+    });
 
-      // Animación suave de fondo por si el dispositivo no tiene giroscopio o está sobre una mesa
-      G.to(spot, {
-        x: () => auth.clientWidth * .35,
-        y: () => auth.clientHeight * .65,
-        duration: 6,
-        repeat: -1,
-        yoyo: true,
+    // 2. Interacción táctil en celulares: al tocar o arrastrar el dedo en cualquier punto de la pantalla
+    let touchInteracting = false;
+    const handleTouchSpot = e => {
+      const t = e.touches ? e.touches[0] : e;
+      if (!t) return;
+      touchInteracting = true;
+      const r = auth.getBoundingClientRect();
+      const px = t.clientX - r.left;
+      const py = t.clientY - r.top;
+      qx(px);
+      qy(py);
+      rx(((px / r.width) - .5) * -28);
+      ry(((py / r.height) - .5) * -28);
+    };
+
+    auth.addEventListener('touchstart', handleTouchSpot, { passive: true });
+    auth.addEventListener('touchmove', handleTouchSpot, { passive: true });
+    auth.addEventListener('touchend', () => { touchInteracting = false; }, { passive: true });
+
+    // 3. Reacción a la inclinación del teléfono (giroscopio y acelerómetro)
+    Motion.subscribe((roll, pitch) => {
+      if (touchInteracting) return;
+      const targetX = auth.clientWidth * (0.5 + roll * 0.42);
+      const targetY = auth.clientHeight * (isMobile ? 0.38 : 0.5 + pitch * 0.35);
+      qx(targetX);
+      qy(targetY);
+      rx(roll * -30);
+      ry(pitch * -24);
+    });
+
+    // 4. Parallax con scroll en celular
+    window.addEventListener('scroll', () => {
+      if (touchInteracting || Motion.hasSensor) return;
+      const sy = window.scrollY || window.pageYOffset;
+      ry(sy * -0.15);
+    }, { passive: true });
+
+    // 5. Animación ambiental flotante por si el teléfono está inmóvil
+    G.timeline({ repeat: -1, yoyo: true })
+      .to(spot, {
+        x: () => auth.clientWidth * (isMobile ? 0.38 : 0.62),
+        y: () => auth.clientHeight * (isMobile ? 0.44 : 0.58),
+        duration: 5.5,
         ease: 'sine.inOut',
-        onUpdate: () => { if (!hasOrientation) paint(); }
+        onUpdate: () => {
+          if (!touchInteracting && !Motion.hasSensor) paint();
+        }
       });
 
-      // Efecto 3D de la tarjeta con movimiento del teléfono
-      fx.tilt($('.auth-card'), 6);
-
-      // Reacción táctil: al deslizar el dedo por la pantalla en móvil también mueve la luz
-      auth.addEventListener('touchmove', e => {
-        if (!e.touches.length) return;
-        const t = e.touches[0];
-        const r = auth.getBoundingClientRect();
-        qx(t.clientX - r.left);
-        qy(t.clientY - r.top);
-      }, { passive: true });
-    }
+    // Tilt 3D reactivo en la tarjeta de autenticación
+    fx.tilt($('.auth-card'), isMobile ? 8 : 6);
   }
 
   // Transición al entrar: la roseta se expande y la pantalla se abre en círculo
   const AUTH_FX = ['#auth', '#rosette', '.auth-card', '.auth-left > *', '.auth-top > *', '.auth-steps li', '.auth-institution'];
   function authExit() {
     if (!G) return Promise.resolve();
+    const isMobile = window.innerWidth <= 1000;
+    const center = isMobile ? '50% 40%' : '74% 50%';
     return G.timeline()
       .to('.auth-card', { y: -30, opacity: 0, scale: .97, duration: .55, ease: 'power3.in' }, 0)
       .to(['.auth-left > *', '.auth-top > *', '.auth-steps li'], { y: -24, opacity: 0, duration: .5, stagger: .03, ease: 'power3.in' }, 0)
       .to('#rosette', { scale: 2.6, opacity: 0, duration: 1.2, ease: 'expo.in' }, .1)
-      .fromTo('#auth', { clipPath: 'circle(150% at 74% 50%)' }, { clipPath: 'circle(0% at 74% 50%)', duration: .9, ease: 'expo.inOut' }, .55);
+      .fromTo('#auth', { clipPath: `circle(150% at ${center})` }, { clipPath: `circle(0% at ${center})`, duration: .9, ease: 'expo.inOut' }, .55);
   }
   function resetAuthFx() {
     if (G) G.set(AUTH_FX, { clearProps: 'opacity,scale,y,clipPath' });

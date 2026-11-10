@@ -67,7 +67,7 @@
       </div>
       <p class="eyebrow">Certificación digital</p>
       <h1 class="display" id="auth-headline">Tu servicio, <em>certificado.</em></h1>
-      <p class="auth-lead">Consulta y descarga tus certificados oficiales del Servicio Comunitario emitidos por la Dirección de Desarrollo y Apoyo Social.</p>
+      <p class="auth-lead">Cursos de emprendimiento, cursos de oficio y cursos de servicio comunitario.</p>
 
       <div class="auth-programs">
         <span class="auth-programs-label">Programas de Formación Comunitaria</span>
@@ -143,16 +143,17 @@
           <input name="email" type="email" autocomplete="email" placeholder="ejemplo@correo.com" required>
         </label>
         <label class="field">
-          <span>Área(s) de Servicio Comunitario <em class="muted">(escritas, pueden ser varias)</em></span>
-          <input name="areas" id="reg-areas" placeholder="Ej: Salud, Bienestar Social, Emprendimiento" required autocomplete="off">
+          <span>Área(s) de Capacitación y Servicio <em class="muted">(escritas, pueden ser varias)</em></span>
+          <input name="areas" id="reg-areas" placeholder="Ej: Emprendimiento, Oficio, Servicio Comunitario, Salud" required autocomplete="off">
           <div class="area-tag-chips" id="reg-area-chips">
-            <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
-            <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
             <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
+            <button type="button" class="area-chip" data-tag="Oficio">+ Oficio</button>
+            <button type="button" class="area-chip" data-tag="Servicio Comunitario">+ Servicio Comunitario</button>
+            <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
+            <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
             <button type="button" class="area-chip" data-tag="Educación">+ Educación</button>
             <button type="button" class="area-chip" data-tag="Ambiente">+ Ambiente</button>
             <button type="button" class="area-chip" data-tag="Deportes">+ Deportes</button>
-            <button type="button" class="area-chip" data-tag="Atención Ciudadana">+ Atención</button>
           </div>
           <p class="form-hint small">Escribe tus áreas o pulsa las sugerencias para agregarlas separadas por coma.</p>
         </label>
@@ -232,7 +233,7 @@
         <div>
           <p class="eyebrow">Mi espacio</p>
           <h2>Hola, <em id="hello-name"></em></h2>
-          <p class="lead">Aquí están tus certificados oficiales y puedes generar nuevos certificados según tus áreas de servicio comunitario.</p>
+          <p class="lead">Aquí están tus certificados oficiales en emprendimiento, oficio y servicio comunitario, y puedes generar nuevos certificados según tus áreas realizadas.</p>
         </div>
         <div class="stats">
           <div class="stat"><strong id="mis-count">0</strong><span>Certificados</span></div>
@@ -256,8 +257,8 @@
           </div>
         </div>
         <div class="banner-info">
-          <h4>Certificación Oficial de Servicio Comunitario</h4>
-          <p>Documentos emitidos por la <strong>Alcaldía del Municipio Chacao</strong> a través de la <strong>Dirección de Desarrollo y Apoyo Social</strong>, válidos para trámites académicos y comunitarios.</p>
+          <h4>Certificación Oficial en Emprendimiento, Oficio y Servicio Comunitario</h4>
+          <p>Documentos emitidos por la <strong>Alcaldía del Municipio Chacao</strong> a través de la <strong>Dirección de Desarrollo y Apoyo Social</strong>, válidos para trámites académicos, laborales y comunitarios.</p>
         </div>
       </div>
 
@@ -780,16 +781,17 @@
     <form id="form-edit-areas" class="form modal-body" novalidate>
       <input type="hidden" name="cedula" id="mea-cedula">
       <label class="field">
-        <span>Área(s) de Servicio Comunitario (escritas)</span>
-        <input name="areas" id="mea-areas" placeholder="Ej: Salud, Bienestar Social, Emprendimiento" required autocomplete="off">
+        <span>Área(s) de Capacitación y Servicio (escritas)</span>
+        <input name="areas" id="mea-areas" placeholder="Ej: Emprendimiento, Oficio, Servicio Comunitario, Salud" required autocomplete="off">
         <div class="area-tag-chips" id="mea-chips">
-          <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
-          <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
           <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
+          <button type="button" class="area-chip" data-tag="Oficio">+ Oficio</button>
+          <button type="button" class="area-chip" data-tag="Servicio Comunitario">+ Servicio Comunitario</button>
+          <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
+          <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
           <button type="button" class="area-chip" data-tag="Educación">+ Educación</button>
           <button type="button" class="area-chip" data-tag="Ambiente">+ Ambiente</button>
           <button type="button" class="area-chip" data-tag="Deportes">+ Deportes</button>
-          <button type="button" class="area-chip" data-tag="Atención Ciudadana">+ Atención</button>
         </div>
         <p class="form-hint small">Puedes escribir cualquier área libremente o hacer clic en las sugerencias.</p>
       </label>
