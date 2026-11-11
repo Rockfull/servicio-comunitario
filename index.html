@@ -6,7 +6,7 @@
   <title>Portal de Certificados</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Sora:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -143,19 +143,19 @@
           <input name="email" type="email" autocomplete="email" placeholder="ejemplo@correo.com" required>
         </label>
         <label class="field">
-          <span>Área(s) de Capacitación y Servicio <em class="muted">(escritas, pueden ser varias)</em></span>
-          <input name="areas" id="reg-areas" placeholder="Ej: Emprendimiento, Oficio, Servicio Comunitario, Salud" required autocomplete="off">
+          <span>Taller(es) o Área(s) que realizaste <em class="muted">(uno o varios separados por coma)</em></span>
+          <input name="areas" id="reg-areas" placeholder="Ej: Marketing Digital, Emprendimiento, Servicio Comunitario" required autocomplete="off">
           <div class="area-tag-chips" id="reg-area-chips">
             <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
             <button type="button" class="area-chip" data-tag="Oficio">+ Oficio</button>
             <button type="button" class="area-chip" data-tag="Servicio Comunitario">+ Servicio Comunitario</button>
+            <button type="button" class="area-chip" data-tag="Marketing Digital">+ Marketing Digital</button>
+            <button type="button" class="area-chip" data-tag="Finanzas para Emprendedores">+ Finanzas</button>
+            <button type="button" class="area-chip" data-tag="Barbería y Oficios">+ Barbería y Oficios</button>
+            <button type="button" class="area-chip" data-tag="Repostería">+ Repostería</button>
             <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
-            <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
-            <button type="button" class="area-chip" data-tag="Educación">+ Educación</button>
-            <button type="button" class="area-chip" data-tag="Ambiente">+ Ambiente</button>
-            <button type="button" class="area-chip" data-tag="Deportes">+ Deportes</button>
           </div>
-          <p class="form-hint small">Escribe tus áreas o pulsa las sugerencias para agregarlas separadas por coma.</p>
+          <p class="form-hint small">Escribe el taller que hiciste o pulsa las sugerencias; tus certificados se prepararán con estos datos.</p>
         </label>
         <div class="grid-2">
           <label class="field"><span>Contraseña</span>
@@ -165,7 +165,7 @@
             <input name="password2" type="password" autocomplete="new-password" required>
           </label>
         </div>
-        <p class="form-hint">Usa la misma cédula con la que hiciste el curso; así tus certificados aparecerán solos.</p>
+        <p class="form-hint">Al registrarte con tu cédula y taller, solo falta que el administrador te habilite. Al descargarlo saldrá con tus datos y la fecha del día de descarga.</p>
         <p class="form-error" aria-live="polite"></p>
         <button class="btn btn-primary btn-block" type="submit">Crear cuenta
           <svg class="i arrow"><use href="#i-arrow"/></svg>
@@ -177,9 +177,9 @@
 
   <footer class="auth-bottom">
     <ol class="auth-steps">
-      <li><span>01</span>Regístrate con tu cédula</li>
-      <li><span>02</span>Encuentra tus certificados</li>
-      <li><span>03</span>Descárgalos en PDF</li>
+      <li><span>01</span>Regístrate con tu taller</li>
+      <li><span>02</span>El admin lo habilita</li>
+      <li><span>03</span>Descárgalo con fecha de hoy</li>
     </ol>
     <div class="auth-institution">
       <span>Alcaldía del Municipio Chacao · Dirección de Desarrollo y Apoyo Social</span>
@@ -206,9 +206,8 @@
         <nav class="nav-links">
           <span class="nav-indicator" aria-hidden="true"></span>
           <a href="#" class="nav-link user-only" data-view="mis"><svg class="i"><use href="#i-file"/></svg><span>Mis certificados</span></a>
-          <a href="#" class="nav-link admin-only" data-view="emitir"><svg class="i"><use href="#i-pen"/></svg><span>Emitir</span></a>
+          <a href="#" class="nav-link admin-only" data-view="usuarios"><svg class="i"><use href="#i-check"/></svg><span>Habilitar</span><span class="nav-pending-badge hidden" id="nav-pending-badge">0</span></a>
           <a href="#" class="nav-link admin-only" data-view="lista"><svg class="i"><use href="#i-list"/></svg><span>Certificados</span></a>
-          <a href="#" class="nav-link admin-only" data-view="usuarios"><svg class="i"><use href="#i-users"/></svg><span>Usuarios</span></a>
           <a href="#" class="nav-link admin-only" data-view="config"><svg class="i"><use href="#i-layout"/></svg><span>Diseño</span></a>
         </nav>
         <div class="nav-user">
@@ -233,10 +232,11 @@
         <div>
           <p class="eyebrow">Mi espacio</p>
           <h2>Hola, <em id="hello-name"></em></h2>
-          <p class="lead">Aquí están tus certificados oficiales en emprendimiento, oficio y servicio comunitario, y puedes generar nuevos certificados según tus áreas realizadas.</p>
+          <p class="lead">Aquí se generan automáticamente tus certificados con tus datos de registro (nombre, cédula y taller) y salen con la fecha del día en que los descargues.</p>
         </div>
         <div class="stats">
-          <div class="stat"><strong id="mis-count">0</strong><span>Certificados</span></div>
+          <div class="stat"><strong id="mis-count">0</strong><span>Habilitados</span></div>
+          <div class="stat"><strong id="mis-pending-count">0</strong><span>Pendientes</span></div>
         </div>
       </div>
 
@@ -262,166 +262,98 @@
         </div>
       </div>
 
-      <!-- Barra de Áreas Asignadas al Usuario -->
+      <!-- Datos de Registro y Talleres del Usuario -->
       <div class="user-profile-bar">
         <div class="user-areas-info">
-          <span class="user-areas-label"><svg class="i"><use href="#i-shield"/></svg>Tus áreas registradas:</span>
+          <span class="user-areas-label"><svg class="i"><use href="#i-shield"/></svg>Tus talleres registrados:</span>
           <div class="user-areas-list" id="mis-areas-list">
             <!-- Badges renderizados dinámicamente -->
           </div>
         </div>
         <button type="button" class="btn btn-sm btn-light" id="btn-editar-mis-areas">
-          <svg class="i"><use href="#i-pen"/></svg>Modificar mis áreas
+          <svg class="i"><use href="#i-pen"/></svg>Agregar / editar mis talleres
         </button>
       </div>
 
-      <!-- Generador de Certificados por Área -->
-      <div class="card cert-generator-card">
-        <div class="generator-header">
+      <!-- Registro rápido de nuevo taller realizado (queda pendiente de habilitación por Admin) -->
+      <div class="card cert-solicitar-card">
+        <div class="generator-header" style="margin-bottom:14px;">
           <div class="generator-icon-badge">
             <svg class="i"><use href="#i-award"/></svg>
           </div>
           <div>
-            <h3 class="card-title">Generar Certificado por Área</h3>
-            <p class="muted small">Selecciona una de tus áreas comunitarias y la actividad o motivo realizado para generar y descargar inmediatamente tu certificado oficial.</p>
+            <h3 class="card-title">¿Realizaste otro taller?</h3>
+            <p class="muted small">Agrégalo aquí con tus datos de registro para que la administración pueda habilitar tu certificado.</p>
           </div>
         </div>
-
-        <form id="form-user-generar" class="form generator-form" novalidate>
-          <div class="grid-2">
-            <label class="field">
-              <span>Área de Servicio Comunitario</span>
-              <select name="area" id="sel-user-area" required>
-                <!-- Opciones dinámicas según las áreas registradas del usuario -->
-              </select>
+        <form id="form-user-solicitar" class="form" novalidate>
+          <div class="solicitar-row">
+            <label class="field" style="flex:2;min-width:200px;">
+              <span>Nombre del Taller / Actividad realizada</span>
+              <input name="curso" list="dl-cursos" placeholder="Ej: Marketing Digital y Redes Sociales" required>
             </label>
-            <label class="field">
-              <span>De qué fue el certificado (Actividad / Taller / Proyecto)</span>
-              <input name="curso" placeholder="Ej: Jornada de Atención Social Comunitaria" required>
+            <label class="field" style="flex:0 0 130px;">
+              <span>Horas</span>
+              <input name="horas" type="number" min="1" max="500" value="5" class="in-horas">
             </label>
-          </div>
-          <div class="grid-2">
-            <label class="field">
-              <span>Mes de culminación</span>
-              <select name="mes" class="sel-mes"></select>
-            </label>
-            <label class="field">
-              <span>Año</span>
-              <input name="anio" type="number" min="2000" max="2100" class="in-anio" required>
-            </label>
-          </div>
-          <div class="generator-footer">
-            <button class="btn btn-primary" type="submit">
-              <svg class="i"><use href="#i-check"/></svg>Generar y Obtener Certificado
+            <button class="btn btn-primary" type="submit" style="align-self:flex-end;">
+              <svg class="i"><use href="#i-plus"/></svg>Registrar taller
             </button>
-            <span class="muted small">El certificado se emitirá con tu nombre, cédula, fecha y el modelo oficial activo.</span>
           </div>
         </form>
       </div>
 
       <div class="section-title-row">
-        <h3 class="section-heading">Tus Certificados Emitidos</h3>
+        <h3 class="section-heading">Tus Certificados Habilitados</h3>
       </div>
       <div id="mis-grid" class="cert-grid"></div>
+
+      <div id="mis-pendientes-section" class="hidden" style="margin-top:38px;">
+        <div class="section-title-row">
+          <h3 class="section-heading">En Espera de Habilitación por Administración</h3>
+        </div>
+        <div id="mis-pendientes-grid" class="cert-grid"></div>
+      </div>
     </section>
 
-    <!-- ===== Admin: emitir ===== -->
-    <section id="view-emitir" class="view hidden">
-      <div class="page-head">
-        <div>
-          <p class="eyebrow">Administración</p>
-          <h2>Emitir <em>certificados</em></h2>
-          <p class="lead">Escribe los datos y el certificado se genera automáticamente con el diseño configurado.</p>
-        </div>
-        <div class="stats">
-          <div class="stat"><strong id="st-users">0</strong><span>Registrados</span></div>
-          <div class="stat"><strong id="st-certs">0</strong><span>Certificados</span></div>
-          <div class="stat"><strong id="st-cursos">0</strong><span>Cursos</span></div>
-        </div>
-      </div>
-
-      <div class="split">
-        <div class="stack reveal">
-          <form id="form-emitir" class="card form" novalidate>
-            <h3 class="card-title"><span class="num">01</span>Un certificado</h3>
-            <div class="grid-2">
-              <label class="field"><span>Cédula</span>
-                <input name="cedula" list="dl-cedulas" inputmode="numeric" placeholder="12345678" required>
-              </label>
-              <label class="field"><span>Nombre en el certificado</span>
-                <input name="nombre" placeholder="Nombre y apellido" required>
-              </label>
-            </div>
-            <label class="field"><span>Curso</span>
-              <input name="curso" list="dl-cursos" placeholder="Ej: Primeros auxilios comunitarios" required>
-            </label>
-            <div class="grid-2">
-              <label class="field"><span>Mes</span><select name="mes" class="sel-mes"></select></label>
-              <label class="field"><span>Año</span><input name="anio" type="number" min="2000" max="2100" class="in-anio" required></label>
-            </div>
-            <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Emitir certificado</button>
-          </form>
-
-          <form id="form-lote" class="card form" novalidate>
-            <h3 class="card-title"><span class="num">02</span>Varios a la vez <span class="badge">Un curso completo</span></h3>
-            <label class="field"><span>Curso</span>
-              <input name="curso" list="dl-cursos" placeholder="Ej: Primeros auxilios comunitarios" required>
-            </label>
-            <div class="grid-2">
-              <label class="field"><span>Mes</span><select name="mes" class="sel-mes"></select></label>
-              <label class="field"><span>Año</span><input name="anio" type="number" min="2000" max="2100" class="in-anio" required></label>
-            </div>
-            <label class="field"><span>Participantes <em>— una persona por línea: cédula, nombre</em></span>
-              <textarea name="lista" rows="7" placeholder="12345678, María Pérez&#10;23456789, José Rodríguez&#10;34567890, Ana Gómez"></textarea>
-            </label>
-            <div class="lote-tools">
-              <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Cargar CSV
-                <input type="file" id="in-csv" accept=".csv,.txt,text/csv,text/plain" hidden>
-              </label>
-              <span class="muted small" id="lote-info">También puedes copiar y pegar las dos columnas desde Excel.</span>
-            </div>
-            <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Emitir certificados</button>
-          </form>
-        </div>
-
-        <aside class="card sticky reveal">
-          <h3 class="card-title">Vista previa</h3>
-          <div class="cert-frame" id="emitir-preview"></div>
-          <p class="muted small">Así lo verá el participante al iniciar sesión.</p>
-        </aside>
-      </div>
-      <datalist id="dl-cedulas"></datalist>
-      <datalist id="dl-cursos"></datalist>
-    </section>
+    <datalist id="dl-cursos"></datalist>
 
     <!-- ===== Admin: lista de certificados ===== -->
     <section id="view-lista" class="view hidden">
       <div class="page-head">
         <div>
           <p class="eyebrow">Administración</p>
-          <h2>Certificados <em>emitidos</em></h2>
+          <h2>Certificados <em>del portal</em></h2>
           <p class="lead" id="lista-count"></p>
         </div>
-        <input id="lista-buscar" class="search" type="search" placeholder="Buscar por cédula, nombre o curso…">
+        <input id="lista-buscar" class="search" type="search" placeholder="Buscar por cédula, nombre o taller…">
       </div>
       <div class="card no-pad reveal">
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Cédula</th><th>Nombre</th><th>Curso</th><th>Fecha</th><th></th></tr></thead>
+            <thead><tr><th>Cédula</th><th>Nombre</th><th>Taller / Curso</th><th>Fecha de descarga</th><th>Estado</th><th></th></tr></thead>
             <tbody id="lista-body"></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- ===== Admin: usuarios ===== -->
+    <!-- ===== Admin: habilitación de usuarios ===== -->
     <section id="view-usuarios" class="view hidden">
       <div class="page-head">
         <div>
           <p class="eyebrow">Administración</p>
-          <h2>Control de <em>Usuarios</em></h2>
-          <p class="lead">Administra los accesos, asigna o edita las áreas de servicio comunitario y restablece contraseñas si un usuario la olvidó.</p>
+          <h2>Habilitación de <em>Usuarios</em></h2>
+          <p class="lead">No necesitas colocar fechas ni nombres manualmente: solo habilita cada taller realizado y el estudiante lo descargará con sus datos y la fecha de descarga.</p>
         </div>
+        <div class="stats">
+          <div class="stat"><strong id="st-users">0</strong><span>Registrados</span></div>
+          <div class="stat"><strong id="st-pendientes">0</strong><span>Por habilitar</span></div>
+          <div class="stat"><strong id="st-certs">0</strong><span>Habilitados</span></div>
+        </div>
+      </div>
+      <div class="users-toolbar reveal">
+        <input id="usuarios-buscar" class="search" type="search" placeholder="Buscar por cédula, nombre, correo o taller…">
       </div>
       <div class="card no-pad reveal">
         <div class="table-wrap">
@@ -431,8 +363,8 @@
                 <th>Cédula</th>
                 <th>Nombre y Apellido</th>
                 <th>Correo</th>
-                <th>Área(s) de Servicio</th>
-                <th>Certificados</th>
+                <th>Talleres y Estado</th>
+                <th>Habilitación</th>
                 <th>Fecha Registro</th>
                 <th>Acciones</th>
               </tr>
@@ -456,47 +388,132 @@
       <div class="split">
         <form id="form-config" class="card form reveal" novalidate>
           <div class="tpl-box">
-            <h3 class="card-title">Modelo Genérico de Certificado <span class="badge">PDF o Imagen</span></h3>
-            <p class="muted small">Sube el PDF base o genérico de tu institución. Sobre este modelo se estamparán dinámicamente las variables de cada persona.</p>
+            <h3 class="card-title">1. Elige el modelo de certificado <span class="badge">Modelos Oficiales 2025-2026</span></h3>
+            <p class="muted small">Selecciona uno de los dos modelos institucionales de Chacao Emprende listos para usar, o sube tu propio archivo PDF/Imagen.</p>
             
+            <div class="model-picker-grid" id="model-picker-grid">
+              <div class="model-picker-card active" data-modelo="emprende1">
+                <span class="model-badge-active">Activo</span>
+                <div class="model-picker-thumb">
+                  <img src="assets/modelo-emprende-1.png" alt="Modelo 1 Chacao Emprende">
+                </div>
+                <div class="model-picker-title">Modelo 1 · Chacao Emprende</div>
+                <div class="model-picker-sub">Fecha abajo · Firmas institucionales</div>
+              </div>
+
+              <div class="model-picker-card" data-modelo="emprende2">
+                <span class="model-badge-active">Activo</span>
+                <div class="model-picker-thumb">
+                  <img src="assets/modelo-emprende-2.png" alt="Modelo 2 Convenio UCV">
+                </div>
+                <div class="model-picker-title">Modelo 2 · Convenio UCV / FaCES</div>
+                <div class="model-picker-sub">Fecha arriba · Logos UCV en base</div>
+              </div>
+
+              <div class="model-picker-card" data-modelo="digital">
+                <span class="model-badge-active">Activo</span>
+                <div class="model-picker-thumb model-picker-thumb--digital">
+                  <div class="digital-mini-preview">
+                    <span>✦ CHACAO DIGITAL ✦</span>
+                  </div>
+                </div>
+                <div class="model-picker-title">Diseño Digital Clásico</div>
+                <div class="model-picker-sub">Marco, logos e institución editables</div>
+              </div>
+
+              <div class="model-picker-card hidden" id="model-picker-custom" data-modelo="custom">
+                <span class="model-badge-active">Activo</span>
+                <div class="model-picker-thumb">
+                  <img id="model-custom-thumb" src="" alt="Nuevo modelo PDF subido">
+                </div>
+                <div class="model-picker-title">Tu Modelo PDF Subido</div>
+                <div class="model-picker-sub">Activado y adaptado automáticamente</div>
+              </div>
+            </div>
+
             <div class="generic-vars-card">
-              <span class="gvar-label">Variables que se reemplazan automáticamente:</span>
+              <span class="gvar-label">Adaptación automática e inteligente a cualquier participante:</span>
               <ul class="gvar-list">
-                <li><span class="gvar-tag">{{nombre}}</span> <strong>Nombre y Apellido</strong> del participante</li>
-                <li><span class="gvar-tag">{{curso}}</span> <strong>De qué fue el certificado</strong> (actividad, taller, área)</li>
-                <li><span class="gvar-tag">{{fecha}}</span> <strong>Mes y Año</strong> de culminación</li>
-                <li><span class="gvar-tag">{{cedula}}</span> <strong>Cédula de Identidad</strong> (C.I.)</li>
+                <li><span class="gvar-tag">{{nombre}}</span> <strong>Nombre y Apellido</strong> de cualquier usuario registrado o emitido</li>
+                <li><span class="gvar-tag">{{cedula}}</span> <strong>Cédula de Identidad</strong> formateada con puntos (C.I. V-...)</li>
+                <li><span class="gvar-tag">{{curso}}</span> <strong>Nombre del taller</strong> con su duración en horas</li>
+                <li><span class="gvar-tag">{{fecha}}</span> <strong>Día, mes y año</strong> automático del día en que el estudiante descarga el certificado</li>
               </ul>
-              <p class="muted small" style="margin-top: 8px;">Si tu PDF ya tiene estos textos escritos, el sistema detecta sus coordenadas de forma automática. Si no, puedes arrastrar cada campo a su posición.</p>
             </div>
 
             <div class="row">
-              <label class="btn btn-light btn-file"><svg class="i"><use href="#i-image"/></svg>Subir modelo genérico (PDF o imagen)
+              <label class="btn btn-primary btn-file"><svg class="i"><use href="#i-upload"/></svg>Subir nuevo modelo PDF o imagen
                 <input type="file" id="in-plantilla" accept="application/pdf,image/*" hidden>
               </label>
-              <button type="button" class="btn btn-danger hidden" id="btn-quitar-plantilla"><svg class="i"><use href="#i-trash"/></svg>Quitar modelo</button>
+              <button type="button" class="btn btn-danger hidden" id="btn-quitar-plantilla"><svg class="i"><use href="#i-trash"/></svg>Restablecer al oficial</button>
+            </div>
+            <p class="form-hint small" style="margin: 8px 0 0;">Con solo subir tu nuevo PDF se adapta a nombre, cédula, taller y fecha, y queda activo automáticamente.</p>
+
+            <!-- Selector de página para PDFs multipágina subidos -->
+            <div id="pdf-page-selector" class="pdf-page-selector hidden">
+              <div>
+                <strong>Páginas del documento:</strong>
+                <span class="muted small" id="pdf-page-info">Selecciona cuál página deseas usar como modelo:</span>
+              </div>
+              <div class="pdf-page-tabs" id="pdf-page-tabs"></div>
             </div>
           </div>
 
           <fieldset id="tpl-controls" class="hidden">
-            <legend>Posición y estilo de las variables</legend>
+            <legend>Posición y estilo de los campos editables</legend>
+            <p class="muted small" style="margin-top:-6px;margin-bottom:12px;">Haz clic en el campo que deseas ajustar, o arrástralo directamente sobre el certificado a la derecha:</p>
             <div class="campo-chips" id="campo-chips">
-              <button type="button" class="campo-chip" data-campo="nombre">Nombre y Apellido</button>
-              <button type="button" class="campo-chip" data-campo="curso">De qué fue (Curso/Área)</button>
-              <button type="button" class="campo-chip" data-campo="fecha">Mes y Año</button>
-              <button type="button" class="campo-chip" data-campo="cedula">Cédula</button>
+              <button type="button" class="campo-chip" data-campo="nombre">👤 Nombre y Apellido</button>
+              <button type="button" class="campo-chip" data-campo="cedula">🪪 Cédula</button>
+              <button type="button" class="campo-chip" data-campo="curso">🎓 Taller y Horas</button>
+              <button type="button" class="campo-chip" data-campo="fecha">📅 Día, Mes y Año</button>
+              <button type="button" class="campo-chip" data-campo="intro">📝 Encabezado</button>
             </div>
-            <label class="check"><input type="checkbox" data-f="visible"> Mostrar este dato en el certificado</label>
-            <div class="grid-2">
-              <label class="field"><span>Tamaño de letra <output data-out="size"></output></span><input type="range" data-f="size" min="8" max="130" step="1"></label>
+
+            <label class="check" style="margin-top:12px;"><input type="checkbox" data-f="visible"> Mostrar este dato en el certificado</label>
+
+            <!-- Campo especial para Encabezado (intro) -->
+            <div id="wrap-textoFijo" class="hidden" style="margin-top:8px;">
+              <label class="field">
+                <span>Texto del encabezado <em>— usa **texto** para destacarlo en azul Chacao</em></span>
+                <textarea data-f="textoFijo" rows="3"></textarea>
+              </label>
+            </div>
+
+            <!-- Campo especial para Formato de Fecha -->
+            <div id="wrap-formatoFecha" class="hidden" style="margin-top:8px;">
+              <label class="field">
+                <span>Formato de Día, Mes y Año</span>
+                <select data-f="formatoFecha">
+                  <option value="completo">Día de mes de año (Ej: 10 de noviembre de 2026)</option>
+                  <option value="mes_anio">Solo mes y año (Ej: noviembre de 2026)</option>
+                  <option value="numerico">Numérico (Ej: 10/11/2026)</option>
+                </select>
+              </label>
+            </div>
+
+            <!-- Prefijo y Sufijo contextuales -->
+            <div class="grid-2" id="wrap-afijos" style="margin-top:8px;">
+              <label class="field" id="wrap-prefijo">
+                <span>Texto delante (prefijo)</span>
+                <textarea data-f="prefijo" rows="2" placeholder="Ej: Por su participación en el taller&#10;“ o Chacao,"></textarea>
+              </label>
+              <label class="field" id="wrap-sufijo">
+                <span>Texto después (sufijo) <em>— usa {horas} para duración</em></span>
+                <textarea data-f="sufijo" rows="2" placeholder="Ej: ” con una duración de ({horas}) horas"></textarea>
+              </label>
+            </div>
+
+            <div class="grid-2" style="margin-top:8px;">
+              <label class="field"><span>Tamaño de letra <output data-out="size"></output></span><input type="range" data-f="size" min="8" max="140" step="1"></label>
               <label class="field"><span>Ancho máximo <output data-out="ancho"></output></span><input type="range" data-f="ancho" min="10" max="100" step="1"></label>
-              <label class="field"><span>Letra</span>
+              <label class="field"><span>Tipo de letra</span>
                 <select data-f="fuente">
-                  <option value="script">Manuscrita</option>
+                  <option value="sans">Moderna Negrita (Geist / Sans-serif)</option>
+                  <option value="arial">Arial / Trebuchet</option>
                   <option value="serif">Clásica (Playfair)</option>
                   <option value="times">Times New Roman</option>
-                  <option value="sans">Moderna (Geist)</option>
-                  <option value="arial">Arial</option>
+                  <option value="script">Manuscrita (Elegante)</option>
                 </select>
               </label>
               <label class="field"><span>Alineación</span>
@@ -506,16 +523,15 @@
                   <option value="right">Derecha</option>
                 </select>
               </label>
-              <label class="field"><span>Color</span><input type="color" data-f="color"></label>
-              <label class="field"><span>Texto delante <em>— opcional</em></span><input data-f="prefijo" placeholder="Ej: C.I. o Caracas,"></label>
+              <label class="field"><span>Color del texto</span><input type="color" data-f="color"></label>
             </div>
             <label class="check"><input type="checkbox" data-f="mayus"> Escribir en MAYÚSCULAS</label>
-            <label class="check"><input type="checkbox" data-f="tapar"> Tapar lo que el modelo tiene debajo <em class="muted small">(para modelos con un texto de ejemplo)</em></label>
+            <label class="check"><input type="checkbox" data-f="tapar"> Tapar lo que el modelo tiene debajo <em class="muted small">(por si tu PDF subido tenía texto preescrito)</em></label>
             <label class="field" id="campo-parche"><span>Alto de la zona tapada <output data-out="taparEscala"></output></span><input type="range" data-f="taparEscala" min="60" max="400" step="10"></label>
           </fieldset>
 
           <fieldset id="default-controls">
-            <legend>Diseño incluido</legend>
+            <legend>Diseño clásico personalizable</legend>
             <div class="field">
               <span>Logos institucionales en el certificado</span>
               <div class="logo-preset-grid" id="logo-presets">
@@ -578,16 +594,56 @@
 
           <div class="row">
             <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Guardar diseño</button>
-            <button type="button" class="btn btn-light" id="btn-restablecer"><svg class="i"><use href="#i-refresh"/></svg>Restablecer textos</button>
+            <button type="button" class="btn btn-light" id="btn-restablecer"><svg class="i"><use href="#i-refresh"/></svg>Restablecer al Modelo 1 Oficial</button>
           </div>
         </form>
 
         <aside class="stack sticky reveal">
           <div class="card">
-            <h3 class="card-title">Vista previa</h3>
+            <h3 class="card-title">Vista previa en tiempo real</h3>
             <div class="cert-frame" id="config-preview"></div>
-            <p class="muted small hidden" id="editor-ayuda">Arrastra cada dato a su lugar. Haz clic en uno para cambiar su letra, tamaño y color.</p>
+            <p class="muted small hidden" id="editor-ayuda">💡 <strong>Interactivo:</strong> Arrastra cualquier dato sobre el certificado para moverlo. Haz clic en cualquiera para cambiar su texto, tamaño, color y formato.</p>
           </div>
+
+          <!-- Tarjeta de prueba y edición rápida de datos en tiempo real -->
+          <div class="card live-test-card" id="card-live-test">
+            <div class="live-test-head">
+              <h4><svg class="i"><use href="#i-pen"/></svg>Probar y Editar Datos en Vivo</h4>
+              <span class="badge">Reacción inmediata</span>
+            </div>
+            <p class="muted small" style="margin-top:-4px;margin-bottom:12px;">Escribe aquí para comprobar al instante cómo se adapta el certificado a cualquier participante y taller:</p>
+            <div class="live-test-grid">
+              <div class="live-test-field">
+                <span>Nombre y Apellido</span>
+                <input id="test-nombre" placeholder="Nombre Apellido">
+              </div>
+              <div class="live-test-field">
+                <span>Cédula de Identidad</span>
+                <input id="test-cedula" placeholder="12345678">
+              </div>
+              <div class="live-test-field" style="grid-column: 1 / -1;">
+                <span>Nombre del Taller</span>
+                <input id="test-curso" placeholder="Nombre taller">
+              </div>
+              <div class="live-test-field">
+                <span>Duración (horas)</span>
+                <input id="test-horas" type="number" min="1" max="500" placeholder="5">
+              </div>
+              <div class="live-test-field">
+                <span>Día</span>
+                <input id="test-dia" type="number" min="1" max="31" placeholder="Día">
+              </div>
+              <div class="live-test-field">
+                <span>Mes</span>
+                <select id="test-mes" class="sel-mes"></select>
+              </div>
+              <div class="live-test-field">
+                <span>Año</span>
+                <input id="test-anio" type="number" min="2000" max="2100" placeholder="Año">
+              </div>
+            </div>
+          </div>
+
           <div class="card">
             <h3 class="card-title">Respaldo de datos</h3>
             <p class="muted small">Los datos se guardan en este navegador. Descarga un respaldo de vez en cuando para no perderlos.</p>
@@ -670,7 +726,7 @@
     </div>
     <div class="modal-body"><div class="cert-frame shadow" id="mc-frame"></div></div>
     <div class="modal-foot">
-      <span class="muted small foot-hint">En la ventana de impresión elige <b>“Guardar como PDF”</b>.</span>
+      <span class="muted small foot-hint">Descarga directa en archivo PDF oficial con tus datos y la fecha de hoy.</span>
       <button class="btn btn-light" data-close>Cerrar</button>
       <button class="btn btn-primary" id="mc-pdf"><svg class="i"><use href="#i-download"/></svg>Descargar PDF</button>
     </div>
@@ -781,22 +837,54 @@
     <form id="form-edit-areas" class="form modal-body" novalidate>
       <input type="hidden" name="cedula" id="mea-cedula">
       <label class="field">
-        <span>Área(s) de Capacitación y Servicio (escritas)</span>
-        <input name="areas" id="mea-areas" placeholder="Ej: Emprendimiento, Oficio, Servicio Comunitario, Salud" required autocomplete="off">
+        <span>Taller(es) o Área(s) realizadas (separadas por coma)</span>
+        <input name="areas" id="mea-areas" placeholder="Ej: Emprendimiento, Marketing Digital, Servicio Comunitario" required autocomplete="off">
         <div class="area-tag-chips" id="mea-chips">
           <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
           <button type="button" class="area-chip" data-tag="Oficio">+ Oficio</button>
           <button type="button" class="area-chip" data-tag="Servicio Comunitario">+ Servicio Comunitario</button>
+          <button type="button" class="area-chip" data-tag="Marketing Digital">+ Marketing Digital</button>
+          <button type="button" class="area-chip" data-tag="Finanzas para Emprendedores">+ Finanzas</button>
+          <button type="button" class="area-chip" data-tag="Barbería y Oficios">+ Barbería y Oficios</button>
+          <button type="button" class="area-chip" data-tag="Repostería">+ Repostería</button>
           <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
-          <button type="button" class="area-chip" data-tag="Salud">+ Salud</button>
-          <button type="button" class="area-chip" data-tag="Educación">+ Educación</button>
-          <button type="button" class="area-chip" data-tag="Ambiente">+ Ambiente</button>
-          <button type="button" class="area-chip" data-tag="Deportes">+ Deportes</button>
         </div>
-        <p class="form-hint small">Puedes escribir cualquier área libremente o hacer clic en las sugerencias.</p>
+        <p class="form-hint small">Los talleres agregados quedarán en espera de habilitación por la administración.</p>
       </label>
       <p class="form-error" aria-live="polite"></p>
-      <button class="btn btn-primary btn-block" type="submit">Guardar Áreas</button>
+      <button class="btn btn-primary btn-block" type="submit">Guardar talleres</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: habilitar certificados de usuario ================= -->
+<div class="modal hidden" id="modal-habilitar-user">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Habilitación por taller</p>
+        <h3 id="mhu-title">Certificados del Participante</h3>
+        <p class="muted small" id="mhu-sub">Solo activa los talleres realizados. El certificado sale con los datos del usuario y la fecha del día de descarga.</p>
+      </div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="form-habilitar-user" class="form modal-body" novalidate>
+      <input type="hidden" id="mhu-cedula">
+      <div id="mhu-list" class="mhu-list"></div>
+
+      <div class="mhu-add-box">
+        <span class="mhu-add-label">¿Agregar otro taller ya habilitado para este usuario?</span>
+        <div class="mhu-add-row">
+          <input id="mhu-new-curso" placeholder="Nombre del nuevo taller (Ej: Oratoria Comunitaria)">
+          <input id="mhu-new-horas" type="number" min="1" max="500" value="5" style="width:90px;" title="Horas">
+          <button type="button" class="btn btn-light btn-sm" id="mhu-btn-add"><svg class="i"><use href="#i-plus"/></svg>Agregar</button>
+        </div>
+      </div>
+
+      <div class="modal-foot" style="padding: 14px 0 0; margin-top: 8px;">
+        <button type="button" class="btn btn-light" id="mhu-enable-all"><svg class="i"><use href="#i-check"/></svg>Habilitar todos</button>
+        <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Guardar cambios</button>
+      </div>
     </form>
   </div>
 </div>

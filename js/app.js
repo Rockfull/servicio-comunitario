@@ -16,7 +16,25 @@
   const ADMIN_CEDULA = 'ADMIN';
   const ADMIN_PASS = 'admin123';
 
+  const MODELO_VERSION = 2;
+  const MODELOS_OFICIALES = {
+    emprende1: {
+      nombre: 'Modelo 1 · Chacao Emprende',
+      plantilla: 'assets/modelo-emprende-1.png',
+      plantillaW: 2199,
+      plantillaH: 1699,
+    },
+    emprende2: {
+      nombre: 'Modelo 2 · Convenio UCV / FaCES',
+      plantilla: 'assets/modelo-emprende-2.png',
+      plantillaW: 2199,
+      plantillaH: 1699,
+    },
+  };
+
   const DEFAULTS = {
+    modeloVersion: MODELO_VERSION,
+    modeloPreset: 'emprende1',
     institucion: 'Alcaldía de Chacao · Dirección de Desarrollo y Apoyo Social',
     titulo: 'Certificado',
     subtitulo: 'de culminación',
@@ -25,21 +43,21 @@
     lugar: 'Chacao, Caracas',
     firma1Nombre: 'Gustavo Duque Sáez',
     firma1Cargo: 'Alcalde del Municipio Chacao',
-    firma2Nombre: 'Dirección de Desarrollo Social',
-    firma2Cargo: 'Desarrollo y Apoyo Social Chacao',
+    firma2Nombre: 'Carlos Luis García Povea',
+    firma2Cargo: 'Director de Desarrollo y Apoyo Social',
     fuenteNombre: 'script',
     mostrarCedula: true,
     logo: '',
     logoPreset: 'duo',
-    plantilla: '',
-    plantillaW: 0,
-    plantillaH: 0,
+    plantilla: MODELOS_OFICIALES.emprende1.plantilla,
+    plantillaW: MODELOS_OFICIALES.emprende1.plantillaW,
+    plantillaH: MODELOS_OFICIALES.emprende1.plantillaH,
     campos: null,
     camposAuto: null,
-    colorTexto: '#004fc8',
+    colorTexto: '#2d4fca',
   };
 
-  const CLAVES_CAMPO = ['nombre', 'cedula', 'curso', 'fecha'];
+  const CLAVES_CAMPO = ['intro', 'nombre', 'cedula', 'curso', 'fecha'];
   const FUENTES = {
     script: "'Great Vibes', cursive",
     serif: "700 1em 'Playfair Display', serif",
@@ -48,26 +66,98 @@
     arial: 'Arial, Helvetica, sans-serif',
   };
 
-  // Posición y estilo inicial de cada dato sobre un modelo (x, y, ancho en % del lienzo)
+  function mkCampo(x, y, ancho, size, fuente, extra = {}) {
+    return {
+      x, y, ancho, size, color: '#232425', fuente, align: 'center',
+      mayus: false, visible: true, prefijo: '', sufijo: '', textoFijo: '',
+      formatoFecha: 'completo', tapar: false, taparColor: '', taparEscala: 100, ...extra,
+    };
+  }
+
+  function camposOficial(presetKey = 'emprende1', k = 1) {
+    const s = n => Math.max(8, Math.round(n * k));
+    const introTexto = 'La Dirección de **Desarrollo y Apoyo Social** de la Alcaldía de Chacao\na través del **Programa Chacao Emprende** otorga el presente certificado a:';
+    if (presetKey === 'emprende2') {
+      return {
+        intro: mkCampo(50, 41.5, 84, s(21), 'sans', { textoFijo: introTexto }),
+        nombre: mkCampo(50, 52.0, 88, s(76), 'sans', { color: '#2d4fca' }),
+        cedula: mkCampo(50, 59.3, 60, s(18), 'sans', { color: '#4b5563', prefijo: 'C.I. ' }),
+        curso: mkCampo(50, 68.0, 84, s(20), 'sans', {
+          prefijo: 'Por su participación en el taller\n“',
+          sufijo: '” con una duración de ({horas}) horas',
+        }),
+        fecha: mkCampo(50, 34.2, 70, s(16), 'arial', { prefijo: 'Chacao, ', formatoFecha: 'completo' }),
+      };
+    }
+    return {
+      intro: mkCampo(50, 38.8, 84, s(21), 'sans', { textoFijo: introTexto }),
+      nombre: mkCampo(50, 51.8, 88, s(76), 'sans', { color: '#2d4fca' }),
+      cedula: mkCampo(50, 59.5, 60, s(18), 'sans', { color: '#4b5563', prefijo: 'C.I. ' }),
+      curso: mkCampo(50, 70.0, 84, s(20), 'sans', {
+        prefijo: 'Por su participación en el taller\n“',
+        sufijo: '” con una duración de ({horas}) horas',
+      }),
+      fecha: mkCampo(50, 93.4, 70, s(16), 'arial', { prefijo: 'Chacao, ', formatoFecha: 'completo' }),
+    };
+  }
+
+  // Posición y estilo inicial de cada dato sobre un modelo genérico (x, y, ancho en % del lienzo)
   function camposBase(s = {}, k = 1) {
     const color = s.colorTexto || DEFAULTS.colorTexto;
-    const yN = s.posNombre ?? 45;
-    const campo = (y, size, fuente, extra = {}) => ({
-      x: 50, y, ancho: 80, size: Math.round(size * k), color, fuente, align: 'center',
-      mayus: false, visible: true, prefijo: '', tapar: false, taparColor: '', taparEscala: 100, ...extra,
-    });
+    const yN = s.posNombre ?? 48;
+    const sz = n => Math.max(8, Math.round(n * k));
     return {
-      nombre: campo(yN, 54, s.fuenteNombre || 'script'),
-      cedula: campo(yN + 7, 16, 'sans', { prefijo: 'C.I. ', visible: s.mostrarCedula !== false }),
-      curso: campo(s.posCurso ?? 62, 30, 'serif'),
-      fecha: campo(s.posFecha ?? 72, 19, 'sans'),
+      intro: mkCampo(50, 38, 84, sz(20), 'sans', {
+        visible: false,
+        textoFijo: 'La Dirección de **Desarrollo y Apoyo Social** de la Alcaldía de Chacao\na través del **Programa Chacao Emprende** otorga el presente certificado a:',
+      }),
+      nombre: mkCampo(50, yN, 86, sz(68), s.fuenteNombre || 'sans', { color }),
+      cedula: mkCampo(50, yN + 7.5, 60, sz(18), 'sans', { color: '#4b5563', prefijo: 'C.I. ', visible: s.mostrarCedula !== false }),
+      curso: mkCampo(50, s.posCurso ?? 67, 84, sz(20), 'sans', {
+        prefijo: 'Por su participación en el taller\n“',
+        sufijo: '” con una duración de ({horas}) horas',
+      }),
+      fecha: mkCampo(50, s.posFecha ?? 90, 70, sz(16), 'arial', { prefijo: 'Chacao, ', formatoFecha: 'completo' }),
+    };
+  }
+
+  function crearSettingsPreset(presetKey = 'emprende1') {
+    if (presetKey === 'digital') {
+      return {
+        ...DEFAULTS,
+        modeloVersion: MODELO_VERSION,
+        modeloPreset: 'digital',
+        plantilla: '',
+        plantillaW: 0,
+        plantillaH: 0,
+        campos: camposBase({ ...DEFAULTS, fuenteNombre: 'script' }),
+        camposAuto: null,
+      };
+    }
+    const m = MODELOS_OFICIALES[presetKey] || MODELOS_OFICIALES.emprende1;
+    const key = MODELOS_OFICIALES[presetKey] ? presetKey : 'emprende1';
+    const campos = camposOficial(key);
+    return {
+      ...DEFAULTS,
+      modeloVersion: MODELO_VERSION,
+      modeloPreset: key,
+      plantilla: m.plantilla,
+      plantillaW: m.plantillaW,
+      plantillaH: m.plantillaH,
+      campos,
+      camposAuto: JSON.parse(JSON.stringify(campos)),
     };
   }
 
   const now = new Date();
   const SAMPLE = {
-    cedula: '12345678', nombre: 'María Fernanda Pérez',
-    curso: 'Formación Comunitaria Chacao', mes: now.getMonth() + 1, anio: now.getFullYear(),
+    cedula: '12345678',
+    nombre: 'María Fernanda Pérez',
+    curso: 'Marketing Digital y Emprendimiento',
+    horas: 5,
+    dia: now.getDate(),
+    mes: now.getMonth() + 1,
+    anio: now.getFullYear(),
   };
 
   /* ---------------- utilidades ---------------- */
@@ -77,8 +167,10 @@
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const clean = s => String(s ?? '').trim().replace(/\s+/g, ' ');
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  const fecha = c => `${MESES[c.mes - 1]} ${c.anio}`;
-  const byDate = (a, b) => (b.anio * 12 + b.mes) - (a.anio * 12 + a.mes) || b.creado - a.creado;
+  const fecha = c => c && c.dia
+    ? `${c.dia} de ${MESES[(c.mes || 1) - 1].toLowerCase()} de ${c.anio}`
+    : `${MESES[(c.mes || 1) - 1]} ${c.anio}`;
+  const byDate = (a, b) => (b.anio * 400 + b.mes * 32 + (b.dia || 1)) - (a.anio * 400 + a.mes * 32 + (a.dia || 1)) || b.creado - a.creado;
 
   function normCedula(v) {
     let c = String(v ?? '').toUpperCase().replace(/[^0-9A-Z]/g, '');
@@ -326,9 +418,23 @@
   const setUsers = v => store.write(K.users, v);
   const getCerts = () => store.read(K.certs, []);
   const setCerts = v => store.write(K.certs, v);
+  function migrarCampos(campos, s) {
+    const base = MODELOS_OFICIALES[s.modeloPreset] ? camposOficial(s.modeloPreset) : camposBase(s);
+    const out = {};
+    CLAVES_CAMPO.forEach(cl => {
+      out[cl] = { ...base[cl], ...(campos[cl] || {}) };
+    });
+    return out;
+  }
+
   function getSettings() {
-    const s = { ...DEFAULTS, ...store.read(K.settings, {}) };
-    if (!s.campos) s.campos = camposBase(s);
+    const raw = store.read(K.settings, null);
+    if (!raw || (!raw.modeloVersion && !raw.plantilla)) {
+      return crearSettingsPreset('emprende1');
+    }
+    const s = { ...DEFAULTS, ...raw };
+    if (!s.campos) s.campos = MODELOS_OFICIALES[s.modeloPreset] ? camposOficial(s.modeloPreset) : camposBase(s);
+    else s.campos = migrarCampos(s.campos, s);
     return s;
   }
   const setSettings = v => store.write(K.settings, v);
@@ -336,6 +442,80 @@
   function currentUser() {
     const c = sessionStorage.getItem(K.session);
     return c ? getUsers().find(u => u.cedula === c) || null : null;
+  }
+
+  function parseTalleres(areasStr) {
+    const seen = new Set();
+    const out = [];
+    String(areasStr || '')
+      .split(',')
+      .map(s => clean(s))
+      .filter(s => s.length >= 2)
+      .forEach(t => {
+        const key = t.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          out.push(t);
+        }
+      });
+    return out;
+  }
+
+  // Genera automáticamente un certificado (pendiente por defecto) por cada taller registrado del usuario usando sus propios datos
+  function sincronizarCertificadosUsuario(user, opts = {}) {
+    if (!user || user.role === 'admin') return 0;
+    const talleres = parseTalleres(user.areas);
+    if (!talleres.length) return 0;
+    const certs = getCerts();
+    const delUsuario = certs.filter(c => c.cedula === user.cedula);
+    const habilitado = opts.habilitado === true;
+    const horas = Math.min(500, Math.max(1, +opts.horas || 5));
+    const modelo = opts.modelo || '';
+    let added = 0;
+
+    const hoy = new Date();
+    talleres.forEach((taller, idx) => {
+      const k = taller.toLowerCase();
+      const yaExiste = delUsuario.some(c =>
+        clean(c.curso).toLowerCase() === k || (c.area && clean(c.area).toLowerCase() === k)
+      );
+      if (yaExiste) return;
+      const nuevo = {
+        id: uid(),
+        cedula: user.cedula,
+        nombre: user.nombre,
+        curso: taller,
+        area: taller,
+        horas,
+        dia: hoy.getDate(),
+        mes: hoy.getMonth() + 1,
+        anio: hoy.getFullYear(),
+        modelo,
+        habilitado,
+        origen: 'registro',
+        creado: Date.now() + idx,
+      };
+      certs.push(nuevo);
+      delUsuario.push(nuevo);
+      added++;
+    });
+
+    if (added > 0) setCerts(certs);
+    return added;
+  }
+
+  function updatePendingBadge() {
+    const badge = $('#nav-pending-badge');
+    if (!badge) return;
+    const u = currentUser();
+    if (!u || u.role !== 'admin') {
+      badge.classList.add('hidden');
+      return;
+    }
+    const pending = getCerts().filter(c => c.habilitado === false).length;
+    badge.textContent = pending;
+    badge.classList.toggle('hidden', pending === 0);
+    if ($('.nav-link.active')) moveIndicator(true);
   }
 
   async function seedAdmin() {
@@ -371,38 +551,70 @@
       }
     }
 
-    // Datos de demostración iniciales para mostrar avances
+    // Datos de demostración iniciales para mostrar certificados habilitados y pendientes
     const certs = getCerts();
     if (!certs.some(c => c.cedula === demoCed)) {
       certs.push({
         id: uid(),
         cedula: demoCed,
         nombre: demoName,
-        curso: 'Formación Comunitaria Chacao (Servicio Comunitario)',
+        curso: 'Formación Comunitaria y Liderazgo Local',
         area: 'Servicio Comunitario',
+        horas: 5,
+        dia: now.getDate(),
         mes: now.getMonth() + 1,
         anio: now.getFullYear(),
+        modelo: '',
+        habilitado: true,
         creado: Date.now() - 86400000,
       }, {
         id: uid(),
         cedula: demoCed,
         nombre: demoName,
-        curso: 'Taller de Oficio y Capacitación Técnica (Oficio)',
+        curso: 'Capacitación Técnica en Barbería y Oficios',
         area: 'Oficio',
+        horas: 8,
+        dia: Math.max(1, now.getDate() - 2),
         mes: now.getMonth() + 1,
         anio: now.getFullYear(),
+        modelo: '',
+        habilitado: true,
         creado: Date.now() - 43200000,
       }, {
         id: uid(),
         cedula: demoCed,
         nombre: demoName,
-        curso: 'Taller de Emprendimiento Social Chacao (Emprendimiento)',
+        curso: 'Planificación Financiera para Emprendedores',
         area: 'Emprendimiento',
+        horas: 5,
+        dia: 15,
         mes: now.getMonth() || 12,
         anio: now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear(),
+        modelo: '',
+        habilitado: false,
         creado: Date.now() - 172800000,
       });
       setCerts(certs);
+    }
+
+    // Sembrar un participante pendiente de demostración la primera vez para mostrar la habilitación admin
+    if (!localStorage.getItem('cc_seed_v2')) {
+      const ced2 = '24567890';
+      if (!users.some(u => u.cedula === ced2)) {
+        const carlos = {
+          cedula: ced2,
+          nombre: 'Carlos Eduardo Silva',
+          email: 'carlos.silva@emprende.ve',
+          areas: 'Marketing Digital y Emprendimiento, Panadería Artesanal',
+          role: 'user',
+          pass: await hashPass(ced2, '123456'),
+          creado: Date.now() - 3600000,
+        };
+        users.push(carlos);
+        setUsers(users);
+        sincronizarCertificadosUsuario(carlos, { habilitado: false });
+      }
+      localStorage.setItem('cc_seed_v2', '1');
     }
 
     // Asegurar que usuarios existentes tengan propiedad areas
@@ -425,6 +637,46 @@
   }
   const courseSize = curso => curso.length > 70 ? 22 : curso.length > 45 ? 26 : 30;
 
+  // Resuelve la configuración efectiva de un certificado; si se subió un modelo PDF personalizado global, lo aplica a todos salvo asignación manual explícita
+  function resolveSettings(c, s = getSettings()) {
+    if (c && c.modelo && MODELOS_OFICIALES[c.modelo] && (c.modeloManual || s.modeloPreset !== 'custom') && c.modelo !== s.modeloPreset) {
+      const m = MODELOS_OFICIALES[c.modelo];
+      return {
+        ...s,
+        modeloPreset: c.modelo,
+        plantilla: m.plantilla,
+        plantillaW: m.plantillaW,
+        plantillaH: m.plantillaH,
+        campos: camposOficial(c.modelo),
+      };
+    }
+    return s;
+  }
+
+  // Resuelve los datos vivos del participante (nombre, cédula) y asigna automáticamente la fecha actual (fecha de descarga)
+  function datosCertificado(c, hoy = new Date()) {
+    if (!c) return c;
+    const u = getUsers().find(x => x.cedula === c.cedula);
+    const nombre = (u && u.nombre) ? u.nombre : (c.nombre || '');
+    const cedula = (u && u.cedula) ? u.cedula : (c.cedula || '');
+    if (c.fechaFija) {
+      return { ...c, nombre, cedula };
+    }
+    return {
+      ...c,
+      nombre,
+      cedula,
+      dia: hoy.getDate(),
+      mes: hoy.getMonth() + 1,
+      anio: hoy.getFullYear(),
+    };
+  }
+
+  function fechaTimestamp(ts) {
+    const d = new Date(ts);
+    return `${d.getDate()} de ${MESES[d.getMonth()].toLowerCase()} de ${d.getFullYear()}`;
+  }
+
   // Tamaño del lienzo: el lado largo mide siempre 1123 px y el otro sigue al modelo
   function tamano(s) {
     if (!s.plantilla || !s.plantillaW || !s.plantillaH) return { w: CERT_W, h: 794 };
@@ -434,26 +686,63 @@
 
   function textoCampo(clave, f, c) {
     let t = '';
-    if (clave === 'nombre') t = c.nombre;
-    if (clave === 'curso') t = c.curso;
-    if (clave === 'cedula') t = /^\d+$/.test(c.cedula) ? fmtCedula(c.cedula) : '';
-    if (clave === 'fecha') {
-      const mes = MESES[c.mes - 1];
-      t = `${f.prefijo ? mes.toLowerCase() : mes} de ${c.anio}`;
+    if (clave === 'intro') {
+      t = f.textoFijo || 'La Dirección de **Desarrollo y Apoyo Social** de la Alcaldía de Chacao\na través del **Programa Chacao Emprende** otorga el presente certificado a:';
+    } else if (clave === 'nombre') {
+      t = c.nombre || '';
+    } else if (clave === 'curso') {
+      t = c.curso || '';
+    } else if (clave === 'cedula') {
+      const ci = normCedula(c.cedula);
+      t = /^\d+$/.test(ci) ? fmtCedula(ci) : (c.cedula || '');
+    } else if (clave === 'fecha') {
+      const ahora = new Date();
+      const dia = c.dia || ahora.getDate();
+      const mesIdx = Math.max(0, Math.min(11, (+c.mes || (ahora.getMonth() + 1)) - 1));
+      const mesNombre = MESES[mesIdx];
+      const anio = c.anio || ahora.getFullYear();
+      const fmt = f.formatoFecha || 'completo';
+      if (fmt === 'completo') {
+        t = `${dia} de ${mesNombre.toLowerCase()} de ${anio}`;
+      } else if (fmt === 'numerico') {
+        t = `${String(dia).padStart(2, '0')}/${String(mesIdx + 1).padStart(2, '0')}/${anio}`;
+      } else {
+        t = `${f.prefijo ? mesNombre.toLowerCase() : mesNombre} de ${anio}`;
+      }
     }
     if (!t) return '';
-    t = (f.prefijo || '') + t;
-    return f.mayus ? t.toUpperCase() : t;
+    const pref = f.prefijo || '';
+    let suf = f.sufijo || '';
+    if (suf.includes('{horas}')) {
+      const hVal = (c.horas !== undefined && c.horas !== null && String(c.horas).trim() !== '') ? c.horas : '5';
+      suf = suf.replace(/\{horas\}/g, hVal);
+    }
+    const res = pref + t + suf;
+    return f.mayus ? res.toUpperCase() : res;
   }
 
-  // Reduce la letra si el texto no cabe en el ancho del campo (nombres y cursos largos)
+  // Renderiza texto seguro manteniendo saltos de línea y negrita Chacao (**texto**) en el encabezado
+  function renderCampoTextoHTML(clave, texto) {
+    let html = esc(texto);
+    if (clave === 'intro') {
+      html = html.replace(/\*\*([\s\S]+?)\*\*/g, '<strong style="color:#2d4fca;font-weight:700;">$1</strong>');
+    }
+    return html;
+  }
+
+  // Reduce la letra si el texto no cabe en el ancho del campo (soporta saltos de línea y marcas **)
   const medidor = document.createElement('canvas').getContext('2d');
   function letraQueCabe(texto, f, anchoPx) {
     const familia = FUENTES[f.fuente] || FUENTES.sans;
     const m = familia.match(/^(\d+) 1em (.*)$/);
     medidor.font = m ? `${m[1]} ${f.size}px ${m[2]}` : `${f.size}px ${familia}`;
-    const w = medidor.measureText(texto).width;
-    return w > anchoPx ? Math.max(f.size * 0.4, f.size * anchoPx / w * 0.98) : f.size;
+    const lineas = String(texto).replace(/\*\*/g, '').split('\n');
+    let maxW = 0;
+    for (const l of lineas) {
+      const w = medidor.measureText(l).width;
+      if (w > maxW) maxW = w;
+    }
+    return maxW > anchoPx ? Math.max(f.size * 0.4, f.size * anchoPx / maxW * 0.98) : f.size;
   }
 
   function cajaParche(f, h) {
@@ -473,12 +762,13 @@
         parches += `<div class="tpl-parche" data-parche="${clave}" style="left:${bx}%;top:${by}%;width:${bw}%;height:${bh}%;background:${esc(f.taparColor)}"></div>`;
       }
       const size = letraQueCabe(texto, f, w * f.ancho / 100);
-      campos += `<div class="tpl-field f-${esc(f.fuente)}" data-campo="${clave}" style="left:${+f.x}%;top:${+f.y}%;width:${+f.ancho}%;font-size:${size.toFixed(1)}px;color:${esc(f.color)};text-align:${esc(f.align)}">${esc(texto)}</div>`;
+      campos += `<div class="tpl-field f-${esc(f.fuente)}" data-campo="${clave}" style="left:${+f.x}%;top:${+f.y}%;width:${+f.ancho}%;font-size:${size.toFixed(1)}px;color:${esc(f.color)};text-align:${esc(f.align)}">${renderCampoTextoHTML(clave, texto)}</div>`;
     });
     return `<div class="cert cert--tpl" style="width:${w}px;height:${h}px;background-image:url('${s.plantilla}')">${parches}${campos}</div>`;
   }
 
-  function certHTML(c, s = getSettings()) {
+  function certHTML(c, rawSettings = getSettings()) {
+    const s = resolveSettings(c, rawSettings);
     if (s.plantilla) return modeloHTML(c, s);
 
     const font = `f-${s.fuenteNombre || 'script'}`;
@@ -486,7 +776,8 @@
     const cSize = courseSize(c.curso);
     const ced = s.mostrarCedula && /^\d+$/.test(c.cedula)
       ? `<div class="cert-ced">C.I. ${fmtCedula(c.cedula)}</div>` : '';
-    const date = `${esc(s.lugar ? s.lugar + ', ' : '')}${MESES[c.mes - 1]} de ${c.anio}`;
+    const diaTxt = c.dia ? `${c.dia} de ` : '';
+    const date = `${esc(s.lugar ? s.lugar + ', ' : '')}${diaTxt}${MESES[c.mes - 1]} de ${c.anio}`;
 
     const signs = [[s.firma1Nombre, s.firma1Cargo], [s.firma2Nombre, s.firma2Cargo]]
       .filter(([n, k]) => clean(n) || clean(k))
@@ -540,24 +831,403 @@
     if (cert && frame.clientWidth) cert.style.transform = `scale(${frame.clientWidth / cert.offsetWidth})`;
   }
   function mount(frame, cert, settings = getSettings()) {
-    const { w, h } = tamano(settings);
+    const eff = resolveSettings(cert, settings);
+    const { w, h } = tamano(eff);
     frame.style.aspectRatio = `${w} / ${h}`;
     frame.style.maxWidth = h > w ? '520px' : '';          // un modelo vertical no ocupa toda la pantalla
     frame.style.marginInline = h > w ? 'auto' : '';
-    frame.innerHTML = certHTML(cert, settings);
+    frame.innerHTML = certHTML(cert, eff);
     fitFrame(frame);
     ro.observe(frame);
   }
 
   const loadImg = src => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = src; });
 
-  // Prepara el área de impresión y la página del PDF con las medidas del modelo
-  async function prepararImpresion(c, s) {
+  function loadCanvasImg(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      if (!src.startsWith('data:') && !src.startsWith('blob:') && typeof location !== 'undefined' && /^https?:/i.test(location.protocol)) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`No se pudo cargar imagen: ${src}`));
+      img.src = src;
+    });
+  }
+
+  function safeFileName(str) {
+    return clean(str).replace(/[/\\?%*:|"<>]/g, '-').slice(0, 140) || 'Certificado';
+  }
+
+  function base64ToBytes(dataUrl) {
+    const b64 = String(dataUrl).split(',')[1] || '';
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  // Empaqueta un JPEG de alta resolución en un archivo PDF estándar (%PDF-1.4) para descarga directa sin diálogo de impresión
+  function buildPdfFromJpeg(jpegBytes, imgW, imgH) {
+    const landscape = imgW >= imgH;
+    const pageW = landscape ? 841.89 : +(595.28 * imgW / imgH).toFixed(2);
+    const pageH = landscape ? +(841.89 * imgH / imgW).toFixed(2) : 595.28;
+    const enc = new TextEncoder();
+    const parts = [];
+    let offset = 0;
+    const offsets = [0];
+    const pushStr = s => { const b = enc.encode(s); parts.push(b); offset += b.length; };
+    const pushBin = b => { parts.push(b); offset += b.length; };
+
+    pushStr('%PDF-1.4\n');
+    pushBin(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+
+    offsets.push(offset);
+    pushStr('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+
+    offsets.push(offset);
+    pushStr('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+
+    offsets.push(offset);
+    pushStr(`3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /XObject << /Im0 4 0 R >> >> /MediaBox [0 0 ${pageW} ${pageH}] /Contents 5 0 R >>\nendobj\n`);
+
+    offsets.push(offset);
+    pushStr(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
+    pushBin(jpegBytes);
+    pushStr('\nendstream\nendobj\n');
+
+    const stream = `q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im0 Do\nQ\n`;
+    offsets.push(offset);
+    pushStr(`5 0 obj\n<< /Length ${stream.length} >>\nstream\n${stream}endstream\nendobj\n`);
+
+    const xrefStart = offset;
+    pushStr(`xref\n0 ${offsets.length}\n0000000000 65535 f \n`);
+    for (let i = 1; i < offsets.length; i++) {
+      pushStr(String(offsets[i]).padStart(10, '0') + ' 00000 n \n');
+    }
+    pushStr(`trailer\n<< /Size ${offsets.length} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+
+  function canvasFontSpec(fuente, px, clave, forceBold = false) {
+    const fam = {
+      script: '"Great Vibes", cursive',
+      serif: '"Playfair Display", serif',
+      times: '"Times New Roman", Times, serif',
+      sans: 'Geist, sans-serif',
+      arial: 'Arial, Helvetica, sans-serif',
+    }[fuente] || 'Geist, sans-serif';
+    let w = '600';
+    if (forceBold) w = '700';
+    else if (fuente === 'serif') w = '700';
+    else if (fuente === 'script' || fuente === 'times') w = '400';
+    else if (fuente === 'arial') w = '500';
+    else if (clave === 'nombre') w = '700';
+    else if (clave === 'intro') w = '400';
+    else if (clave === 'fecha') w = '500';
+    return `${w} ${px.toFixed(1)}px ${fam}`;
+  }
+
+  function parseStyledRuns(texto, baseColor, hasBoldTokens) {
+    if (!hasBoldTokens) return [{ text: texto, bold: false, color: baseColor }];
+    const runs = [];
+    const re = /\*\*([\s\S]+?)\*\*/g;
+    let last = 0, m;
+    while ((m = re.exec(texto)) !== null) {
+      if (m.index > last) runs.push({ text: texto.slice(last, m.index), bold: false, color: baseColor });
+      runs.push({ text: m[1], bold: true, color: '#2d4fca' });
+      last = m.index + m[0].length;
+    }
+    if (last < texto.length) runs.push({ text: texto.slice(last), bold: false, color: baseColor });
+    return runs;
+  }
+
+  function drawFieldOnCanvas(ctx, clave, f, c, cvW, cvH, scale) {
+    const texto = textoCampo(clave, f, c);
+    if (!texto) return;
+
+    const wCss = cvW / scale;
+    const hCss = cvH / scale;
+    if (f.tapar && f.taparColor) {
+      const [bx, by, bw, bh] = cajaParche(f, hCss);
+      ctx.fillStyle = f.taparColor;
+      ctx.fillRect((bx - bw / 2) / 100 * cvW, (by - bh / 2) / 100 * cvH, bw / 100 * cvW, bh / 100 * cvH);
+    }
+
+    const sizeCss = letraQueCabe(texto, f, wCss * f.ancho / 100);
+    const px = sizeCss * scale;
+    const lh = px * (clave === 'intro' ? 1.38 : clave === 'curso' ? 1.32 : 1.25);
+    const boxW = f.ancho / 100 * cvW;
+    const cx = f.x / 100 * cvW;
+    const cy = f.y / 100 * cvH;
+
+    // Dividir en líneas respetando saltos de línea y ancho máximo del campo
+    const lines = [];
+    String(texto).split('\n').forEach(rawPara => {
+      const runs = parseStyledRuns(rawPara, f.color || '#232425', clave === 'intro');
+      const tokens = [];
+      runs.forEach(r => {
+        r.text.split(/(\s+)/).filter(Boolean).forEach(part => {
+          tokens.push({ text: part, space: /^\s+$/.test(part), bold: r.bold, color: r.color });
+        });
+      });
+      if (!tokens.length) { lines.push([]); return; }
+
+      let curLine = [], curW = 0;
+      tokens.forEach(tok => {
+        ctx.font = canvasFontSpec(f.fuente, px, clave, tok.bold);
+        const tw = ctx.measureText(tok.text).width;
+        if (curLine.length && !tok.space && curW + tw > boxW) {
+          while (curLine.length && curLine[curLine.length - 1].space) curLine.pop();
+          if (curLine.length) lines.push(curLine);
+          curLine = [tok];
+          curW = tw;
+        } else {
+          curLine.push(tok);
+          curW += tw;
+        }
+      });
+      while (curLine.length && curLine[curLine.length - 1].space) curLine.pop();
+      lines.push(curLine);
+    });
+
+    const totalH = lines.length * lh;
+    let y = cy - totalH / 2 + lh / 2;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+
+    lines.forEach(lineTokens => {
+      const lineW = lineTokens.reduce((sum, t) => {
+        ctx.font = canvasFontSpec(f.fuente, px, clave, t.bold);
+        return sum + ctx.measureText(t.text).width;
+      }, 0);
+      let x = cx - lineW / 2;
+      if (f.align === 'left') x = cx - boxW / 2;
+      else if (f.align === 'right') x = cx + boxW / 2 - lineW;
+
+      lineTokens.forEach(t => {
+        ctx.font = canvasFontSpec(f.fuente, px, clave, t.bold);
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, x, y);
+        x += ctx.measureText(t.text).width;
+      });
+      y += lh;
+    });
+  }
+
+  function wrapSimpleLines(ctx, text, maxW) {
+    const words = String(text || '').split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    const out = [];
+    let cur = words[0];
+    for (let i = 1; i < words.length; i++) {
+      const next = cur + ' ' + words[i];
+      if (ctx.measureText(next).width <= maxW) cur = next;
+      else { out.push(cur); cur = words[i]; }
+    }
+    out.push(cur);
+    return out;
+  }
+
+  async function renderDigitalToCanvas(ctx, c, s, K) {
+    const W = CERT_W * K, H = 794 * K;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    const rad = ctx.createRadialGradient(W * 0.5, H * 0.48, 0, W * 0.5, H * 0.48, W * 0.45);
+    rad.addColorStop(0, 'rgba(0, 150, 242, 0.05)');
+    rad.addColorStop(1, 'rgba(0, 150, 242, 0)');
+    ctx.fillStyle = rad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Ribbons de esquinas Chacao
+    const poly = (pts, col) => {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] * K, pts[0][1] * K);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * K, pts[i][1] * K);
+      ctx.closePath();
+      ctx.fill();
+    };
+    poly([[0, 0], [192, 0], [0, 192]], '#004fc8');
+    poly([[192, 0], [210, 0], [0, 210], [0, 192]], '#0096f2');
+    poly([[210, 0], [222, 0], [0, 222], [0, 210]], '#38b6ff');
+    poly([[1123, 794], [931, 794], [1123, 602]], '#004fc8');
+    poly([[931, 794], [913, 794], [1123, 584], [1123, 602]], '#0096f2');
+    poly([[913, 794], [901, 794], [1123, 572], [1123, 584]], '#38b6ff');
+
+    // Doble marco
+    ctx.strokeStyle = '#004fc8';
+    ctx.lineWidth = 2.5 * K;
+    ctx.strokeRect(26 * K, 26 * K, (1123 - 52) * K, (794 - 52) * K);
+    ctx.strokeStyle = 'rgba(0, 150, 242, 0.55)';
+    ctx.lineWidth = 1.5 * K;
+    ctx.strokeRect(33 * K, 33 * K, (1123 - 66) * K, (794 - 66) * K);
+
+    // Logos
+    const logoUrls = s.logo ? [s.logo] : ({
+      bienestar: ['assets/logo-bienestar.png'],
+      emprende: ['assets/logo-emprende.png'],
+      alcaldia: ['assets/logo-alcaldia.png'],
+    }[s.logoPreset || 'duo'] || ['assets/logo-alcaldia.png', 'assets/logo-desarrollo-social.png']);
+    const loadedLogos = (await Promise.all(logoUrls.map(u => loadCanvasImg(u).catch(() => null)))).filter(Boolean);
+    if (loadedLogos.length) {
+      const maxH = 98 * K;
+      const sized = loadedLogos.map(im => {
+        const sc = Math.min(maxH / im.height, (260 * K) / im.width);
+        return { im, w: im.width * sc, h: im.height * sc };
+      });
+      const gap = sized.length > 1 ? 44 * K : 0;
+      const totW = sized.reduce((acc, it) => acc + it.w, 0) + gap * (sized.length - 1);
+      let lx = W / 2 - totW / 2;
+      const cyLogo = 102 * K;
+      sized.forEach((it, idx) => {
+        ctx.drawImage(it.im, lx, cyLogo - it.h / 2, it.w, it.h);
+        lx += it.w;
+        if (idx === 0 && sized.length > 1) {
+          ctx.fillStyle = '#0096f2';
+          ctx.fillRect(lx + gap / 2 - K, cyLogo - 34 * K, 2 * K, 68 * K);
+          lx += gap;
+        }
+      });
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#666666';
+    ctx.font = `600 ${13.5 * K}px Geist, sans-serif`;
+    ctx.fillText(String(s.institucion || '').toUpperCase(), W / 2, 182 * K);
+
+    ctx.fillStyle = '#004fc8';
+    ctx.font = `700 ${62 * K}px "Playfair Display", serif`;
+    ctx.fillText(String(s.titulo || 'Certificado').toUpperCase(), W / 2, 234 * K);
+
+    ctx.fillStyle = '#0096f2';
+    ctx.font = `600 ${15 * K}px Geist, sans-serif`;
+    ctx.fillText(String(s.subtitulo || '').toUpperCase(), W / 2, 280 * K);
+
+    ctx.fillStyle = '#666666';
+    ctx.font = `italic 400 ${19 * K}px "Playfair Display", serif`;
+    ctx.fillText(String(s.textoA || ''), W / 2, 330 * K);
+
+    const fName = s.fuenteNombre || 'script';
+    const nSize = nameSize(c.nombre, fName) * K;
+    ctx.fillStyle = '#004fc8';
+    ctx.font = canvasFontSpec(fName, nSize, 'nombre');
+    ctx.fillText(String(c.nombre || ''), W / 2, 386 * K);
+    const nameW = Math.max(560 * K, ctx.measureText(String(c.nombre || '')).width + 80 * K);
+    ctx.fillStyle = '#0096f2';
+    ctx.fillRect(W / 2 - nameW / 2, 424 * K, nameW, 2 * K);
+
+    let yNext = 446 * K;
+    if (s.mostrarCedula && /^\d+$/.test(c.cedula)) {
+      ctx.fillStyle = '#666666';
+      ctx.font = `600 ${13.5 * K}px Geist, sans-serif`;
+      ctx.fillText(`C.I. ${fmtCedula(c.cedula)}`, W / 2, yNext);
+      yNext += 34 * K;
+    } else {
+      yNext += 14 * K;
+    }
+
+    ctx.fillStyle = '#666666';
+    ctx.font = `italic 400 ${19 * K}px "Playfair Display", serif`;
+    ctx.fillText(String(s.textoB || ''), W / 2, yNext);
+    yNext += 40 * K;
+
+    const cSize = courseSize(c.curso) * K;
+    ctx.fillStyle = '#004fc8';
+    ctx.font = `700 ${cSize}px "Playfair Display", serif`;
+    const cLines = wrapSimpleLines(ctx, c.curso, 820 * K);
+    cLines.forEach(l => { ctx.fillText(l, W / 2, yNext); yNext += cSize * 1.28; });
+
+    const diaTxt = c.dia ? `${c.dia} de ` : '';
+    const dateStr = `${s.lugar ? s.lugar + ', ' : ''}${diaTxt}${MESES[(c.mes || 1) - 1]} de ${c.anio}`;
+    ctx.fillStyle = '#666666';
+    ctx.font = `500 ${15.5 * K}px Geist, sans-serif`;
+    ctx.fillText(dateStr, W / 2, Math.min(615 * K, yNext + 14 * K));
+
+    // Sello y firmas abajo
+    const ySign = 695 * K;
+    const drawSign = (x, nom, car) => {
+      ctx.fillStyle = '#004fc8';
+      ctx.fillRect(x - 125 * K, ySign - 18 * K, 250 * K, 1.5 * K);
+      ctx.fillStyle = '#353535';
+      ctx.font = `600 ${15 * K}px Geist, sans-serif`;
+      ctx.fillText(nom, x, ySign + 4 * K);
+      ctx.fillStyle = '#666666';
+      ctx.font = `400 ${13 * K}px Geist, sans-serif`;
+      ctx.fillText(car, x, ySign + 24 * K);
+    };
+    const signs = [[s.firma1Nombre, s.firma1Cargo], [s.firma2Nombre, s.firma2Cargo]]
+      .filter(([n, k]) => clean(n) || clean(k));
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W / 2, ySign - 8 * K, 46 * K, 0, Math.PI * 2);
+    const sg = ctx.createRadialGradient(W / 2 - 14 * K, ySign - 24 * K, 4 * K, W / 2, ySign - 8 * K, 46 * K);
+    sg.addColorStop(0, '#38b6ff');
+    sg.addColorStop(0.5, '#0096f2');
+    sg.addColorStop(1, '#004fc8');
+    ctx.fillStyle = sg;
+    ctx.fill();
+    ctx.setLineDash([4 * K, 4 * K]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 1.5 * K;
+    ctx.beginPath();
+    ctx.arc(W / 2, ySign - 8 * K, 35 * K, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 ${26 * K}px sans-serif`;
+    ctx.fillText('✦', W / 2, ySign - 7 * K);
+    ctx.restore();
+
+    if (signs.length >= 1) drawSign(W / 2 - 245 * K, signs[0][0], signs[0][1]);
+    if (signs.length >= 2) drawSign(W / 2 + 245 * K, signs[1][0], signs[1][1]);
+  }
+
+  async function certToCanvas(c, rawSettings) {
+    const s = resolveSettings(c, rawSettings);
+    if (document.fonts) {
+      if (document.fonts.ready) await document.fonts.ready;
+      if (typeof document.fonts.load === 'function') {
+        await Promise.allSettled([
+          document.fonts.load('600 40px Geist'),
+          document.fonts.load('700 40px "Playfair Display"'),
+          document.fonts.load('40px "Great Vibes"'),
+        ]);
+      }
+    }
+    const { w, h } = tamano(s);
+    const K = 2;
+    const cv = document.createElement('canvas');
+    cv.width = w * K;
+    cv.height = h * K;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+
+    if (s.plantilla) {
+      const bg = await loadCanvasImg(s.plantilla);
+      ctx.drawImage(bg, 0, 0, cv.width, cv.height);
+      CLAVES_CAMPO.forEach(clave => {
+        const f = s.campos[clave];
+        if (!f || !f.visible) return;
+        drawFieldOnCanvas(ctx, clave, f, c, cv.width, cv.height, K);
+      });
+    } else {
+      await renderDigitalToCanvas(ctx, c, s, K);
+    }
+    return cv;
+  }
+
+  // Prepara el área de impresión (solo respaldo si canvas en file:// es bloqueado por CORS)
+  async function prepararImpresion(c, rawSettings) {
+    const s = resolveSettings(c, rawSettings);
     const area = $('#print-area');
     area.innerHTML = certHTML(c, s);
     await Promise.all([s.plantilla, s.logo].filter(Boolean).map(loadImg));
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    area.innerHTML = certHTML(c, s);                      // ya con las letras cargadas, para medir bien
+    area.innerHTML = certHTML(c, s);
     const estilo = $('#estilo-pagina') || document.head.appendChild(Object.assign(document.createElement('style'), { id: 'estilo-pagina' }));
     if (s.plantilla) {
       const { w, h } = tamano(s);
@@ -568,17 +1238,55 @@
   }
 
   async function printCert(c) {
+    const hoy = new Date();
+    const resolved = datosCertificado(c, hoy);
+    const u = currentUser();
+    if (u && u.role !== 'admin') {
+      const certs = getCerts();
+      const stored = certs.find(x => x.id === c.id);
+      if (stored) {
+        stored.dia = hoy.getDate();
+        stored.mes = hoy.getMonth() + 1;
+        stored.anio = hoy.getFullYear();
+        stored.descargadoEn = hoy.getTime();
+        setCerts(certs);
+      }
+    }
+
     const s = getSettings();
-    const area = $('#print-area');
-    await prepararImpresion(c, s);
-    // El título sugiere el nombre del archivo PDF
-    document.title = `Certificado - ${c.nombre} - ${c.curso}`;
-    window.addEventListener('afterprint', () => {
-      document.title = APP_TITLE;
-      area.innerHTML = '';
-    }, { once: true });
-    toast('Elige “Guardar como PDF” en la ventana de impresión.');
-    setTimeout(() => window.print(), 50);
+    const nombreArchivo = `${safeFileName(`Certificado - ${resolved.nombre} - ${resolved.curso}`)}.pdf`;
+
+    try {
+      const cv = await certToCanvas(resolved, s);
+      const dataUrl = cv.toDataURL('image/jpeg', 0.94);
+      const jpegBytes = base64ToBytes(dataUrl);
+      const pdfBlob = buildPdfFromJpeg(jpegBytes, cv.width, cv.height);
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombreArchivo;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+      toast(`¡Descargado! ${nombreArchivo}`);
+      if (!$('#view-mis').classList.contains('hidden')) renderMis();
+      if (!$('#view-lista').classList.contains('hidden')) renderLista();
+    } catch (err) {
+      console.warn('Descarga directa bloqueada en modo local sin servidor, usando impresión:', err);
+      const area = $('#print-area');
+      await prepararImpresion(resolved, s);
+      document.title = nombreArchivo.replace(/\.pdf$/i, '');
+      window.addEventListener('afterprint', () => {
+        document.title = APP_TITLE;
+        area.innerHTML = '';
+        if (!$('#view-mis').classList.contains('hidden')) renderMis();
+        if (!$('#view-lista').classList.contains('hidden')) renderLista();
+      }, { once: true });
+      toast('Elige “Guardar como PDF” para completar la descarga.');
+      setTimeout(() => window.print(), 50);
+    }
   }
 
   /* =========================================================
@@ -875,19 +1583,23 @@
     if (!validCedula(cedula)) return fail('Ingresa una cédula válida (solo números).');
     if (nombre.length < 3) return fail('Escribe tu nombre y apellido.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Ingresa un correo electrónico válido.');
-    if (areas.length < 2) return fail('Escribe al menos un área de servicio comunitario (o selecciona de las sugerencias).');
+    if (areas.length < 2) return fail('Escribe al menos un taller o área realizada (o selecciona de las sugerencias).');
     if (f.password.value.length < 6) return fail('La contraseña debe tener al menos 6 caracteres.');
     if (f.password.value !== f.password2.value) return fail('Las contraseñas no coinciden.');
     const users = getUsers();
     if (users.some(u => u.cedula === cedula)) return fail('Esa cédula ya está registrada. Inicia sesión.');
     if (users.some(u => u.email && u.email.toLowerCase() === email)) return fail('Ese correo ya está registrado por otro estudiante.');
-    users.push({
+    const newUser = {
       cedula, nombre, email, areas, role: 'user',
       pass: await hashPass(cedula, f.password.value), creado: Date.now()
-    });
+    };
+    users.push(newUser);
     if (!setUsers(users)) return;
+    const creados = sincronizarCertificadosUsuario(newUser, { habilitado: false });
     sessionStorage.setItem(K.session, cedula);
-    toast('¡Cuenta creada! Bienvenido(a).');
+    toast(creados
+      ? `¡Cuenta creada! Registramos ${creados} taller(es) con tus datos. En espera de habilitación.`
+      : '¡Cuenta creada! Bienvenido(a).');
     enterApp(f);
   });
 
@@ -913,7 +1625,8 @@
     $('#nav-avatar').textContent = initials(u.nombre);
     $('.nav-indicator').style.opacity = 0;
     if (G) G.fromTo('.navbar', { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1, ease: 'expo.out', clearProps: 'transform,opacity' });
-    show(isAdmin ? 'emitir' : 'mis');
+    show(isAdmin ? 'usuarios' : 'mis');
+    updatePendingBadge();
     if (isAdmin && u.cedula === ADMIN_CEDULA) checkDefaultAdminPass(u);
   }
 
@@ -924,7 +1637,7 @@
   }
 
   const renderers = {
-    mis: renderMis, emitir: renderEmitir, lista: renderLista,
+    mis: renderMis, lista: renderLista,
     usuarios: renderUsuarios, config: renderConfig,
   };
 
@@ -932,7 +1645,7 @@
     const u = currentUser();
     if (!u) return startApp();
     if (u.role !== 'admin') view = 'mis';
-    else if (view === 'mis') view = 'emitir';
+    else if (!view || view === 'mis' || view === 'emitir') view = 'usuarios';
     const section = $(`#view-${view}`);
     $$('.view').forEach(v => v.classList.toggle('hidden', v !== section));
     $$('.nav-link').forEach(a => a.classList.toggle('active', a.dataset.view === view));
@@ -989,94 +1702,150 @@
     if (!u) return;
     $('#hello-name').textContent = clean(u.nombre).split(' ')[0];
 
-    // Áreas registradas del estudiante
-    const userAreas = (u.areas || 'Bienestar Social, Salud').split(',').map(s => s.trim()).filter(Boolean);
+    // Talleres o áreas registradas del usuario
+    const userAreas = parseTalleres(u.areas || '');
     const areasList = $('#mis-areas-list');
     if (areasList) {
       areasList.innerHTML = userAreas.length
         ? userAreas.map(a => `<span class="badge-area">${esc(a)}</span>`).join('')
-        : '<span class="muted small">Sin áreas registradas aún</span>';
-    }
-
-    // Selector de áreas en el generador de certificados
-    const selArea = $('#sel-user-area');
-    if (selArea) {
-      selArea.innerHTML = userAreas.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')
-        + (userAreas.length === 0 ? '<option value="Bienestar Social">Bienestar Social</option>' : '');
+        : '<span class="muted small">Sin talleres registrados aún</span>';
     }
 
     const certs = getCerts().filter(c => c.cedula === u.cedula).sort(byDate);
+    const habilitados = certs.filter(c => c.habilitado !== false);
+    const pendientes = certs.filter(c => c.habilitado === false);
+
     const grid = $('#mis-grid');
     $('#mis-count').textContent = 0;
-    fx.count($('#mis-count'), certs.length);
-    if (!certs.length) {
+    fx.count($('#mis-count'), habilitados.length);
+    if ($('#mis-pending-count')) {
+      $('#mis-pending-count').textContent = 0;
+      fx.count($('#mis-pending-count'), pendientes.length);
+    }
+
+    const s = getSettings();
+    const hoy = new Date();
+    fillDatalists();
+    if (!habilitados.length) {
       grid.innerHTML = `<div class="empty">
         <div class="brand-mark">${ic('award')}</div>
-        <h3>Aún no tienes certificados</h3>
-        <p>Genera tu certificado arriba indicando tu área y actividad, o espera la emisión directa de la coordinación.</p>
+        <h3>${pendientes.length ? 'Aún no tienes certificados habilitados' : 'Aún no tienes certificados'}</h3>
+        <p>${pendientes.length
+          ? 'Tus talleres registrados aparecen abajo en espera. En cuanto el administrador los habilite podrás descargar tu certificado con tus datos y la fecha de descarga.'
+          : 'Agrega arriba el taller que realizaste para que el administrador lo habilite.'}</p>
       </div>`;
-      return;
-    }
-    const s = getSettings();
-    grid.innerHTML = certs.map((c, i) => `
-      <article class="cert-card">
-        <div class="cert-frame" data-act="ver" data-id="${c.id}"></div>
-        <div class="cert-card-body">
-          <span class="cert-card-index">Nº ${String(certs.length - i).padStart(2, '0')}</span>
-          <h3>${esc(c.curso)}</h3>
-          <p>${fecha(c)}</p>
-          <div class="cert-card-actions">
-            <button class="btn btn-light" data-act="ver" data-id="${c.id}">${ic('eye')}Ver</button>
-            <button class="btn btn-primary" data-act="pdf" data-id="${c.id}">${ic('download')}PDF</button>
+    } else {
+      const resueltos = habilitados.map(c => datosCertificado(c, hoy));
+      grid.innerHTML = resueltos.map((c, i) => `
+        <article class="cert-card">
+          <div class="cert-frame" data-act="ver" data-id="${c.id}"></div>
+          <div class="cert-card-body">
+            <div>
+              <span class="cert-card-index">Nº ${String(resueltos.length - i).padStart(2, '0')}</span>
+              ${c.area ? `<span class="cert-card-area">${esc(c.area)}</span>` : ''}
+            </div>
+            <h3>${esc(c.curso)}</h3>
+            <p>${c.descargadoEn ? `Descargado el ${fechaTimestamp(c.descargadoEn)}` : `Listo · se emite con fecha ${fecha(c)}`}${c.horas ? ` · ${c.horas} horas` : ''}</p>
+            <div class="cert-card-actions">
+              <button class="btn btn-light" data-act="ver" data-id="${c.id}">${ic('eye')}Ver</button>
+              <button class="btn btn-primary" data-act="pdf" data-id="${c.id}">${ic('download')}Descargar PDF</button>
+            </div>
           </div>
-        </div>
-      </article>`).join('');
-    $$('.cert-frame', grid).forEach(f => mount(f, certs.find(c => c.id === f.dataset.id), s));
-    $$('.cert-card', grid).forEach(card => fx.tilt(card, 8));
+        </article>`).join('');
+      $$('.cert-frame', grid).forEach(f => mount(f, resueltos.find(c => c.id === f.dataset.id), s));
+      $$('.cert-card', grid).forEach(card => fx.tilt(card, 8));
+    }
+
+    // Sección de certificados pendientes por habilitación del administrador
+    const pendSec = $('#mis-pendientes-section');
+    const pendGrid = $('#mis-pendientes-grid');
+    if (pendSec && pendGrid) {
+      pendSec.classList.toggle('hidden', pendientes.length === 0);
+      if (pendientes.length) {
+        pendGrid.innerHTML = pendientes.map((c, i) => `
+          <article class="cert-card cert-pending-card">
+            <div class="cert-pending-preview">
+              <div class="cert-pending-icon">${ic('shield')}</div>
+              <span class="cert-pending-badge">En espera de habilitación</span>
+              <p class="cert-pending-note">Datos vinculados: <strong>${esc(u.nombre)}</strong> · C.I. ${fmtCedula(u.cedula)}</p>
+            </div>
+            <div class="cert-card-body">
+              <div>
+                <span class="cert-card-index">Taller #${i + 1}</span>
+                ${c.area ? `<span class="cert-card-area">${esc(c.area)}</span>` : ''}
+              </div>
+              <h3>${esc(c.curso)}</h3>
+              <p>Pendiente · Fecha automática al descargar${c.horas ? ` · ${c.horas} horas` : ''}</p>
+            </div>
+            <div class="cert-pending-foot">
+              El administrador solo debe habilitar este taller para activar tu descarga.
+            </div>
+          </article>`).join('');
+      } else {
+        pendGrid.innerHTML = '';
+      }
+    }
   }
 
-  // Generación de certificado propia por el estudiante según su área
-  const formUserGenerar = $('#form-user-generar');
-  formUserGenerar?.addEventListener('submit', e => {
+  // Registro rápido de un taller adicional por parte del usuario (queda pendiente hasta que el admin lo habilite)
+  const formUserSolicitar = $('#form-user-solicitar');
+  formUserSolicitar?.addEventListener('submit', e => {
     e.preventDefault();
     const u = currentUser();
     if (!u) return;
-    const f = formUserGenerar;
-    const area = clean(f.area?.value || '');
-    const actividad = clean(f.curso?.value || '');
-    const mes = +f.mes?.value || (now.getMonth() + 1);
-    const anio = +f.anio?.value || now.getFullYear();
+    const f = formUserSolicitar;
+    const curso = clean(f.curso?.value || '');
+    const horas = Math.min(500, Math.max(1, +f.horas?.value || 5));
 
-    if (actividad.length < 3) {
-      toast('Escribe la actividad, proyecto o motivo del certificado.', 'error');
+    if (curso.length < 3) {
+      toast('Escribe el nombre del taller o curso que realizaste.', 'error');
       f.curso?.focus();
       return;
     }
-    if (!(anio >= 2000 && anio <= 2100)) {
-      toast('Escribe un año válido.', 'error');
+
+    const users = getUsers();
+    const user = users.find(x => x.cedula === u.cedula);
+    if (!user) return;
+    const actuales = parseTalleres(user.areas);
+    if (!actuales.some(t => t.toLowerCase() === curso.toLowerCase())) {
+      actuales.push(curso);
+      user.areas = actuales.join(', ');
+      if (!setUsers(users)) return;
+    }
+
+    const certs = getCerts();
+    const yaCert = certs.some(c => c.cedula === user.cedula && clean(c.curso).toLowerCase() === curso.toLowerCase());
+    if (yaCert) {
+      toast('Ese taller ya se encuentra registrado en tu cuenta.', 'error');
       return;
     }
 
-    const cursoCompleto = actividad + (area && !actividad.toLowerCase().includes(area.toLowerCase()) ? ` (${area})` : '');
-    const cert = {
-      id: uid(),
-      cedula: u.cedula,
-      nombre: u.nombre,
-      curso: cursoCompleto,
-      area: area,
-      mes,
-      anio,
-      creado: Date.now(),
-    };
+    sincronizarCertificadosUsuario(user, { habilitado: false, horas });
+    const certsNow = getCerts();
+    if (!certsNow.some(c => c.cedula === user.cedula && clean(c.curso).toLowerCase() === curso.toLowerCase())) {
+      const hoy = new Date();
+      certsNow.push({
+        id: uid(),
+        cedula: user.cedula,
+        nombre: user.nombre,
+        curso,
+        area: curso,
+        horas,
+        dia: hoy.getDate(),
+        mes: hoy.getMonth() + 1,
+        anio: hoy.getFullYear(),
+        modelo: '',
+        habilitado: false,
+        origen: 'solicitud',
+        creado: Date.now(),
+      });
+      if (!setCerts(certsNow)) return;
+    }
 
-    const certs = getCerts();
-    certs.push(cert);
-    if (!setCerts(certs)) return;
-
-    toast(`¡Certificado generado con éxito! Abriendo vista oficial...`);
+    toast('Taller registrado con tus datos. Queda en espera de habilitación.');
     f.curso.value = '';
+    if (f.horas) f.horas.value = 5;
     renderMis();
-    viewCert(cert);
   });
 
   // Botón para que el estudiante modifique sus áreas asignadas
@@ -1085,183 +1854,59 @@
     if (u) openEditAreasModal(u);
   });
 
-  /* ---------------- Admin: emitir ---------------- */
+  /* ---------------- Admin: utilidades y listas ---------------- */
   function fillDatalists() {
-    $('#dl-cedulas').innerHTML = getUsers().filter(u => u.role !== 'admin')
-      .map(u => `<option value="${esc(u.cedula)}">${esc(u.nombre)}</option>`).join('');
-    $('#dl-cursos').innerHTML = [...new Set(getCerts().map(c => c.curso))]
-      .map(c => `<option value="${esc(c)}"></option>`).join('');
-  }
-
-  function renderEmitir() {
-    fillDatalists();
-    updatePreview($('#form-emitir'));
-    updateStats();
+    const dlCursos = $('#dl-cursos');
+    if (dlCursos) {
+      dlCursos.innerHTML = [...new Set(getCerts().map(c => c.curso))]
+        .map(c => `<option value="${esc(c)}"></option>`).join('');
+    }
   }
 
   function updateStats() {
     const certs = getCerts();
-    fx.count($('#st-users'), getUsers().filter(u => u.role !== 'admin').length);
-    fx.count($('#st-certs'), certs.length);
-    fx.count($('#st-cursos'), new Set(certs.map(c => c.curso.toLowerCase())).size);
+    const pending = certs.filter(c => c.habilitado === false).length;
+    const enabled = certs.length - pending;
+    if ($('#st-users')) fx.count($('#st-users'), getUsers().filter(u => u.role !== 'admin').length);
+    if ($('#st-pendientes')) fx.count($('#st-pendientes'), pending);
+    if ($('#st-certs')) fx.count($('#st-certs'), enabled);
   }
-
-  function previewData(f) {
-    if (f.id === 'form-lote') {
-      const first = parseLote(f.lista.value).ok[0];
-      return {
-        cedula: first ? first.cedula : SAMPLE.cedula,
-        nombre: first ? first.nombre : 'Nombre del participante',
-        curso: clean(f.curso.value) || 'Nombre del curso',
-        mes: +f.mes.value, anio: +f.anio.value || now.getFullYear(),
-      };
-    }
-    return {
-      cedula: validCedula(normCedula(f.cedula.value)) ? normCedula(f.cedula.value) : SAMPLE.cedula,
-      nombre: clean(f.nombre.value) || 'Nombre del participante',
-      curso: clean(f.curso.value) || 'Nombre del curso',
-      mes: +f.mes.value, anio: +f.anio.value || now.getFullYear(),
-    };
-  }
-  const updatePreview = f => mount($('#emitir-preview'), previewData(f));
-
-  const formEmitir = $('#form-emitir');
-  formEmitir.addEventListener('input', e => {
-    const f = formEmitir;
-    if (e.target === f.cedula) {
-      const u = getUsers().find(x => x.cedula === normCedula(f.cedula.value) && x.role !== 'admin');
-      if (u && (!f.nombre.value || f.nombre.dataset.auto)) {
-        f.nombre.value = u.nombre;
-        f.nombre.dataset.auto = '1';
-      } else if (!u && f.nombre.dataset.auto) {
-        f.nombre.value = '';
-        delete f.nombre.dataset.auto;
-      }
-    }
-    if (e.target === f.nombre) delete f.nombre.dataset.auto;
-    updatePreview(f);
-  });
-  formEmitir.addEventListener('change', () => updatePreview(formEmitir));
-
-  const isDup = (list, c) => list.some(x => x.cedula === c.cedula && x.mes === c.mes && x.anio === c.anio
-    && x.curso.toLowerCase() === c.curso.toLowerCase());
-
-  function readCommon(f) {
-    const curso = clean(f.curso.value), mes = +f.mes.value, anio = +f.anio.value;
-    if (curso.length < 3) { toast('Escribe el nombre del curso.', 'error'); return null; }
-    if (!(anio >= 2000 && anio <= 2100)) { toast('Escribe un año válido.', 'error'); return null; }
-    return { curso, mes, anio };
-  }
-
-  formEmitir.addEventListener('submit', e => {
-    e.preventDefault();
-    const f = formEmitir;
-    const common = readCommon(f);
-    if (!common) return;
-    const cedula = normCedula(f.cedula.value), nombre = clean(f.nombre.value);
-    if (!validCedula(cedula)) { toast('Escribe una cédula válida (solo números).', 'error'); return; }
-    if (nombre.length < 3) { toast('Escribe el nombre que aparecerá en el certificado.', 'error'); return; }
-    const cert = { id: uid(), cedula, nombre, ...common, creado: Date.now() };
-    const certs = getCerts();
-    if (isDup(certs, cert) && !confirm('Esta persona ya tiene un certificado de ese curso en esa fecha. ¿Crear otro igual?')) return;
-    certs.push(cert);
-    if (!setCerts(certs)) return;
-    const registrado = getUsers().some(u => u.cedula === cedula);
-    toast(`Certificado emitido para ${nombre}.${registrado ? '' : ' Lo verá cuando se registre con su cédula.'}`);
-    f.cedula.value = '';
-    f.nombre.value = '';
-    delete f.nombre.dataset.auto;
-    f.cedula.focus();
-    fillDatalists();
-    fx.stamp($('#emitir-preview'));
-    updateStats();
-    updatePreview(f);
-  });
-
-  /* Lote: "cédula, nombre" por línea (coma, punto y coma o tabulación de Excel) */
-  function parseLote(text) {
-    const users = new Map(getUsers().map(u => [u.cedula, u]));
-    const ok = [], bad = [];
-    text.split(/\r?\n/).forEach((line, i) => {
-      if (!line.trim()) return;
-      const parts = line.split(/\t|;|,/).map(p => p.trim().replace(/^"(.*)"$/, '$1'));
-      if (!/\d/.test(parts[0])) return; // encabezado u otra línea sin cédula
-      const cedula = normCedula(parts[0]);
-      const nombre = clean(parts.slice(1).filter(p => p && !/[@\d]/.test(p)).join(' '))
-        || (users.get(cedula) || {}).nombre || '';
-      if (!validCedula(cedula) || !nombre) { bad.push(i + 1); return; }
-      ok.push({ cedula, nombre });
-    });
-    return { ok, bad };
-  }
-
-  const formLote = $('#form-lote');
-  function updateLoteInfo() {
-    const info = $('#lote-info');
-    const { ok, bad } = parseLote(formLote.lista.value);
-    if (!ok.length && !bad.length) {
-      info.textContent = 'También puedes copiar y pegar las dos columnas desde Excel.';
-      info.classList.remove('ok');
-      return;
-    }
-    info.textContent = `${ok.length} participante(s) listo(s)` + (bad.length ? ` · revisa la(s) línea(s) ${bad.join(', ')}` : '');
-    info.classList.toggle('ok', !bad.length);
-  }
-  formLote.addEventListener('input', () => { updateLoteInfo(); updatePreview(formLote); });
-  formLote.addEventListener('change', () => updatePreview(formLote));
-
-  $('#in-csv').addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    formLote.lista.value = (await file.text()).trim();
-    e.target.value = '';
-    updateLoteInfo();
-    updatePreview(formLote);
-  });
-
-  formLote.addEventListener('submit', e => {
-    e.preventDefault();
-    const common = readCommon(formLote);
-    if (!common) return;
-    const { ok, bad } = parseLote(formLote.lista.value);
-    if (!ok.length) { toast('Agrega al menos un participante (cédula, nombre).', 'error'); return; }
-    if (bad.length && !confirm(`Hay ${bad.length} línea(s) con errores que se omitirán (${bad.join(', ')}). ¿Continuar?`)) return;
-    const certs = getCerts();
-    let creados = 0, omitidos = 0;
-    ok.forEach(p => {
-      const cert = { id: uid(), ...p, ...common, creado: Date.now() };
-      if (isDup(certs, cert)) { omitidos++; return; }
-      certs.push(cert);
-      creados++;
-    });
-    if (!setCerts(certs)) return;
-    toast(`Se emitieron ${creados} certificado(s)` + (omitidos ? ` · ${omitidos} ya existían` : '') + '.');
-    formLote.lista.value = '';
-    updateLoteInfo();
-    fillDatalists();
-    fx.stamp($('#emitir-preview'));
-    updateStats();
-  });
 
   /* ---------------- Admin: lista ---------------- */
   function renderLista() {
     const q = clean($('#lista-buscar').value).toLowerCase();
     const all = getCerts().sort(byDate);
-    const certs = all.filter(c => !q || `${c.cedula} ${c.nombre} ${c.curso}`.toLowerCase().includes(q));
+    const certs = all.filter(c => {
+      const d = datosCertificado(c);
+      return !q || `${d.cedula} ${d.nombre} ${d.curso}`.toLowerCase().includes(q);
+    });
     $('#lista-count').textContent = q ? `${certs.length} de ${all.length} certificado(s)` : `${all.length} certificado(s) en total`;
-    $('#lista-body').innerHTML = certs.length ? certs.map(c => `
+    $('#lista-body').innerHTML = certs.length ? certs.map(c => {
+      const d = datosCertificado(c);
+      const hab = c.habilitado !== false;
+      const fechaCol = c.descargadoEn
+        ? `<span>${fechaTimestamp(c.descargadoEn)}</span> <span class="muted small">(Descargado)</span>`
+        : `<span class="muted small">Al descargar</span>`;
+      return `
       <tr>
-        <td class="nowrap">${fmtCedula(c.cedula)}</td>
-        <td class="strong">${esc(c.nombre)}</td>
-        <td>${esc(c.curso)}</td>
-        <td class="nowrap">${fecha(c)}</td>
+        <td class="nowrap">${fmtCedula(d.cedula)}</td>
+        <td class="strong">${esc(d.nombre)}</td>
+        <td>${esc(d.curso)}${d.horas ? ` <span class="muted small">(${d.horas}h)</span>` : ''}</td>
+        <td class="nowrap">${fechaCol}</td>
+        <td>
+          <button class="cert-status-pill ${hab ? 'is-enabled' : 'is-pending'}" data-act="toggle-hab" data-id="${c.id}" title="${hab ? 'Habilitado · clic para pausar' : 'Pendiente · clic para habilitar'}">
+            ${hab ? '✓ Habilitado' : '⏳ Pendiente'}
+          </button>
+        </td>
         <td><div class="t-actions">
-          <button class="btn btn-light btn-icon" data-act="ver" data-id="${c.id}" title="Ver" aria-label="Ver">${ic('eye')}</button>
+          <button class="btn btn-light btn-icon" data-act="ver" data-id="${c.id}" title="Ver certificado" aria-label="Ver certificado">${ic('eye')}</button>
           <button class="btn btn-light btn-icon" data-act="pdf" data-id="${c.id}" title="Descargar PDF" aria-label="Descargar PDF">${ic('download')}</button>
           <button class="btn btn-danger btn-icon" data-act="del" data-id="${c.id}" title="Eliminar" aria-label="Eliminar">${ic('trash')}</button>
         </div></td>
-      </tr>`).join('')
-      : `<tr><td colspan="5" class="t-empty">${q ? 'Sin resultados.' : 'Todavía no se ha emitido ningún certificado.'}</td></tr>`;
+      </tr>`;
+    }).join('')
+      : `<tr><td colspan="6" class="t-empty">${q ? 'Sin resultados.' : 'Todavía no hay certificados registrados.'}</td></tr>`;
+    updatePendingBadge();
   }
   $('#lista-buscar').addEventListener('input', renderLista);
 
@@ -1269,36 +1914,106 @@
   function renderUsuarios() {
     const certs = getCerts();
     const me = currentUser();
-    const users = getUsers().sort((a, b) => (b.role === 'admin') - (a.role === 'admin') || b.creado - a.creado);
-    $('#usuarios-body').innerHTML = users.map(u => {
-      const n = certs.filter(c => c.cedula === u.cedula).length;
+    const q = clean($('#usuarios-buscar')?.value || '').toLowerCase();
+    const allUsers = getUsers().sort((a, b) => (b.role === 'admin') - (a.role === 'admin') || b.creado - a.creado);
+    const users = allUsers.filter(u => {
+      if (!q) return true;
+      const uCerts = certs.filter(c => c.cedula === u.cedula).map(c => c.curso).join(' ');
+      return `${u.cedula} ${u.nombre} ${u.email || ''} ${u.areas || ''} ${uCerts}`.toLowerCase().includes(q);
+    });
+    updateStats();
+
+    $('#usuarios-body').innerHTML = users.length ? users.map(u => {
+      const userCerts = certs.filter(c => c.cedula === u.cedula).sort((a, b) => (a.habilitado === false ? -1 : 1) || byDate(a, b));
+      const pend = userCerts.filter(c => c.habilitado === false).length;
+      const hab = userCerts.length - pend;
       const isMe = u.cedula === me.cedula;
-      const userAreas = (u.areas || '').split(',').map(s => s.trim()).filter(Boolean);
+      const userAreas = parseTalleres(u.areas || '');
       const emailTxt = u.email ? `<small class="muted" style="word-break:break-all;">${esc(u.email)}</small>` : '<span class="muted small">—</span>';
-      const areasHtml = userAreas.length
-        ? `<div class="table-areas-list">${userAreas.map(a => `<span class="user-area-pill">${esc(a)}</span>`).join('')}</div>`
-        : (u.role === 'admin' ? '<span class="muted small">Administración</span>' : '<span class="muted small">Sin área</span>');
+
+      // Pills interactivos de talleres/certificados (clic directo habilita o pausa)
+      const certKeys = new Set(userCerts.map(c => clean(c.curso).toLowerCase()));
+      const extraAreas = userAreas.filter(a => !certKeys.has(a.toLowerCase()) && !userCerts.some(c => c.area && clean(c.area).toLowerCase() === a.toLowerCase()));
+      let talleresHtml = '';
+      if (userCerts.length || extraAreas.length) {
+        talleresHtml = `<div class="user-certs-pills">` +
+          userCerts.map(c => {
+            const on = c.habilitado !== false;
+            return `<button type="button" class="cert-status-pill ${on ? 'is-enabled' : 'is-pending'}" data-act="toggle-hab" data-id="${c.id}" title="${on ? 'Habilitado · clic para pausar' : 'Pendiente · clic para habilitar'}">${on ? '✓' : '⏳'} ${esc(c.curso)}</button>`;
+          }).join('') +
+          extraAreas.map(a => `<span class="user-area-pill">${esc(a)}</span>`).join('') +
+          `</div>`;
+      } else {
+        talleresHtml = u.role === 'admin'
+          ? '<span class="muted small">Administración</span>'
+          : '<span class="muted small">Sin talleres registrados</span>';
+      }
+
+      const statusCol = u.role === 'admin' && !userCerts.length
+        ? '<span class="muted small">—</span>'
+        : userCerts.length
+          ? `<span class="cert-status-pill cert-status-pill--static ${pend ? 'is-pending' : 'is-enabled'}">${hab}/${userCerts.length} ${pend ? `(${pend} pend.)` : 'listo'}</span>`
+          : '<span class="muted small">0 certificados</span>';
 
       const actions = isMe ? '<span class="muted small">Sesión activa</span>' : `
-        <button class="btn btn-light btn-sm" data-act="editareas" data-id="${esc(u.cedula)}" title="Editar áreas de servicio">${ic('pen')}Áreas</button>
-        <button class="btn btn-light btn-sm" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer clave a la cédula">${ic('refresh')}Restablecer clave</button>
-        <button class="btn btn-light btn-sm" data-act="role" data-id="${esc(u.cedula)}">${ic('shield')}${u.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}</button>
+        ${pend > 0 ? `<button class="btn btn-sm btn-enable-ok" data-act="habilitar-todo" data-id="${esc(u.cedula)}" title="Habilitar los ${pend} certificado(s) pendiente(s)">${ic('check')}Habilitar (${pend})</button>` : ''}
+        <button class="btn btn-light btn-sm" data-act="gestionar-certs" data-id="${esc(u.cedula)}" title="Gestionar y habilitar talleres">${ic('list')}Gestionar</button>
+        <button class="btn btn-light btn-sm" data-act="editareas" data-id="${esc(u.cedula)}" title="Editar talleres registrados">${ic('pen')}Talleres</button>
+        <button class="btn btn-light btn-sm" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer clave a la cédula">${ic('refresh')}Clave</button>
+        <button class="btn btn-light btn-sm" data-act="role" data-id="${esc(u.cedula)}">${ic('shield')}${u.role === 'admin' ? 'Quitar admin' : 'Admin'}</button>
         <button class="btn btn-danger btn-icon" data-act="deluser" data-id="${esc(u.cedula)}" title="Eliminar cuenta" aria-label="Eliminar">${ic('trash')}</button>`;
       return `<tr>
         <td class="nowrap">${fmtCedula(u.cedula)}</td>
         <td class="strong">${esc(u.nombre)} ${u.role === 'admin' ? '<span class="badge">Admin</span>' : ''}</td>
         <td>${emailTxt}</td>
-        <td>${areasHtml}</td>
-        <td>${n}</td>
+        <td>${talleresHtml}</td>
+        <td>${statusCol}</td>
         <td class="nowrap">${new Date(u.creado).toLocaleDateString('es-VE')}</td>
         <td><div class="t-actions">${actions}</div></td>
       </tr>`;
-    }).join('');
+    }).join('')
+      : `<tr><td colspan="7" class="t-empty">No se encontraron participantes con "${esc(q)}".</td></tr>`;
+    updatePendingBadge();
   }
+  $('#usuarios-buscar')?.addEventListener('input', renderUsuarios);
 
   /* ---------------- Admin: diseño ---------------- */
   let draft = getSettings();
   const formConfig = $('#form-config');
+
+  let pdfDocActivo = null;
+  let pdfPageCache = new Map();
+  let pdfPaginaActual = 1;
+
+  function renderTestInputs() {
+    if ($('#test-nombre')) $('#test-nombre').value = SAMPLE.nombre;
+    if ($('#test-cedula')) $('#test-cedula').value = SAMPLE.cedula;
+    if ($('#test-curso')) $('#test-curso').value = SAMPLE.curso;
+    if ($('#test-horas')) $('#test-horas').value = SAMPLE.horas ?? 5;
+    if ($('#test-dia')) $('#test-dia').value = SAMPLE.dia ?? now.getDate();
+    if ($('#test-mes')) $('#test-mes').value = SAMPLE.mes ?? (now.getMonth() + 1);
+    if ($('#test-anio')) $('#test-anio').value = SAMPLE.anio ?? now.getFullYear();
+  }
+
+  function seleccionarPresetOficial(presetKey) {
+    const next = crearSettingsPreset(presetKey);
+    // Conservar logos e info institucional personalizada del modo digital si el usuario cambia
+    draft = {
+      ...draft,
+      modeloVersion: MODELO_VERSION,
+      modeloPreset: next.modeloPreset,
+      plantilla: next.plantilla,
+      plantillaW: next.plantillaW,
+      plantillaH: next.plantillaH,
+      campos: next.campos,
+      camposAuto: next.camposAuto,
+    };
+    pdfDocActivo = null;
+    pdfPageCache.clear();
+    $('#pdf-page-selector')?.classList.add('hidden');
+    prepararMuestra(draft.plantilla);
+    syncConfig();
+  }
 
   function renderConfig(d = getSettings()) {
     draft = d;
@@ -1307,6 +2022,7 @@
       if (el.type === 'checkbox') el.checked = !!draft[el.name];
       else el.value = draft[el.name];
     }
+    renderTestInputs();
     prepararMuestra(draft.plantilla);
     syncConfig();
   }
@@ -1315,9 +2031,21 @@
     const tpl = !!draft.plantilla;
     $('#tpl-controls').classList.toggle('hidden', !tpl);
     $('#default-controls').classList.toggle('hidden', tpl);
-    $('#btn-quitar-plantilla').classList.toggle('hidden', !tpl);
+    $('#btn-quitar-plantilla').classList.toggle('hidden', draft.modeloPreset === 'emprende1');
     $('#btn-quitar-logo').classList.toggle('hidden', !draft.logo);
     $('#editor-ayuda').classList.toggle('hidden', !tpl);
+
+    const activeModel = tpl ? (MODELOS_OFICIALES[draft.modeloPreset] ? draft.modeloPreset : 'custom') : 'digital';
+    const customCard = $('#model-picker-custom');
+    if (customCard) {
+      customCard.classList.toggle('hidden', activeModel !== 'custom');
+      if (activeModel === 'custom' && $('#model-custom-thumb')) {
+        $('#model-custom-thumb').src = draft.plantilla;
+      }
+    }
+    $$('.model-picker-card').forEach(card => {
+      card.classList.toggle('active', card.dataset.modelo === activeModel);
+    });
 
     const activePreset = draft.logo ? '' : (draft.logoPreset || 'duo');
     $$('.preset-btn').forEach(b => {
@@ -1334,22 +2062,42 @@
   let campoActivo = 'nombre';
 
   function sincronizarPanel() {
+    if (!draft.campos || !draft.campos[campoActivo]) campoActivo = 'nombre';
     const f = draft.campos[campoActivo];
     $$('.campo-chip').forEach(b => {
+      const cObj = draft.campos[b.dataset.campo];
       b.classList.toggle('activo', b.dataset.campo === campoActivo);
-      b.classList.toggle('oculto', !draft.campos[b.dataset.campo].visible);
+      b.classList.toggle('oculto', !cObj || !cObj.visible);
     });
     $$('[data-f]', formConfig).forEach(el => {
       const v = f[el.dataset.f];
       if (el.type === 'checkbox') el.checked = !!v;
       else if (el.value !== String(v ?? '')) el.value = v ?? '';
     });
+
+    // Mostrar controles contextuales según el campo seleccionado
+    const isIntro = campoActivo === 'intro';
+    const isFecha = campoActivo === 'fecha';
+    $('#wrap-textoFijo')?.classList.toggle('hidden', !isIntro);
+    $('#wrap-formatoFecha')?.classList.toggle('hidden', !isFecha);
+    $('#wrap-afijos')?.classList.toggle('hidden', isIntro);
+
     $('[data-out="size"]').textContent = `${f.size}`;
     $('[data-out="ancho"]').textContent = `${f.ancho}%`;
     $('[data-out="taparEscala"]').textContent = `${f.taparEscala || 100}%`;
     $('#campo-parche').classList.toggle('hidden', !f.tapar);
     $$('#config-preview .tpl-field').forEach(el => el.classList.toggle('sel', el.dataset.campo === campoActivo));
   }
+
+  $('#model-picker-grid')?.addEventListener('click', e => {
+    const card = e.target.closest('.model-picker-card');
+    if (!card) return;
+    const key = card.dataset.modelo;
+    if (key === 'custom') return;
+    seleccionarPresetOficial(key);
+    setSettings(draft);
+    toast(key === 'digital' ? 'Diseño Digital Clásico activado.' : `Activado: ${MODELOS_OFICIALES[key]?.nombre || key}`);
+  });
 
   $('#campo-chips').addEventListener('click', e => {
     const b = e.target.closest('.campo-chip');
@@ -1368,7 +2116,33 @@
     syncConfig();
   });
 
-  // Arrastrar un dato sobre la vista previa
+  // Edición rápida de prueba en tiempo real
+  $('#card-live-test')?.addEventListener('input', e => {
+    const el = e.target;
+    if (el.id === 'test-nombre') SAMPLE.nombre = el.value || 'Nombre Apellido';
+    else if (el.id === 'test-cedula') SAMPLE.cedula = el.value;
+    else if (el.id === 'test-curso') SAMPLE.curso = el.value || 'Nombre taller';
+    else if (el.id === 'test-horas') SAMPLE.horas = el.value || '5';
+    else if (el.id === 'test-dia') SAMPLE.dia = Math.min(31, Math.max(1, +el.value || 1));
+    else if (el.id === 'test-mes') SAMPLE.mes = +el.value || 1;
+    else if (el.id === 'test-anio') SAMPLE.anio = +el.value || now.getFullYear();
+    else return;
+    mount($('#config-preview'), SAMPLE, draft);
+    if (draft.plantilla) {
+      $$('#config-preview .tpl-field').forEach(fld => fld.classList.toggle('sel', fld.dataset.campo === campoActivo));
+    }
+  });
+  $('#card-live-test')?.addEventListener('change', e => {
+    if (e.target.id === 'test-mes') {
+      SAMPLE.mes = +e.target.value || 1;
+      mount($('#config-preview'), SAMPLE, draft);
+      if (draft.plantilla) {
+        $$('#config-preview .tpl-field').forEach(fld => fld.classList.toggle('sel', fld.dataset.campo === campoActivo));
+      }
+    }
+  });
+
+  // Arrastrar o hacer doble clic para editar sobre la vista previa
   const vistaEditor = $('#config-preview');
   let arrastre = null;
   vistaEditor.addEventListener('pointerdown', e => {
@@ -1381,6 +2155,17 @@
     arrastre = { el, f, r, dx: e.clientX - (r.left + f.x / 100 * r.width), dy: e.clientY - (r.top + f.y / 100 * r.height) };
     vistaEditor.setPointerCapture(e.pointerId);
     sincronizarPanel();
+  });
+  vistaEditor.addEventListener('dblclick', e => {
+    const el = e.target.closest('.tpl-field');
+    if (!el || !draft.plantilla) return;
+    const c = el.dataset.campo;
+    const mapFocus = { nombre: '#test-nombre', cedula: '#test-cedula', curso: '#test-curso', fecha: '#test-dia', intro: '[data-f="textoFijo"]' };
+    const target = $(mapFocus[c]);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => { target.focus(); target.select?.(); }, 180);
+    }
   });
   vistaEditor.addEventListener('pointermove', e => {
     if (!arrastre) return;
@@ -1413,12 +2198,16 @@
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
-        const cv = document.createElement('canvas');
-        cv.width = img.width;
-        cv.height = img.height;
-        const ctx = cv.getContext('2d', { willReadFrequently: true });
-        ctx.drawImage(img, 0, 0);
-        muestra = { src, ctx, w: img.width, h: img.height };
+        try {
+          const cv = document.createElement('canvas');
+          cv.width = img.width;
+          cv.height = img.height;
+          const ctx = cv.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0);
+          muestra = { src, ctx, w: img.width, h: img.height };
+        } catch {
+          muestra = null;
+        }
         resolve();
       };
       img.onerror = () => resolve();
@@ -1431,50 +2220,59 @@
   // Lee una zona del modelo (en %): su color de fondo y el color de lo que está escrito ahí
   function leerZona(x, y, ancho, alto) {
     if (!muestra) return null;
-    const x0 = Math.max(0, Math.floor((x - ancho / 2) / 100 * muestra.w));
-    const y0 = Math.max(0, Math.floor((y - alto / 2) / 100 * muestra.h));
-    const w = Math.max(1, Math.min(muestra.w - x0, Math.ceil(ancho / 100 * muestra.w)));
-    const h = Math.max(1, Math.min(muestra.h - y0, Math.ceil(alto / 100 * muestra.h)));
-    const d = muestra.ctx.getImageData(x0, y0, w, h).data;
-    // El fondo se toma solo del borde de la zona, para que la letra del centro no lo contamine
-    const canales = [[], [], []];
-    for (let f = 0; f < h; f++) {
-      for (let col = 0; col < w; col++) {
-        if (f > 1 && f < h - 2 && col > 1 && col < w - 2) continue;
-        const i = (f * w + col) * 4;
-        for (let c = 0; c < 3; c++) canales[c].push(d[i + c]);
+    try {
+      const x0 = Math.max(0, Math.floor((x - ancho / 2) / 100 * muestra.w));
+      const y0 = Math.max(0, Math.floor((y - alto / 2) / 100 * muestra.h));
+      const w = Math.max(1, Math.min(muestra.w - x0, Math.ceil(ancho / 100 * muestra.w)));
+      const h = Math.max(1, Math.min(muestra.h - y0, Math.ceil(alto / 100 * muestra.h)));
+      const d = muestra.ctx.getImageData(x0, y0, w, h).data;
+      // El fondo se toma solo del borde de la zona, para que la letra del centro no lo contamine
+      const canales = [[], [], []];
+      for (let f = 0; f < h; f++) {
+        for (let col = 0; col < w; col++) {
+          if (f > 1 && f < h - 2 && col > 1 && col < w - 2) continue;
+          const i = (f * w + col) * 4;
+          for (let c = 0; c < 3; c++) canales[c].push(d[i + c]);
+        }
       }
+      const fondo = canales.map(v => v.sort((a, b) => a - b)[v.length >> 1]);
+      let tinta = null, mayor = 90;
+      for (let i = 0; i < d.length; i += 4) {
+        const dist = Math.abs(d[i] - fondo[0]) + Math.abs(d[i + 1] - fondo[1]) + Math.abs(d[i + 2] - fondo[2]);
+        if (dist > mayor) { mayor = dist; tinta = [d[i], d[i + 1], d[i + 2]]; }
+      }
+      const oscuro = 0.3 * fondo[0] + 0.59 * fondo[1] + 0.11 * fondo[2] < 110;
+      return { fondo: aHex(fondo), tinta: tinta && aHex(tinta), oscuro };
+    } catch {
+      return null;
     }
-    const fondo = canales.map(v => v.sort((a, b) => a - b)[v.length >> 1]);
-    let tinta = null, mayor = 90;
-    for (let i = 0; i < d.length; i += 4) {
-      const dist = Math.abs(d[i] - fondo[0]) + Math.abs(d[i + 1] - fondo[1]) + Math.abs(d[i + 2] - fondo[2]);
-      if (dist > mayor) { mayor = dist; tinta = [d[i], d[i + 1], d[i + 2]]; }
-    }
-    const oscuro = 0.3 * fondo[0] + 0.59 * fondo[1] + 0.11 * fondo[2] < 110;
-    return { fondo: aHex(fondo), tinta: tinta && aHex(tinta), oscuro };
   }
 
   // Borra una zona de la imagen del modelo rellenándola con lo que hay justo encima y debajo
   function borrarZona(x, y, ancho, alto) {
-    const { ctx, w: W, h: H } = muestra;
-    const x0 = Math.max(0, Math.floor((x - ancho / 2) / 100 * W));
-    const y0 = Math.max(1, Math.floor((y - alto / 2) / 100 * H));
-    const w = Math.min(W - x0, Math.ceil(ancho / 100 * W));
-    const h = Math.min(H - y0 - 1, Math.ceil(alto / 100 * H));
-    if (w < 1 || h < 1) return;
-    const arriba = ctx.getImageData(x0, y0 - 1, w, 1).data;
-    const abajo = ctx.getImageData(x0, y0 + h, w, 1).data;
-    const zona = ctx.createImageData(w, h);
-    for (let f = 0; f < h; f++) {
-      const t = (f + 1) / (h + 1);
-      for (let col = 0; col < w; col++) {
-        const i = col * 4, j = (f * w + col) * 4;
-        for (let c = 0; c < 3; c++) zona.data[j + c] = arriba[i + c] * (1 - t) + abajo[i + c] * t;
-        zona.data[j + 3] = 255;
+    if (!muestra) return;
+    try {
+      const { ctx, w: W, h: H } = muestra;
+      const x0 = Math.max(0, Math.floor((x - ancho / 2) / 100 * W));
+      const y0 = Math.max(1, Math.floor((y - alto / 2) / 100 * H));
+      const w = Math.min(W - x0, Math.ceil(ancho / 100 * W));
+      const h = Math.min(H - y0 - 1, Math.ceil(alto / 100 * H));
+      if (w < 1 || h < 1) return;
+      const arriba = ctx.getImageData(x0, y0 - 1, w, 1).data;
+      const abajo = ctx.getImageData(x0, y0 + h, w, 1).data;
+      const zona = ctx.createImageData(w, h);
+      for (let f = 0; f < h; f++) {
+        const t = (f + 1) / (h + 1);
+        for (let col = 0; col < w; col++) {
+          const i = col * 4, j = (f * w + col) * 4;
+          for (let c = 0; c < 3; c++) zona.data[j + c] = arriba[i + c] * (1 - t) + abajo[i + c] * t;
+          zona.data[j + 3] = 255;
+        }
       }
+      ctx.putImageData(zona, x0, y0);
+    } catch {
+      // Canvas protegido en file:// sin servidor
     }
-    ctx.putImageData(zona, x0, y0);
   }
 
   function colorDelParche(f) {
@@ -1484,41 +2282,86 @@
     f.taparColor = z ? z.fondo : '#ffffff';
   }
 
-  // Coloca los datos según el modelo recién subido
+  // Coloca los datos según el modelo recién subido y lo adapta a Nombre, Cédula, Taller y Día/Mes/Año
   async function adaptarAlModelo(modelo) {
+    draft.modeloVersion = MODELO_VERSION;
+    draft.modeloPreset = modelo.presetName || 'custom';
     draft.plantilla = modelo.data;
     draft.plantillaW = modelo.w;
     draft.plantillaH = modelo.h;
     await prepararMuestra(modelo.data);
     const { w, h } = tamano(draft);
-    const campos = camposBase({ fuenteNombre: draft.fuenteNombre, mostrarCedula: draft.mostrarCedula }, w / CERT_W);
+    const campos = camposBase({ fuenteNombre: 'sans', mostrarCedula: true }, w / CERT_W);
+
     CLAVES_CAMPO.forEach(clave => {
       const f = campos[clave];
       const z = leerZona(f.x, f.y, f.ancho, 8);
       if (z && z.oscuro) f.color = '#ffffff';              // sobre un fondo oscuro, letra clara
     });
+
     const marcadores = modelo.marcadores || [];
     if (marcadores.length) {
-      CLAVES_CAMPO.forEach(clave => { campos[clave].visible = false; });
+      campos.intro.visible = false;
+      let hasCedulaMarker = false;
+      const encontradosSet = new Set();
       marcadores.forEach(m => {
         const f = campos[m.campo];
+        if (!f) return;
+        encontradosSet.add(m.campo);
+        if (m.campo === 'cedula') hasCedulaMarker = true;
         const z = leerZona(m.x, m.y, m.w * 1.08, m.h * 1.5);
         Object.assign(f, {
-          visible: true, x: +m.x.toFixed(2), y: +m.y.toFixed(2),
+          visible: true,
+          x: +m.x.toFixed(2),
+          y: +m.y.toFixed(2),
           size: Math.max(8, Math.round(m.h / 100 * h)),
-          ancho: Math.round(Math.min(92, Math.max(m.w * 1.5, m.campo === 'cedula' || m.campo === 'fecha' ? 30 : 60))),
-          prefijo: m.campo === 'cedula' ? f.prefijo : '',
+          ancho: Math.round(Math.min(92, Math.max(m.w * 1.5, (m.campo === 'cedula' || m.campo === 'fecha') ? 45 : 80))),
         });
-        if (z && z.tinta) f.color = z.tinta;
+        if (m.fuente) f.fuente = m.fuente;
+        if (m.prefijo !== undefined) f.prefijo = m.prefijo;
+        if (m.sufijo !== undefined) f.sufijo = m.sufijo;
+        if (m.textoFijo !== undefined) f.textoFijo = m.textoFijo;
+        if (m.formatoFecha !== undefined) f.formatoFecha = m.formatoFecha;
+        if (z && z.tinta && m.campo !== 'intro') f.color = z.tinta;
       });
-      // Ya leídos sus colores, los marcadores desaparecen del modelo
-      marcadores.forEach(m => borrarZona(m.x, m.y, m.w * 1.08, m.h * 1.5));
-      draft.plantilla = muestra.ctx.canvas.toDataURL('image/jpeg', 0.86);
-      muestra.src = draft.plantilla;
+
+      // Mantener siempre visibles Nombre, Cédula, Taller y Fecha en posiciones seguras aunque el PDF no trajera texto explícito para alguno
+      if (!encontradosSet.has('curso') && encontradosSet.has('nombre')) {
+        campos.curso.y = +Math.min(82, Math.max(64, campos.nombre.y + 15)).toFixed(2);
+      }
+      if (!encontradosSet.has('fecha') && encontradosSet.has('curso')) {
+        campos.fecha.y = +Math.min(93, Math.max(86, campos.curso.y + 16)).toFixed(2);
+      }
+
+      // Borrar limpiamente todos los textos marcadores del fondo rasterizado del PDF
+      marcadores.forEach(m => {
+        const boxes = m.eraseBoxes || [{ x: m.x, y: m.y, w: m.w * 1.12, h: m.h * 1.6 }];
+        boxes.forEach(b => borrarZona(b.x, b.y, b.w, b.h));
+      });
+      try {
+        draft.plantilla = muestra.ctx.canvas.toDataURL('image/jpeg', 0.88);
+        muestra.src = draft.plantilla;
+      } catch {}
+
+      // Si el PDF traía "Nombre Apellido" pero no traía etiqueta de Cédula explícita, activamos la Cédula debajo del Nombre
+      if (campos.nombre.visible && !hasCedulaMarker) {
+        const maxY = campos.curso.visible ? Math.min(campos.curso.y - 6.2, campos.nombre.y + 7.6) : campos.nombre.y + 7.6;
+        Object.assign(campos.cedula, {
+          visible: true,
+          x: campos.nombre.x,
+          y: +maxY.toFixed(2),
+          size: Math.max(12, Math.round(17 * w / CERT_W)),
+          ancho: 60,
+          fuente: 'sans',
+          color: '#4b5563',
+          prefijo: 'C.I. ',
+        });
+      }
     }
+
     draft.campos = campos;
     draft.camposAuto = JSON.parse(JSON.stringify(campos));
-    campoActivo = marcadores.length ? marcadores[0].campo : 'nombre';
+    campoActivo = campos.nombre.visible ? 'nombre' : (marcadores[0]?.campo || 'nombre');
     syncConfig();
     return marcadores.length;
   }
@@ -1532,13 +2375,13 @@
 
   formConfig.addEventListener('submit', e => {
     e.preventDefault();
-    if (setSettings(draft)) toast('Diseño guardado. Todos los certificados usan el nuevo diseño.');
+    if (setSettings(draft)) toast('Diseño guardado. Todos los certificados usan este modelo.');
   });
 
   $('#btn-restablecer').addEventListener('click', () => {
-    const { logo, plantilla, plantillaW, plantillaH, camposAuto } = draft;
-    const campos = camposAuto ? JSON.parse(JSON.stringify(camposAuto)) : camposBase();
-    renderConfig({ ...DEFAULTS, logo, plantilla, plantillaW, plantillaH, camposAuto, campos });
+    seleccionarPresetOficial('emprende1');
+    setSettings(draft);
+    toast('Restablecido al Modelo 1 Oficial Chacao Emprende.');
   });
 
   function imageToDataURL(file, maxSide, type) {
@@ -1574,62 +2417,219 @@
   const LADO_MODELO = 2000;                               // resolución con la que se guarda el modelo
   const RE_MARCADOR = /(?:\{\{?|\[\[?|<<?|«)\s*(nombre(?:\s+(?:completo|y\s+apellido))?|apellido|participante|alumno|estudiante|c[eé]dula|c\.?i\.?|curso|area|motivo|actividad|proyecto|taller|fecha|mes(?:\s+y\s+a[nñ]o)?|a[nñ]o)\s*(?:\}\}?|\]\]?|>>?|»)/gi;
 
-  // Busca marcadores como {{nombre}}, {{curso}}, {{fecha}}, {{cedula}} en el texto del PDF
+  // Detecta tanto marcadores {{...}} como los textos reales de Chacao Emprende (Nombre Apellido, Taller, Chacao dia de mes de año)
   async function buscarMarcadores(page, viewport) {
     const { items } = await page.getTextContent();
-    const lineas = new Map();
+    const rowMap = new Map();
     items.forEach(it => {
       if (!it.str) return;
       const [x, y] = viewport.convertToViewportPoint(it.transform[4], it.transform[5]);
-      const fila = Math.round(y / 4);
-      if (!lineas.has(fila)) lineas.set(fila, []);
-      lineas.get(fila).push({
+      const fila = Math.round(y / 5);
+      if (!rowMap.has(fila)) rowMap.set(fila, []);
+      rowMap.get(fila).push({
         x, y, str: it.str, ancho: it.width * viewport.scale,
         alto: Math.hypot(it.transform[2], it.transform[3]) * viewport.scale,
       });
     });
+
+    const lineasOrd = [...rowMap.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([, partes]) => {
+        partes.sort((a, b) => a.x - b.x);
+        let texto = '';
+        const tramos = partes.map(p => { const t = { p, ini: texto.length }; texto += p.str; t.fin = texto.length; return t; });
+        const x0 = partes[0].x;
+        const ult = partes[partes.length - 1];
+        const x1 = ult.x + ult.ancho;
+        const yBase = partes.reduce((acc, p) => acc + p.y, 0) / partes.length;
+        const alto = Math.max(...partes.map(p => p.alto));
+        return { texto, cleanText: clean(texto), tramos, x0, x1, yBase, alto };
+      })
+      .filter(l => l.cleanText.length > 0);
+
+    const usados = new Set();
     const encontrados = [];
-    lineas.forEach(partes => {
-      partes.sort((a, b) => a.x - b.x);
-      let texto = '';
-      const tramos = partes.map(p => { const t = { p, ini: texto.length }; texto += p.str; t.fin = texto.length; return t; });
-      for (const m of texto.matchAll(RE_MARCADOR)) {
+    const pctX = px => px / viewport.width * 100;
+    const pctY = py => py / viewport.height * 100;
+    const makeEraseBox = l => ({
+      x: pctX((l.x0 + l.x1) / 2),
+      y: pctY(l.yBase - l.alto * 0.28),
+      w: Math.max(4, pctX(l.x1 - l.x0) + 1.8),
+      h: Math.max(1.5, pctY(l.alto * 1.65)),
+    });
+
+    // 1. Buscar marcadores con llaves {{nombre}}, [curso], etc.
+    lineasOrd.forEach((l, idx) => {
+      for (const m of l.texto.matchAll(RE_MARCADOR)) {
         const fin = m.index + m[0].length;
-        const tocados = tramos.filter(t => t.ini < fin && t.fin > m.index);
+        const tocados = l.tramos.filter(t => t.ini < fin && t.fin > m.index);
         if (!tocados.length) continue;
-        // Posición proporcional dentro de cada tramo, por si el marcador comparte línea con otro texto
         const a = tocados[0], z = tocados[tocados.length - 1];
-        const x0 = a.p.x + a.p.ancho * (m.index - a.ini) / (a.fin - a.ini);
-        const x1 = z.p.x + z.p.ancho * (fin - z.ini) / (z.fin - z.ini);
+        const lenA = Math.max(1, a.fin - a.ini), lenZ = Math.max(1, z.fin - z.ini);
+        const x0 = a.p.x + a.p.ancho * (m.index - a.ini) / lenA;
+        const x1 = z.p.x + z.p.ancho * (fin - z.ini) / lenZ;
         const alto = Math.max(...tocados.map(t => t.p.alto));
-        
         const rawKey = m[1].toLowerCase().replace(/[.\s]+/g, ' ').trim();
         let clave = 'curso';
         if (/^(nombre|apellido|participante|alumno|estudiante)/.test(rawKey)) clave = 'nombre';
         else if (/^(c[eé]dula|ci|c i)/.test(rawKey)) clave = 'cedula';
         else if (/^(fecha|mes|a[nñ]o)/.test(rawKey)) clave = 'fecha';
-        else clave = 'curso';
 
+        usados.add(idx);
         encontrados.push({
           campo: clave,
-          x: (x0 + x1) / 2 / viewport.width * 100,
-          y: (a.p.y - alto * 0.32) / viewport.height * 100,
-          w: (x1 - x0) / viewport.width * 100,
-          h: alto / viewport.height * 100,
+          x: pctX((x0 + x1) / 2),
+          y: pctY(a.p.y - alto * 0.30),
+          w: pctX(x1 - x0),
+          h: pctY(alto * 1.05),
+          eraseBoxes: [{
+            x: pctX((x0 + x1) / 2),
+            y: pctY(a.p.y - alto * 0.28),
+            w: pctX(x1 - x0) + 1.5,
+            h: pctY(alto * 1.65),
+          }],
         });
       }
     });
+
+    const yaTiene = clave => encontrados.some(e => e.campo === clave);
+
+    // 2. Detectar textos genéricos literales del certificado (Nombre Apellido, Taller + Horas, Chacao dia de mes de año, Encabezado)
+    for (let i = 0; i < lineasOrd.length; i++) {
+      if (usados.has(i)) continue;
+      const l = lineasOrd[i];
+      const txt = l.cleanText;
+
+      // Encabezado (La Dirección de Desarrollo y Apoyo Social ... otorga el presente certificado a:)
+      if (!yaTiene('intro') && /direcci[oó]n\s+de\s+desarrollo/i.test(txt)) {
+        const next = (i + 1 < lineasOrd.length && !usados.has(i + 1) && /otorga\s+el\s+presente/i.test(lineasOrd[i + 1].cleanText))
+          ? lineasOrd[i + 1] : null;
+        usados.add(i);
+        if (next) usados.add(i + 1);
+        const yMid = next ? (l.yBase + next.yBase) / 2 : l.yBase;
+        const maxAlto = Math.max(l.alto, next ? next.alto : 0);
+        const minX = Math.min(l.x0, next ? next.x0 : l.x0);
+        const maxX = Math.max(l.x1, next ? next.x1 : l.x1);
+        encontrados.push({
+          campo: 'intro',
+          x: 50,
+          y: pctY(yMid - maxAlto * 0.32),
+          w: Math.max(60, pctX(maxX - minX)),
+          h: pctY(maxAlto * 1.05),
+          fuente: 'sans',
+          textoFijo: 'La Dirección de **Desarrollo y Apoyo Social** de la Alcaldía de Chacao\na través del **Programa Chacao Emprende** otorga el presente certificado a:',
+          eraseBoxes: next ? [makeEraseBox(l), makeEraseBox(next)] : [makeEraseBox(l)],
+        });
+        continue;
+      }
+
+      // Nombre Apellido / Participante
+      if (!yaTiene('nombre') && /^(?:nombre\s+(?:y\s+)?apellido|nombres?\s+y\s+apellidos?|nombre\s+completo|nombre\s+del\s+(?:participante|estudiante)|participante|estudiante)$/i.test(txt)) {
+        usados.add(i);
+        encontrados.push({
+          campo: 'nombre',
+          x: 50,
+          y: pctY(l.yBase - l.alto * 0.30),
+          w: pctX(l.x1 - l.x0),
+          h: pctY(l.alto * 0.85),
+          fuente: 'sans',
+          prefijo: '',
+          sufijo: '',
+          eraseBoxes: [makeEraseBox(l)],
+        });
+        continue;
+      }
+
+      // Bloque taller ("Por su participación en el taller" + "“Nombre taller” con una duración de (5) horas")
+      if (!yaTiene('curso') && /por\s+su\s+participaci[oó]n\s+en\s+el\s+(?:taller|curso)/i.test(txt)) {
+        const next = (i + 1 < lineasOrd.length && !usados.has(i + 1) && /nombre\s*(?:del\s*)?(?:taller|curso)|taller|curso/i.test(lineasOrd[i + 1].cleanText))
+          ? lineasOrd[i + 1] : null;
+        usados.add(i);
+        if (next) usados.add(i + 1);
+        const yMid = next ? (l.yBase + next.yBase) / 2 : l.yBase;
+        const maxAlto = Math.max(l.alto, next ? next.alto : 0);
+        let suf = '” con una duración de ({horas}) horas';
+        if (next) {
+          const mT = next.cleanText.match(/nombre\s*(?:del\s*)?(?:taller|curso)(.*)/i);
+          if (mT && clean(mT[1])) {
+            const after = mT[1].replace(/^["“”'\s]+/, '').trim();
+            if (after) suf = '” ' + after.replace(/\(\s*\d+\s*\)/, '({horas})');
+          }
+        }
+        encontrados.push({
+          campo: 'curso',
+          x: 50,
+          y: pctY(yMid - maxAlto * 0.30),
+          w: pctX(Math.max(l.x1 - l.x0, next ? next.x1 - next.x0 : 0)),
+          h: pctY(maxAlto * 1.05),
+          fuente: 'sans',
+          prefijo: `${txt}\n“`,
+          sufijo: suf,
+          eraseBoxes: next ? [makeEraseBox(l), makeEraseBox(next)] : [makeEraseBox(l)],
+        });
+        continue;
+      }
+
+      // Línea suelta con Nombre taller / curso / actividad
+      if (!yaTiene('curso') && /nombre\s*(?:del\s*)?(?:taller|curso|actividad)|t[ií]tulo\s+del\s+(?:taller|curso)/i.test(txt)) {
+        usados.add(i);
+        encontrados.push({
+          campo: 'curso',
+          x: 50,
+          y: pctY(l.yBase - l.alto * 0.30),
+          w: pctX(l.x1 - l.x0),
+          h: pctY(l.alto * 1.05),
+          fuente: 'sans',
+          prefijo: 'Por su participación en el taller\n“',
+          sufijo: '” con una duración de ({horas}) horas',
+          eraseBoxes: [makeEraseBox(l)],
+        });
+        continue;
+      }
+
+      // Fecha ("Chacao, dia de mes de año", "__ de ____ de 202_", etc.)
+      if (!yaTiene('fecha') && /(?:d[ií]a|_{2,})\s+de\s+(?:mes|_{2,})\s+de\s+(?:a[ñn]o|(?:20)?_{1,})|mes\s+de\s+a[ñn]o/i.test(txt)) {
+        usados.add(i);
+        const mPref = txt.match(/^(.*?)(?:d[ií]a\s+de\s+mes\s+de\s+a[ñn]o|mes\s+de\s+a[ñn]o|_{2,}\s+de)/i);
+        const ciudadPref = mPref && mPref[1] ? clean(mPref[1]) + ' ' : '';
+        encontrados.push({
+          campo: 'fecha',
+          x: 50,
+          y: pctY(l.yBase - l.alto * 0.30),
+          w: pctX(l.x1 - l.x0),
+          h: pctY(l.alto * 1.02),
+          fuente: 'arial',
+          prefijo: ciudadPref,
+          sufijo: '',
+          formatoFecha: /d[ií]a|_{2,}/i.test(txt) ? 'completo' : 'mes_anio',
+          eraseBoxes: [makeEraseBox(l)],
+        });
+        continue;
+      }
+
+      // Cédula literal
+      if (!yaTiene('cedula') && /c[eé]dula|c\.?i\.?\s*(?:v-?)?\s*(?:x+|_+|\.\.\.)/i.test(txt)) {
+        usados.add(i);
+        encontrados.push({
+          campo: 'cedula',
+          x: pctX((l.x0 + l.x1) / 2),
+          y: pctY(l.yBase - l.alto * 0.30),
+          w: pctX(l.x1 - l.x0),
+          h: pctY(l.alto * 1.02),
+          fuente: 'sans',
+          prefijo: 'C.I. ',
+          sufijo: '',
+          eraseBoxes: [makeEraseBox(l)],
+        });
+      }
+    }
+
     return encontrados;
   }
 
-  // Convierte la primera página de un PDF en imagen (usa pdf.js solo cuando hace falta)
-  async function pdfToDataURL(file) {
-    if (!window.pdfjsLib) {
-      await loadScript(PDFJS + 'pdf.min.js');
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
-    }
-    const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
-    const page = await pdf.getPage(1);
+  async function renderPdfPage(pdf, pageNum) {
+    if (pdfPageCache.has(pageNum)) return pdfPageCache.get(pageNum);
+    const page = await pdf.getPage(pageNum);
     const base = page.getViewport({ scale: 1 });
     const viewport = page.getViewport({ scale: LADO_MODELO / Math.max(base.width, base.height) });
     const cv = document.createElement('canvas');
@@ -1640,7 +2640,61 @@
     ctx.fillRect(0, 0, cv.width, cv.height);
     await page.render({ canvasContext: ctx, viewport }).promise;
     const marcadores = await buscarMarcadores(page, viewport);
-    return { data: cv.toDataURL('image/jpeg', 0.86), w: cv.width, h: cv.height, marcadores };
+    const res = { data: cv.toDataURL('image/jpeg', 0.88), w: cv.width, h: cv.height, marcadores, presetName: 'custom' };
+    pdfPageCache.set(pageNum, res);
+    return res;
+  }
+
+  function actualizarSelectorPaginasPDF(pdf) {
+    const wrap = $('#pdf-page-selector');
+    const tabs = $('#pdf-page-tabs');
+    if (!wrap || !tabs) return;
+    if (!pdf || pdf.numPages <= 1) {
+      wrap.classList.add('hidden');
+      tabs.innerHTML = '';
+      return;
+    }
+    wrap.classList.remove('hidden');
+    const total = Math.min(pdf.numPages, 10);
+    tabs.innerHTML = Array.from({ length: total }, (_, idx) => {
+      const p = idx + 1;
+      const label = p === 1 ? 'Página 1 (Modelo 1)' : p === 2 ? 'Página 2 (Modelo 2)' : `Página ${p}`;
+      return `<button type="button" class="pdf-page-btn${p === pdfPaginaActual ? ' active' : ''}" data-pdf-page="${p}">${label}</button>`;
+    }).join('');
+  }
+
+  $('#pdf-page-tabs')?.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-pdf-page]');
+    if (!btn || !pdfDocActivo) return;
+    const p = +btn.dataset.pdfPage;
+    if (!p || p === pdfPaginaActual) return;
+    pdfPaginaActual = p;
+    actualizarSelectorPaginasPDF(pdfDocActivo);
+    try {
+      toast(`Cargando página ${p}…`);
+      const modelo = await renderPdfPage(pdfDocActivo, p);
+      const n = await adaptarAlModelo(modelo);
+      setSettings(draft);
+      toast(n
+        ? `Página ${p} activada y guardada con ${n} zona(s) detectada(s).`
+        : `Página ${p} activada y guardada automáticamente.`);
+    } catch {
+      toast('No se pudo cargar esa página del PDF.', 'error');
+    }
+  });
+
+  // Carga un PDF (soporta 1 o varias páginas y selecciona la primera automáticamente)
+  async function pdfToDataURL(file) {
+    if (!window.pdfjsLib) {
+      await loadScript(PDFJS + 'pdf.min.js');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
+    }
+    const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    pdfDocActivo = pdf;
+    pdfPageCache = new Map();
+    pdfPaginaActual = 1;
+    actualizarSelectorPaginasPDF(pdf);
+    return renderPdfPage(pdf, 1);
   }
 
   $('#in-plantilla').addEventListener('change', async e => {
@@ -1648,21 +2702,30 @@
     e.target.value = '';
     if (!file) return;
     try {
-      toast('Procesando modelo…');
+      toast('Procesando y activando nuevo modelo…');
       const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+      if (!isPdf) {
+        pdfDocActivo = null;
+        pdfPageCache.clear();
+        $('#pdf-page-selector')?.classList.add('hidden');
+      }
       const modelo = isPdf ? await pdfToDataURL(file) : await imageToDataURL(file, LADO_MODELO, 'image/jpeg');
       const n = await adaptarAlModelo(modelo);
-      if (n) toast(`Encontré ${n} marcador(es) en tu PDF y coloqué los datos ahí. Revisa y pulsa “Guardar diseño”.`);
-      else toast('Modelo cargado. Arrastra cada dato a su lugar y pulsa “Guardar diseño”.');
+      setSettings(draft);
+      if (n) {
+        toast(`¡Listo! Nuevo modelo activado y guardado automáticamente (${n} zonas detectadas).`);
+      } else {
+        toast('¡Nuevo modelo activado y guardado! Ya aplica automáticamente a los certificados.');
+      }
     } catch (err) {
       console.error(err);
       toast('No se pudo leer el archivo. Si es PDF, revisa tu conexión a internet.', 'error');
     }
   });
   $('#btn-quitar-plantilla').addEventListener('click', () => {
-    Object.assign(draft, { plantilla: '', plantillaW: 0, plantillaH: 0, camposAuto: null });
-    prepararMuestra('');
-    syncConfig();
+    seleccionarPresetOficial('emprende1');
+    setSettings(draft);
+    toast('Restablecido al Modelo 1 Oficial Chacao Emprende.');
   });
 
   $('#in-logo').addEventListener('change', async e => {
@@ -1758,16 +2821,19 @@
 
   function canSee(cert) {
     const u = currentUser();
-    return cert && u && (u.role === 'admin' || u.cedula === cert.cedula);
+    if (!cert || !u) return false;
+    if (u.role === 'admin') return true;
+    return u.cedula === cert.cedula && cert.habilitado !== false;
   }
 
   function viewCert(cert) {
     modalCert = cert;
-    $('#mc-title').textContent = cert.curso;
-    $('#mc-date').textContent = fecha(cert);
-    $('#mc-sub').textContent = `${cert.nombre} · C.I. ${fmtCedula(cert.cedula)}`;
+    const resolved = datosCertificado(cert);
+    $('#mc-title').textContent = resolved.curso;
+    $('#mc-date').textContent = `Fecha al descargar: ${fecha(resolved)}`;
+    $('#mc-sub').textContent = `${resolved.nombre} · C.I. ${fmtCedula(resolved.cedula)}`;
     openModal('#modal-cert');
-    mount($('#mc-frame'), cert);
+    mount($('#mc-frame'), resolved);
   }
   $('#mc-pdf').addEventListener('click', () => { if (modalCert) printCert(modalCert); });
 
@@ -1785,14 +2851,55 @@
         setCerts(getCerts().filter(c => c.id !== id));
         toast('Certificado eliminado.');
         renderLista();
+        if (currentUser()?.role === 'admin') { updateStats(); updatePendingBadge(); }
       }
       return;
     }
 
     if (currentUser()?.role !== 'admin') return;
+
+    if (act === 'toggle-hab') {
+      const certs = getCerts();
+      const cert = certs.find(c => c.id === id);
+      if (!cert) return;
+      cert.habilitado = cert.habilitado === false ? true : false;
+      if (!setCerts(certs)) return;
+      toast(cert.habilitado ? `Certificado de ${cert.nombre} (${cert.curso}) habilitado.` : `Certificado de ${cert.nombre} pausado.`);
+      if (!$('#view-lista').classList.contains('hidden')) renderLista();
+      if (!$('#view-usuarios').classList.contains('hidden')) renderUsuarios();
+      updatePendingBadge();
+      return;
+    }
+
     const users = getUsers();
     const user = users.find(u => u.cedula === id);
     if (!user) return;
+
+    if (act === 'habilitar-todo') {
+      const certs = getCerts();
+      let count = 0;
+      certs.forEach(c => {
+        if (c.cedula === user.cedula && c.habilitado === false) {
+          c.habilitado = true;
+          count++;
+        }
+      });
+      if (!count) {
+        toast(`${user.nombre} no tiene certificados pendientes.`);
+        return;
+      }
+      if (!setCerts(certs)) return;
+      toast(`¡${count} certificado(s) de ${user.nombre} habilitado(s)!`);
+      renderUsuarios();
+      if (!$('#view-lista').classList.contains('hidden')) renderLista();
+      updatePendingBadge();
+      return;
+    }
+
+    if (act === 'gestionar-certs') {
+      openHabilitarUserModal(user);
+      return;
+    }
 
     if (act === 'editareas') {
       openEditAreasModal(user);
@@ -1817,13 +2924,13 @@
     }
   });
 
-  /* Modal de edición de áreas */
+  /* Modal de edición de áreas / talleres */
   function openEditAreasModal(user) {
     const m = $('#modal-edit-areas');
     if (!m) return;
     $('#mea-cedula').value = user.cedula;
     $('#mea-areas').value = user.areas || '';
-    $('#mea-title').textContent = `Áreas de ${user.nombre}`;
+    $('#mea-title').textContent = `Talleres de ${user.nombre}`;
     $('#form-edit-areas .form-error').textContent = '';
     openModal('#modal-edit-areas');
     $('#mea-areas').focus();
@@ -1836,7 +2943,7 @@
     const areas = clean(f.areas.value);
     const err = $('.form-error', f);
     if (areas.length < 2) {
-      err.textContent = 'Indica al menos un área de servicio.';
+      err.textContent = 'Indica al menos un taller o área realizada.';
       return;
     }
     const users = getUsers();
@@ -1844,11 +2951,157 @@
     if (!user) return;
     user.areas = areas;
     setUsers(users);
+    const nuevos = sincronizarCertificadosUsuario(user, { habilitado: false });
     closeModals();
-    toast('Áreas de servicio comunitario actualizadas.');
+    toast(nuevos
+      ? `Talleres actualizados. Se registraron ${nuevos} nuevo(s) en espera de habilitación.`
+      : 'Talleres y áreas actualizados.');
     const cur = currentUser();
     if (cur && cur.cedula === cedula) renderMis();
     if (cur && cur.role === 'admin') renderUsuarios();
+    updatePendingBadge();
+  });
+
+  /* Modal admin: habilitar y configurar certificados de un usuario */
+  function renderMhuList(cedula) {
+    const listEl = $('#mhu-list');
+    if (!listEl) return;
+    const certs = getCerts()
+      .filter(c => c.cedula === cedula)
+      .sort((a, b) => (a.habilitado === false ? -1 : 1) || byDate(a, b));
+    if (!certs.length) {
+      listEl.innerHTML = '<div class="muted small" style="padding:14px;text-align:center;border:1px dashed var(--line);border-radius:12px;">Este usuario aún no tiene talleres registrados. Agrega uno abajo para generarlo con sus datos.</div>';
+      return;
+    }
+    listEl.innerHTML = certs.map(c => {
+      const hab = c.habilitado !== false;
+      return `<div class="mhu-item ${hab ? 'is-enabled' : 'is-pending'}" data-cert-id="${c.id}">
+        <div class="mhu-info">
+          <div class="mhu-title-row">
+            <span class="mhu-curso">${esc(c.curso)}</span>
+            <span class="muted small">${c.descargadoEn ? `· Descargado el ${fechaTimestamp(c.descargadoEn)}` : '· Fecha automática al descargar'}</span>
+          </div>
+          <div class="mhu-controls">
+            <label>Horas: <input type="number" min="1" max="500" value="${c.horas || 5}" data-mhu-horas></label>
+            <label>Modelo:
+              <select data-mhu-modelo>
+                <option value="" ${!c.modelo ? 'selected' : ''}>Predeterminado</option>
+                <option value="emprende1" ${c.modelo === 'emprende1' ? 'selected' : ''}>Modelo 1 · Chacao Emprende</option>
+                <option value="emprende2" ${c.modelo === 'emprende2' ? 'selected' : ''}>Modelo 2 · Convenio UCV / FaCES</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <label class="mhu-switch">
+          <input type="checkbox" data-mhu-check ${hab ? 'checked' : ''}>
+          <span class="mhu-slider"></span>
+          <span class="mhu-switch-txt">${hab ? 'Habilitado' : 'Pendiente'}</span>
+        </label>
+      </div>`;
+    }).join('');
+  }
+
+  function openHabilitarUserModal(user) {
+    const m = $('#modal-habilitar-user');
+    if (!m || !user) return;
+    // Si el usuario tiene áreas registradas y ningún certificado generado aún, los creamos automáticamente en pendiente
+    if (!getCerts().some(c => c.cedula === user.cedula) && user.areas) {
+      sincronizarCertificadosUsuario(user, { habilitado: false });
+    }
+    $('#mhu-cedula').value = user.cedula;
+    $('#mhu-title').textContent = `Certificados de ${user.nombre}`;
+    $('#mhu-sub').textContent = `C.I. ${fmtCedula(user.cedula)}${user.email ? ' · ' + user.email : ''} · Usa los datos del usuario y fecha al descargar`;
+    if ($('#mhu-new-curso')) $('#mhu-new-curso').value = '';
+    if ($('#mhu-new-horas')) $('#mhu-new-horas').value = 5;
+    renderMhuList(user.cedula);
+    openModal('#modal-habilitar-user');
+  }
+
+  $('#mhu-list')?.addEventListener('change', e => {
+    const chk = e.target.closest('input[data-mhu-check]');
+    if (!chk) return;
+    const item = chk.closest('.mhu-item');
+    if (!item) return;
+    const on = chk.checked;
+    item.classList.toggle('is-enabled', on);
+    item.classList.toggle('is-pending', !on);
+    const txt = $('.mhu-switch-txt', item);
+    if (txt) txt.textContent = on ? 'Habilitado' : 'Pendiente';
+  });
+
+  $('#mhu-btn-add')?.addEventListener('click', () => {
+    const cedula = $('#mhu-cedula')?.value;
+    const curso = clean($('#mhu-new-curso')?.value || '');
+    const horas = Math.min(500, Math.max(1, +$('#mhu-new-horas')?.value || 5));
+    if (!cedula) return;
+    if (curso.length < 3) {
+      toast('Escribe el nombre del taller que deseas agregar.', 'error');
+      $('#mhu-new-curso')?.focus();
+      return;
+    }
+    const users = getUsers();
+    const user = users.find(u => u.cedula === cedula);
+    if (!user) return;
+    const actuales = parseTalleres(user.areas);
+    if (!actuales.some(t => t.toLowerCase() === curso.toLowerCase())) {
+      actuales.push(curso);
+      user.areas = actuales.join(', ');
+      setUsers(users);
+    }
+    const hoy = new Date();
+    const certs = getCerts();
+    certs.push({
+      id: uid(),
+      cedula: user.cedula,
+      nombre: user.nombre,
+      curso,
+      area: curso,
+      horas,
+      dia: hoy.getDate(),
+      mes: hoy.getMonth() + 1,
+      anio: hoy.getFullYear(),
+      modelo: '',
+      habilitado: true,
+      creado: Date.now(),
+    });
+    if (!setCerts(certs)) return;
+    $('#mhu-new-curso').value = '';
+    renderMhuList(cedula);
+    renderUsuarios();
+    if (!$('#view-lista').classList.contains('hidden')) renderLista();
+    updatePendingBadge();
+    toast(`Taller "${curso}" agregado y habilitado para ${user.nombre}.`);
+  });
+
+  function saveMhuChanges(forceEnableAll = false) {
+    const cedula = $('#mhu-cedula')?.value;
+    if (!cedula) return;
+    const certs = getCerts();
+    $$('#mhu-list .mhu-item[data-cert-id]').forEach(item => {
+      const cert = certs.find(c => c.id === item.dataset.certId);
+      if (!cert) return;
+      const chk = $('input[data-mhu-check]', item);
+      const horasInp = $('input[data-mhu-horas]', item);
+      const modeloSel = $('select[data-mhu-modelo]', item);
+      cert.habilitado = forceEnableAll ? true : !!chk?.checked;
+      if (horasInp) cert.horas = Math.min(500, Math.max(1, +horasInp.value || 5));
+      if (modeloSel) {
+        cert.modelo = modeloSel.value || '';
+        cert.modeloManual = !!cert.modelo;
+      }
+    });
+    if (!setCerts(certs)) return;
+    closeModals();
+    renderUsuarios();
+    if (!$('#view-lista').classList.contains('hidden')) renderLista();
+    updatePendingBadge();
+    toast(forceEnableAll ? 'Todos los certificados del usuario han sido habilitados.' : 'Cambios guardados y estado actualizado.');
+  }
+
+  $('#mhu-enable-all')?.addEventListener('click', () => saveMhuChanges(true));
+  $('#form-habilitar-user')?.addEventListener('submit', e => {
+    e.preventDefault();
+    saveMhuChanges(false);
   });
 
   /* Modal de recuperación de contraseña ("¿Olvidaste tu contraseña?") */
@@ -2017,7 +3270,9 @@
     sel.innerHTML = MESES.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
     sel.value = now.getMonth() + 1;
   });
+  $$('.in-dia').forEach(inp => { inp.value = now.getDate(); });
   $$('.in-anio').forEach(inp => { inp.value = now.getFullYear(); });
+  $$('.in-horas').forEach(inp => { if (!inp.value) inp.value = 5; });
   $$('.footer-year, #year').forEach(el => { el.textContent = now.getFullYear(); });
 
   seedAdmin().then(startApp);
