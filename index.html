@@ -203,26 +203,65 @@
       <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú"><span></span><span></span><span></span></button>
 
       <div class="nav-menu" id="nav-menu">
-        <nav class="nav-links">
-          <span class="nav-indicator" aria-hidden="true"></span>
-          <a href="#" class="nav-link user-only" data-view="mis"><svg class="i"><use href="#i-file"/></svg><span>Mis certificados</span></a>
-          <a href="#" class="nav-link admin-only" data-view="usuarios"><svg class="i"><use href="#i-check"/></svg><span>Habilitar</span><span class="nav-pending-badge hidden" id="nav-pending-badge">0</span></a>
-          <a href="#" class="nav-link admin-only" data-view="lista"><svg class="i"><use href="#i-list"/></svg><span>Certificados</span></a>
-          <a href="#" class="nav-link admin-only" data-view="config"><svg class="i"><use href="#i-layout"/></svg><span>Diseño</span></a>
-        </nav>
-        <div class="nav-user">
+        <div class="nav-user" id="nav-user-box">
           <div class="avatar" id="nav-avatar"></div>
           <div class="nav-user-info"><strong id="nav-name"></strong><small id="nav-role"></small></div>
-          <button class="icon-btn" id="btn-pass" title="Cambiar contraseña" aria-label="Cambiar contraseña">
-            <svg class="i"><use href="#i-key"/></svg>
-          </button>
-          <button class="icon-btn" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
-            <svg class="i"><use href="#i-logout"/></svg>
-          </button>
+          <div class="nav-user-actions">
+            <button class="icon-btn" id="btn-pass" title="Cambiar contraseña" aria-label="Cambiar contraseña">
+              <svg class="i"><use href="#i-key"/></svg>
+            </button>
+            <button class="icon-btn btn-logout-mobile" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+              <svg class="i"><use href="#i-logout"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <nav class="nav-links">
+          <span class="nav-indicator" aria-hidden="true"></span>
+          <a href="#" class="nav-link user-only" data-view="mis">
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-file"/></svg></span>
+            <span class="nav-link-text">
+              <strong>Mis certificados</strong>
+              <small class="nav-link-desc">Tus certificados y talleres</small>
+            </span>
+            <span class="nav-chevron">›</span>
+          </a>
+          <a href="#" class="nav-link admin-only" data-view="usuarios">
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-check"/></svg></span>
+            <span class="nav-link-text">
+              <strong>Habilitar</strong>
+              <small class="nav-link-desc">Activar talleres en 1 clic</small>
+            </span>
+            <span class="nav-pending-badge hidden" id="nav-pending-badge">0</span>
+            <span class="nav-chevron">›</span>
+          </a>
+          <a href="#" class="nav-link admin-only" data-view="lista">
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-list"/></svg></span>
+            <span class="nav-link-text">
+              <strong>Certificados</strong>
+              <small class="nav-link-desc">Historial y descargas</small>
+            </span>
+            <span class="nav-chevron">›</span>
+          </a>
+          <a href="#" class="nav-link admin-only" data-view="config">
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-layout"/></svg></span>
+            <span class="nav-link-text">
+              <strong>Diseño</strong>
+              <small class="nav-link-desc">Modelos, logos y formato</small>
+            </span>
+            <span class="nav-chevron">›</span>
+          </a>
+        </nav>
+
+        <div class="nav-menu-footer">
+          <span class="pulse-dot"></span>
+          <span>Plataforma Oficial · Municipio Chacao</span>
         </div>
       </div>
     </div>
   </header>
+
+  <div class="nav-backdrop" id="nav-backdrop"></div>
 
   <main class="container">
 
@@ -893,6 +932,7 @@
 <div id="toasts"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="js/assets-data.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

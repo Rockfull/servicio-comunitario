@@ -16,17 +16,34 @@
   const ADMIN_CEDULA = 'ADMIN';
   const ADMIN_PASS = 'admin123';
 
+  function getAssetSrc(src) {
+    if (!src) return '';
+    if (src.startsWith('data:') || src.startsWith('blob:')) return src;
+    if (typeof window !== 'undefined' && window.ASSETS_DATA) {
+      if (window.ASSETS_DATA[src]) return window.ASSETS_DATA[src];
+      const cleanKey = src.replace(/^\.\//, '');
+      if (window.ASSETS_DATA[cleanKey]) return window.ASSETS_DATA[cleanKey];
+      if (src.includes('modelo-emprende-1')) return window.ASSETS_DATA['emprende1'] || window.ASSETS_DATA['assets/modelo-emprende-1.png'] || src;
+      if (src.includes('modelo-emprende-2')) return window.ASSETS_DATA['emprende2'] || window.ASSETS_DATA['assets/modelo-emprende-2.png'] || src;
+      if (src.includes('logo-alcaldia')) return window.ASSETS_DATA['assets/logo-alcaldia.png'] || src;
+      if (src.includes('logo-desarrollo-social')) return window.ASSETS_DATA['assets/logo-desarrollo-social.png'] || src;
+      if (src.includes('logo-emprende')) return window.ASSETS_DATA['assets/logo-emprende.png'] || src;
+      if (src.includes('logo-bienestar')) return window.ASSETS_DATA['assets/logo-bienestar.png'] || src;
+    }
+    return src;
+  }
+
   const MODELO_VERSION = 2;
   const MODELOS_OFICIALES = {
     emprende1: {
       nombre: 'Modelo 1 · Chacao Emprende',
-      plantilla: 'assets/modelo-emprende-1.png',
+      plantilla: getAssetSrc('assets/modelo-emprende-1.png'),
       plantillaW: 2199,
       plantillaH: 1699,
     },
     emprende2: {
       nombre: 'Modelo 2 · Convenio UCV / FaCES',
-      plantilla: 'assets/modelo-emprende-2.png',
+      plantilla: getAssetSrc('assets/modelo-emprende-2.png'),
       plantillaW: 2199,
       plantillaH: 1699,
     },
@@ -267,6 +284,10 @@
     },
     tilt(el, max = 8) {
       if (!G || !el) return;
+      if (el.classList.contains('auth-card') && (!canHover || window.innerWidth <= 1000)) {
+        G.set(el, { clearProps: 'transform,rotationX,rotationY,scale' });
+        return;
+      }
       const rx = G.quickTo(el, 'rotationX', { duration: .65, ease: 'power3' });
       const ry = G.quickTo(el, 'rotationY', { duration: .65, ease: 'power3' });
       
@@ -843,15 +864,17 @@
 
   const loadImg = src => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = src; });
 
-  function loadCanvasImg(src) {
+  function loadCanvasImg(rawSrc) {
+    const src = getAssetSrc(rawSrc);
     return new Promise((resolve, reject) => {
       const img = new Image();
       if (!src.startsWith('data:') && !src.startsWith('blob:') && typeof location !== 'undefined' && /^https?:/i.test(location.protocol)) {
         img.crossOrigin = 'anonymous';
       }
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`No se pudo cargar imagen: ${src}`));
+      img.onerror = () => reject(new Error(`No se pudo cargar imagen: ${src.slice(0, 80)}`));
       img.src = src;
+      if (img.complete && img.naturalWidth) resolve(img);
     });
   }
 
@@ -1257,6 +1280,7 @@
     const nombreArchivo = `${safeFileName(`Certificado - ${resolved.nombre} - ${resolved.curso}`)}.pdf`;
 
     try {
+      toast(`Generando PDF…`);
       const cv = await certToCanvas(resolved, s);
       const dataUrl = cv.toDataURL('image/jpeg', 0.94);
       const jpegBytes = base64ToBytes(dataUrl);
@@ -1274,18 +1298,8 @@
       if (!$('#view-mis').classList.contains('hidden')) renderMis();
       if (!$('#view-lista').classList.contains('hidden')) renderLista();
     } catch (err) {
-      console.warn('Descarga directa bloqueada en modo local sin servidor, usando impresión:', err);
-      const area = $('#print-area');
-      await prepararImpresion(resolved, s);
-      document.title = nombreArchivo.replace(/\.pdf$/i, '');
-      window.addEventListener('afterprint', () => {
-        document.title = APP_TITLE;
-        area.innerHTML = '';
-        if (!$('#view-mis').classList.contains('hidden')) renderMis();
-        if (!$('#view-lista').classList.contains('hidden')) renderLista();
-      }, { once: true });
-      toast('Elige “Guardar como PDF” para completar la descarga.');
-      setTimeout(() => window.print(), 50);
+      console.error('Error generando descarga directa de PDF:', err);
+      toast(`No se pudo descargar el PDF: ${err.message || 'Error de exportación'}`, 'error');
     }
   }
 
@@ -1503,8 +1517,14 @@
         }
       });
 
-    // Tilt 3D reactivo en la tarjeta de autenticación
-    fx.tilt($('.auth-card'), isMobile ? 8 : 6);
+    // Tilt 3D reactivo en la tarjeta de autenticación: SOLO en PC con mouse
+    // En celular el formulario permanece 100% fijo y estable para escribir con total comodidad
+    if (canHover && !isMobile) {
+      fx.tilt($('.auth-card'), 6);
+    } else {
+      const card = $('.auth-card');
+      if (card && G) G.set(card, { clearProps: 'transform,rotationX,rotationY,scale' });
+    }
   }
 
   // Transición al entrar: la roseta se expande y la pantalla se abre en círculo
@@ -1681,14 +1701,23 @@
 
   $$('.nav-link').forEach(a => a.addEventListener('click', e => { e.preventDefault(); show(a.dataset.view); }));
   $('#nav-home').addEventListener('click', e => { e.preventDefault(); show('mis'); });
-  $('#nav-toggle').addEventListener('click', () => {
-    const open = $('#nav-menu').classList.toggle('open');
-    $('#nav-toggle').classList.toggle('open', open);
-    if (open) fx.in($$('#nav-menu .nav-link, #nav-menu .nav-user'), { y: -10, d: .5, stagger: .04 });
-  });
+  const navBackdrop = $('#nav-backdrop');
+  function toggleMenu(force) {
+    const menu = $('#nav-menu');
+    const toggle = $('#nav-toggle');
+    const open = typeof force === 'boolean' ? force : !menu.classList.contains('open');
+    menu.classList.toggle('open', open);
+    toggle?.classList.toggle('open', open);
+    navBackdrop?.classList.toggle('open', open);
+    document.body.classList.toggle('menu-open', open);
+    if (open) {
+      fx.in($$('#nav-menu .nav-user, #nav-menu .nav-link, #nav-menu .nav-menu-footer'), { y: -8, d: .45, stagger: .03 });
+    }
+  }
+  $('#nav-toggle')?.addEventListener('click', () => toggleMenu());
+  navBackdrop?.addEventListener('click', () => toggleMenu(false));
   function closeMenu() {
-    $('#nav-menu').classList.remove('open');
-    $('#nav-toggle').classList.remove('open');
+    toggleMenu(false);
   }
   $('#btn-logout').addEventListener('click', () => {
     sessionStorage.removeItem(K.session);
@@ -1929,7 +1958,7 @@
       const hab = userCerts.length - pend;
       const isMe = u.cedula === me.cedula;
       const userAreas = parseTalleres(u.areas || '');
-      const emailTxt = u.email ? `<small class="muted" style="word-break:break-all;">${esc(u.email)}</small>` : '<span class="muted small">—</span>';
+      const emailTxt = u.email ? `<span class="user-email">${esc(u.email)}</span>` : '<span class="muted small">—</span>';
 
       // Pills interactivos de talleres/certificados (clic directo habilita o pausa)
       const certKeys = new Set(userCerts.map(c => clean(c.curso).toLowerCase()));
@@ -1959,8 +1988,8 @@
         ${pend > 0 ? `<button class="btn btn-sm btn-enable-ok" data-act="habilitar-todo" data-id="${esc(u.cedula)}" title="Habilitar los ${pend} certificado(s) pendiente(s)">${ic('check')}Habilitar (${pend})</button>` : ''}
         <button class="btn btn-light btn-sm" data-act="gestionar-certs" data-id="${esc(u.cedula)}" title="Gestionar y habilitar talleres">${ic('list')}Gestionar</button>
         <button class="btn btn-light btn-sm" data-act="editareas" data-id="${esc(u.cedula)}" title="Editar talleres registrados">${ic('pen')}Talleres</button>
-        <button class="btn btn-light btn-sm" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer clave a la cédula">${ic('refresh')}Clave</button>
-        <button class="btn btn-light btn-sm" data-act="role" data-id="${esc(u.cedula)}">${ic('shield')}${u.role === 'admin' ? 'Quitar admin' : 'Admin'}</button>
+        <button class="btn btn-light btn-sm btn-icon" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer contraseña a la cédula" aria-label="Restablecer clave">${ic('refresh')}</button>
+        <button class="btn btn-light btn-sm btn-icon" data-act="role" data-id="${esc(u.cedula)}" title="${u.role === 'admin' ? 'Quitar rol administrador' : 'Hacer administrador'}" aria-label="Rol">${ic('shield')}</button>
         <button class="btn btn-danger btn-icon" data-act="deluser" data-id="${esc(u.cedula)}" title="Eliminar cuenta" aria-label="Eliminar">${ic('trash')}</button>`;
       return `<tr>
         <td class="nowrap">${fmtCedula(u.cedula)}</td>
@@ -2192,7 +2221,8 @@
 
   /* ---------------- Lectura de colores del modelo ---------------- */
   let muestra = null;
-  function prepararMuestra(src) {
+  function prepararMuestra(rawSrc) {
+    const src = getAssetSrc(rawSrc);
     if (!src) { muestra = null; return Promise.resolve(); }
     if (muestra && muestra.src === src) return Promise.resolve();
     return new Promise(resolve => {
@@ -2212,6 +2242,7 @@
       };
       img.onerror = () => resolve();
       img.src = src;
+      if (img.complete && img.naturalWidth) img.onload();
     });
   }
 
