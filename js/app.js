@@ -1748,6 +1748,7 @@
   const renderers = {
     mis: renderMis, lista: renderLista,
     usuarios: renderUsuarios, config: renderConfig,
+    respaldo: renderRespaldo,
   };
 
   function show(view) {
@@ -1808,11 +1809,12 @@
   function closeMenu() {
     toggleMenu(false);
   }
-  $('#btn-logout').addEventListener('click', () => {
+  function doLogout() {
     sessionStorage.removeItem(K.session);
     document.body.classList.remove('is-admin');
     startApp();
-  });
+  }
+  $('#btn-logout')?.addEventListener('click', doLogout);
 
   /* ---------------- Usuario: mis certificados ---------------- */
   function renderMis() {
@@ -3337,37 +3339,154 @@
     syncConfig();
   });
 
-  /* Respaldo */
-  $('#btn-export').addEventListener('click', () => {
+  /* =========================================================
+     CENTRO DE SEGURIDAD Y RESPALDO
+     ========================================================= */
+  function renderRespaldo() {
+    const allUsers = getUsers();
+    const students = allUsers.filter(u => u.role !== 'admin');
+    const allCerts = getCerts();
+    const talleres = getCatalogoTalleres();
+
+    if ($('#bk-users-count')) $('#bk-users-count').textContent = students.length;
+    if ($('#bk-certs-count')) $('#bk-certs-count').textContent = allCerts.length;
+    if ($('#bk-talleres-count')) $('#bk-talleres-count').textContent = talleres.length;
+
+    const lastBackup = store.read('ultimo_respaldo_fecha', null);
+    if ($('#bk-last-backup-info')) {
+      if (lastBackup) {
+        $('#bk-last-backup-info').textContent = `Último respaldo descargado: ${lastBackup}`;
+      } else {
+        $('#bk-last-backup-info').textContent = `Respaldo activo en este navegador · Se sugiere descargar copia semanal`;
+      }
+    }
+  }
+
+  /* Respaldo Maestro JSON */
+  $('#btn-export')?.addEventListener('click', () => {
     const data = {
-      app: 'portal-certificados', version: 1, exportado: new Date().toISOString(),
-      users: getUsers(), certs: getCerts(), settings: store.read(K.settings, {}),
+      app: 'portal-certificados-chacao',
+      version: 2,
+      exportado: new Date().toISOString(),
+      fechaLegible: new Date().toLocaleString('es-VE'),
+      users: getUsers(),
+      certs: getCerts(),
+      settings: store.read(K.settings, {}),
+      catalogo: getCatalogoTalleres(),
     };
+    const nowStr = new Date().toISOString().slice(0, 10);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
-    a.download = `respaldo-certificados-${new Date().toISOString().slice(0, 10)}.json`;
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = `respaldo-maestro-chacao-${nowStr}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+
+    const stamp = new Date().toLocaleString('es-VE');
+    store.write('ultimo_respaldo_fecha', stamp);
+    if ($('#bk-last-backup-info')) {
+      $('#bk-last-backup-info').textContent = `Último respaldo descargado: ${stamp}`;
+    }
+    toast('Respaldo Maestro (.JSON) descargado con éxito.');
   });
 
-  $('#in-import').addEventListener('change', async e => {
+  /* Restaurar Respaldo JSON */
+  $('#in-import')?.addEventListener('change', async e => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
     try {
       const data = JSON.parse(await file.text());
       if (!Array.isArray(data.users) || !Array.isArray(data.certs)) throw new Error('Formato inválido');
-      if (!confirm(`El respaldo tiene ${data.users.length} usuario(s) y ${data.certs.length} certificado(s). Reemplazará los datos actuales. ¿Continuar?`)) return;
+      const cantUsers = data.users.filter(u => u.role !== 'admin').length;
+      const cantTalleres = Array.isArray(data.catalogo) ? data.catalogo.length : 0;
+      const msg = `El respaldo contiene:\n` +
+                  `• ${cantUsers} estudiante(s) registrados\n` +
+                  `• ${data.certs.length} certificado(s) emitidos\n` +
+                  (cantTalleres > 0 ? `• ${cantTalleres} taller(es) en catálogo\n` : '') +
+                  `\n¿Deseas restaurar este respaldo? Reemplazará los datos actuales en este navegador.`;
+      if (!confirm(msg)) return;
+
       setUsers(data.users);
       setCerts(data.certs);
       setSettings(data.settings || {});
+      if (Array.isArray(data.catalogo) && data.catalogo.length) {
+        setCatalogoTalleres(data.catalogo);
+      }
       await seedAdmin();
-      toast('Respaldo restaurado.');
+      toast('Respaldo restaurado exitosamente.');
       startApp();
-    } catch {
-      toast('El archivo no es un respaldo válido.', 'error');
+      show('respaldo');
+    } catch (err) {
+      console.error(err);
+      toast('El archivo no es un respaldo válido o está dañado.', 'error');
     }
   });
+
+  /* Exportar nómina de estudiantes a CSV (compatible con Excel con UTF-8 BOM) */
+  $('#btn-export-excel')?.addEventListener('click', () => {
+    const allUsers = getUsers();
+    const students = allUsers.filter(u => u.role !== 'admin');
+    const allCerts = getCerts();
+
+    if (!students.length) {
+      return toast('No hay estudiantes registrados para exportar.', 'error');
+    }
+
+    const headers = [
+      'Cédula',
+      'Nombre y Apellido',
+      'Correo Electrónico',
+      'Talleres Registrados',
+      'Talleres Habilitados / Certificados',
+      'Total Horas Académicas',
+      'Fecha Registro'
+    ];
+
+    const escapeCsv = val => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = students.map(u => {
+      const uCerts = allCerts.filter(c => c.cedula === u.cedula);
+      const cursosList = (u.cursos || []).map(c => typeof c === 'string' ? c : c.nombre).join('; ');
+      const certsList = uCerts.map(c => `${c.curso} (${c.horas || 0}h)`).join('; ');
+      const totalHoras = uCerts.reduce((sum, c) => sum + (Number(c.horas) || 0), 0);
+      const fechaReg = u.creado ? new Date(u.creado).toLocaleDateString('es-VE') : 'N/A';
+
+      return [
+        escapeCsv(u.cedula),
+        escapeCsv(u.nombre),
+        escapeCsv(u.email || 'Sin correo'),
+        escapeCsv(cursosList || 'Sin talleres asignados'),
+        escapeCsv(certsList || '0 habilitados'),
+        escapeCsv(totalHoras ? `${totalHoras} hrs` : '0 hrs'),
+        escapeCsv(fechaReg)
+      ].join(',');
+    });
+
+    // BOM UTF-8 (\uFEFF) para que Excel abra directamente con caracteres latinos (á, é, í, ó, ú, ñ)
+    const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const nowStr = new Date().toISOString().slice(0, 10);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nomina_estudiantes_chacao_${nowStr}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast(`Nómina de ${students.length} estudiante(s) descargada para Excel.`);
+  });
+
+  /* Botones de navegación y seguridad */
+  $('#btn-goto-respaldo')?.addEventListener('click', () => show('respaldo'));
+  $('#btn-goto-respaldo-from-config')?.addEventListener('click', () => show('respaldo'));
+  $('#btn-trigger-change-pass')?.addEventListener('click', () => {
+    $('#form-pass').reset();
+    $('#form-pass .form-error').textContent = '';
+    openModal('#modal-pass');
+  });
+  $('#btn-trigger-logout')?.addEventListener('click', doLogout);
 
   /* =========================================================
      ACCIONES (delegadas) Y MODALES

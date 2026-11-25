@@ -244,6 +244,14 @@
             </span>
             <span class="nav-chevron">›</span>
           </a>
+          <a href="#" class="nav-link admin-only" data-view="respaldo">
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-shield"/></svg></span>
+            <span class="nav-link-text">
+              <strong>Seguridad y Respaldo</strong>
+              <small class="nav-link-desc">Copias de seguridad y protección</small>
+            </span>
+            <span class="nav-chevron">›</span>
+          </a>
         </nav>
 
         <div class="nav-menu-footer">
@@ -445,6 +453,10 @@
             <svg class="i"><use href="#i-upload"/></svg>
             <span>Importar Excel / CSV</span>
           </button>
+          <button type="button" class="btn btn-light btn-sm btn-respaldo-trigger" id="btn-goto-respaldo" title="Centro de seguridad, respaldo y exportación de nómina">
+            <svg class="i"><use href="#i-shield"/></svg>
+            <span>Seguridad y Respaldo</span>
+          </button>
         </div>
       </div>
       <div class="card no-pad reveal">
@@ -582,17 +594,159 @@
             </div>
           </div>
 
-          <div class="card">
-            <h3 class="card-title">Respaldo de datos</h3>
-            <p class="muted small">Los datos se guardan en este navegador. Descarga un respaldo de vez en cuando para no perderlos.</p>
-            <div class="row">
-              <button type="button" class="btn btn-light btn-sm" id="btn-export"><svg class="i"><use href="#i-download"/></svg>Descargar respaldo</button>
-              <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Restaurar respaldo
-                <input type="file" id="in-import" accept=".json,application/json" hidden>
-              </label>
-            </div>
+          <div class="card config-sec-card">
+            <h3 class="card-title"><svg class="i"><use href="#i-shield"/></svg> Seguridad y Respaldo</h3>
+            <p class="muted small">Los datos se almacenan en este equipo. Mantén al día tus copias de seguridad y exporta la nómina de estudiantes.</p>
+            <button type="button" class="btn btn-light btn-sm btn-block" id="btn-goto-respaldo-from-config">
+              <svg class="i"><use href="#i-shield"/></svg> Ir al Centro de Seguridad y Respaldo
+            </button>
           </div>
         </aside>
+      </div>
+    </section>
+
+    <!-- ===== Admin: Centro de Seguridad y Respaldo ===== -->
+    <section id="view-respaldo" class="view hidden">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Seguridad & Resguardo Institucional</p>
+          <h2>Centro de Seguridad y <em>Respaldo de Datos</em></h2>
+          <p class="lead">Garantiza la protección de los estudiantes registrados, conserva copias de seguridad de las certificaciones y gestiona el acceso administrativo seguro de la Alcaldía de Chacao.</p>
+        </div>
+      </div>
+
+      <!-- Resumen en vivo de datos resguardados -->
+      <div class="backup-stats-strip reveal">
+        <div class="b-stat-card">
+          <div class="b-stat-icon"><svg class="i"><use href="#i-users"/></svg></div>
+          <div class="b-stat-content">
+            <span class="b-stat-num" id="bk-users-count">0</span>
+            <span class="b-stat-lbl">Estudiantes Registrados</span>
+          </div>
+        </div>
+        <div class="b-stat-card">
+          <div class="b-stat-icon"><svg class="i"><use href="#i-file"/></svg></div>
+          <div class="b-stat-content">
+            <span class="b-stat-num" id="bk-certs-count">0</span>
+            <span class="b-stat-lbl">Certificados Habilitados</span>
+          </div>
+        </div>
+        <div class="b-stat-card">
+          <div class="b-stat-icon"><svg class="i"><use href="#i-award"/></svg></div>
+          <div class="b-stat-content">
+            <span class="b-stat-num" id="bk-talleres-count">0</span>
+            <span class="b-stat-lbl">Talleres en Catálogo</span>
+          </div>
+        </div>
+        <div class="b-stat-card b-stat-status">
+          <div class="b-stat-icon sec-safe"><svg class="i"><use href="#i-shield"/></svg></div>
+          <div class="b-stat-content">
+            <span class="b-stat-badge">● Almacenamiento Local Protegido</span>
+            <span class="b-stat-sub" id="bk-last-backup-info">Respaldo activo en este navegador</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guía didáctica para el Administrador -->
+      <div class="security-guide-section reveal">
+        <h3 class="sec-section-title"><svg class="i"><use href="#i-shield"/></svg> ¿Cómo funciona la seguridad y protección de tus datos?</h3>
+        <div class="security-guide-grid">
+          <div class="sec-guide-card">
+            <div class="sec-step-pill">01 · Privacidad Total</div>
+            <h4>Almacenamiento Local Seguro</h4>
+            <p>Toda la información vive directamente en la memoria segura de este navegador (<em>localStorage</em>). No se envía a servidores de terceros, lo que garantiza privacidad absoluta sin costos de suscripción ni caídas de internet.</p>
+          </div>
+          <div class="sec-guide-card">
+            <div class="sec-step-pill">02 · Cifrado SHA-256</div>
+            <h4>Contraseñas Protegidas</h4>
+            <p>Las claves de estudiantes y administradores están cifradas mediante el estándar bancario <strong>SHA-256 con salado de cédula</strong>. Nadie puede verlas en texto plano, ni siquiera en el archivo de respaldo descargado.</p>
+          </div>
+          <div class="sec-guide-card">
+            <div class="sec-step-pill">03 · Protocolo de Respaldo</div>
+            <h4>Prevención ante Pérdidas</h4>
+            <p>Si la computadora es formateada o se borra el historial del navegador, los datos locales podrían perderse. Por eso, descarga un <strong>Respaldo Maestro</strong> semanalmente y guárdalo en el Google Drive de la Alcaldía o en un pendrive.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones de Respaldo y Exportación -->
+      <div class="backup-actions-grid reveal">
+        <!-- Tarjeta 1: Respaldo Maestro JSON -->
+        <div class="card backup-action-card">
+          <div class="backup-card-head">
+            <div class="backup-card-icon"><svg class="i"><use href="#i-download"/></svg></div>
+            <div>
+              <h3>Respaldo Maestro del Sistema (.JSON)</h3>
+              <p class="muted small">Copia de seguridad integral: estudiantes, cédulas, talleres, certificados y catálogo.</p>
+            </div>
+          </div>
+          <p class="backup-card-desc">Este archivo contiene toda la base de datos de la plataforma. Si cambias de computadora o necesitas restaurar los datos, solo subes este archivo y todo volverá exactamente al mismo estado.</p>
+          <div class="backup-action-buttons">
+            <button type="button" class="btn btn-primary" id="btn-export">
+              <svg class="i"><use href="#i-download"/></svg>
+              <span>Descargar Respaldo Maestro</span>
+            </button>
+            <label class="btn btn-light btn-file" id="btn-import-wrap">
+              <svg class="i"><use href="#i-upload"/></svg>
+              <span>Restaurar desde archivo</span>
+              <input type="file" id="in-import" accept=".json,application/json" hidden>
+            </label>
+          </div>
+          <div class="backup-check-list">
+            <span>✓ Incluye catálogo dinámico de talleres</span>
+            <span>✓ Compatible con cualquier navegador</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2: Exportar a Excel -->
+        <div class="card backup-action-card">
+          <div class="backup-card-head">
+            <div class="backup-card-icon excel-icon"><svg class="i"><use href="#i-file"/></svg></div>
+            <div>
+              <h3>Directorio de Estudiantes en Excel (.CSV)</h3>
+              <p class="muted small">Exportación tabular de estudiantes con carnet, cédula, correo y estado.</p>
+            </div>
+          </div>
+          <p class="backup-card-desc">Genera una hoja de cálculo compatible con Microsoft Excel y Google Sheets. Ideal para entregar reportes de gestión mensual a la Dirección de Desarrollo Social y coordinadores de Chacao Emprende.</p>
+          <div class="backup-action-buttons">
+            <button type="button" class="btn btn-success-excel" id="btn-export-excel">
+              <svg class="i"><use href="#i-download"/></svg>
+              <span>Descargar Nómina en Excel / CSV</span>
+            </button>
+          </div>
+          <div class="backup-check-list">
+            <span>✓ Cédula, Nombres, Correo, Talleres y Horas</span>
+            <span>✓ Caracteres especiales y acentos en formato UTF-8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta 3: Seguridad de la Cuenta Administrador -->
+      <div class="card admin-security-box reveal">
+        <div class="admin-sec-header">
+          <div class="admin-sec-badge"><svg class="i"><use href="#i-shield"/></svg> Acceso Administrativo Oficial</div>
+          <div class="admin-user-pill">Sesión activa: <strong>ADMIN</strong></div>
+        </div>
+        <div class="admin-sec-body">
+          <div class="admin-sec-info">
+            <h4>Buenas prácticas de seguridad para el Administrador</h4>
+            <ul class="admin-sec-tips">
+              <li><strong>Cambia la contraseña inicial:</strong> No mantengas la clave predeterminada de instalación en la oficina.</li>
+              <li><strong>No compartas la clave:</strong> Evita enviar contraseñas por correo electrónico o aplicaciones de mensajería.</li>
+              <li><strong>Cierra sesión al retirarte:</strong> Si compartes la computadora en la oficina de la Alcaldía, cierra sesión cuando termines tu jornada.</li>
+            </ul>
+          </div>
+          <div class="admin-sec-actions">
+            <button type="button" class="btn btn-light" id="btn-trigger-change-pass">
+              <svg class="i"><use href="#i-key"/></svg>
+              <span>Cambiar mi Contraseña</span>
+            </button>
+            <button type="button" class="btn btn-outline-danger" id="btn-trigger-logout">
+              <svg class="i"><use href="#i-logout"/></svg>
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
