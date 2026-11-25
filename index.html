@@ -32,6 +32,7 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
 </svg>
 
 <!-- ================= LOGIN / REGISTRO ================= -->
@@ -67,22 +68,14 @@
       </div>
       <p class="eyebrow">Certificación digital</p>
       <h1 class="display" id="auth-headline">Tu servicio, <em>certificado.</em></h1>
-      <p class="auth-lead">Consulta y descarga tus certificados oficiales en emprendimiento, oficio y servicio comunitario emitidos por la Dirección de Desarrollo y Apoyo Social.</p>
+      <p class="auth-lead">Consulta y descarga tus certificados oficiales de Chacao Emprende, oficio y servicio comunitario.</p>
 
       <div class="auth-programs">
-        <span class="auth-programs-label">Programas de Formación Comunitaria</span>
+        <span class="auth-programs-label">Programa Chacao Emprende</span>
         <div class="auth-programs-list">
-          <div class="program-tag" title="Programa Chacao Bienestar">
-            <img src="assets/logo-bienestar.png" alt="Chacao Bienestar">
-            <span>Chacao Bienestar</span>
-          </div>
           <div class="program-tag" title="Programa Chacao Emprende">
             <img src="assets/logo-emprende.png" alt="Chacao Emprende">
             <span>Chacao Emprende</span>
-          </div>
-          <div class="program-tag" title="Desarrollo y Apoyo Social">
-            <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social">
-            <span>Desarrollo Social</span>
           </div>
         </div>
       </div>
@@ -227,27 +220,27 @@
             <span class="nav-chevron">›</span>
           </a>
           <a href="#" class="nav-link admin-only" data-view="usuarios">
-            <span class="nav-icon-wrap"><svg class="i"><use href="#i-check"/></svg></span>
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-users"/></svg></span>
             <span class="nav-link-text">
-              <strong>Habilitar</strong>
-              <small class="nav-link-desc">Activar talleres en 1 clic</small>
+              <strong>Estudiantes</strong>
+              <small class="nav-link-desc">Aprobación y habilitación</small>
             </span>
             <span class="nav-pending-badge hidden" id="nav-pending-badge">0</span>
             <span class="nav-chevron">›</span>
           </a>
           <a href="#" class="nav-link admin-only" data-view="lista">
-            <span class="nav-icon-wrap"><svg class="i"><use href="#i-list"/></svg></span>
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-file"/></svg></span>
             <span class="nav-link-text">
-              <strong>Certificados</strong>
-              <small class="nav-link-desc">Historial y descargas</small>
+              <strong>Historial</strong>
+              <small class="nav-link-desc">Todos los certificados emitidos</small>
             </span>
             <span class="nav-chevron">›</span>
           </a>
           <a href="#" class="nav-link admin-only" data-view="config">
-            <span class="nav-icon-wrap"><svg class="i"><use href="#i-layout"/></svg></span>
+            <span class="nav-icon-wrap"><svg class="i"><use href="#i-upload"/></svg></span>
             <span class="nav-link-text">
-              <strong>Diseño</strong>
-              <small class="nav-link-desc">Modelos, logos y formato</small>
+              <strong>Modelo PDF</strong>
+              <small class="nav-link-desc">Plantilla oficial del certificado</small>
             </span>
             <span class="nav-chevron">›</span>
           </a>
@@ -271,11 +264,38 @@
         <div>
           <p class="eyebrow">Mi espacio</p>
           <h2>Hola, <em id="hello-name"></em></h2>
-          <p class="lead">Aquí puedes solicitar tus certificados y descargar aquellos que el administrador ya te haya habilitado. Al descargarlos saldrán con tus datos oficiales y la fecha del día.</p>
+          <p class="lead">Bienvenido a tu portal de certificados oficiales. Consulta tus talleres culminados y descarga tus acreditaciones emitidas por la Alcaldía de Chacao.</p>
         </div>
         <div class="stats">
           <div class="stat"><strong id="mis-count">0</strong><span>Habilitados</span></div>
           <div class="stat"><strong id="mis-pending-count">0</strong><span>Pendientes</span></div>
+        </div>
+      </div>
+
+      <!-- Guía visual rápida en 3 pasos para el estudiante -->
+      <div class="student-guide-steps">
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <strong>Realiza tu taller</strong>
+            <small>Culmina tus horas académicas o de formación comunitaria.</small>
+          </div>
+        </div>
+        <div class="guide-step-arrow">→</div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <strong>Aprobación oficial</strong>
+            <small>La Alcaldía de Chacao valida y habilita tu certificado.</small>
+          </div>
+        </div>
+        <div class="guide-step-arrow">→</div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <strong>Descarga tu PDF</strong>
+            <small>Descárgalo con tus datos oficiales y fecha del día.</small>
+          </div>
         </div>
       </div>
 
@@ -288,16 +308,13 @@
           <div class="banner-logo-badge" title="Dirección de Desarrollo y Apoyo Social">
             <img src="assets/logo-desarrollo-social.png" alt="Desarrollo Social">
           </div>
-          <div class="banner-logo-badge" title="Programa Chacao Bienestar">
-            <img src="assets/logo-bienestar.png" alt="Chacao Bienestar">
-          </div>
           <div class="banner-logo-badge" title="Programa Chacao Emprende">
             <img src="assets/logo-emprende.png" alt="Chacao Emprende">
           </div>
         </div>
         <div class="banner-info">
-          <h4>Certificación Oficial en Emprendimiento, Oficio y Servicio Comunitario</h4>
-          <p>Documentos emitidos por la <strong>Alcaldía del Municipio Chacao</strong> a través de la <strong>Dirección de Desarrollo y Apoyo Social</strong>, válidos para trámites académicos, laborales y comunitarios.</p>
+          <h4>Certificación Oficial · Chacao Emprende, Oficio y Servicio Comunitario</h4>
+          <p>Documentos emitidos por la <strong>Alcaldía del Municipio Chacao</strong> a través de la <strong>Dirección de Desarrollo y Apoyo Social</strong> y el <strong>Programa Chacao Emprende</strong>, con plena validez institucional.</p>
         </div>
       </div>
 
@@ -322,22 +339,43 @@
           </div>
           <div>
             <h3 class="card-title">Solicitar Certificado de Taller</h3>
-            <p class="muted small">Indica el taller que realizaste para enviar la solicitud. El administrador lo revisará y lo habilitará para que puedas descargarlo.</p>
+            <p class="muted small">¿Culminaste un taller? Escribe o selecciona el nombre para solicitar tu certificado. El facilitador lo habilitará para tu descarga.</p>
           </div>
         </div>
         <form id="form-user-solicitar" class="form" novalidate>
           <div class="solicitar-row">
             <label class="field" style="flex:2;min-width:200px;">
               <span>Nombre del Taller / Curso realizado</span>
-              <input name="curso" list="dl-cursos" placeholder="Ej: Marketing Digital y Redes Sociales" required>
+              <input name="curso" list="dl-cursos" id="in-user-curso" placeholder="Ej: Emprendimiento Comunitario o Marketing Digital" required>
             </label>
-            <label class="field" style="flex:0 0 130px;">
-              <span>Duración (horas)</span>
-              <input name="horas" type="number" min="1" max="500" value="5" class="in-horas">
+            <label class="field" style="flex:0 0 100px;">
+              <span>Horas</span>
+              <input name="horas" type="number" min="1" max="500" value="5" class="in-horas" id="in-user-horas">
+            </label>
+            <label class="field" style="flex:1.4;min-width:180px;">
+              <span>Modelo Oficial</span>
+              <select name="modelo" id="in-user-modelo">
+                <option value="emprende1">Modelo 1 · Chacao Emprende</option>
+                <option value="emprende2">Modelo 2 · Convenio UCV / FaCES</option>
+              </select>
             </label>
             <button class="btn btn-primary" type="submit" style="align-self:flex-end;">
               <svg class="i"><use href="#i-plus"/></svg>Solicitar certificado
             </button>
+          </div>
+
+          <!-- Sugerencias de talleres rápidos -->
+          <div class="quick-suggest-row">
+            <span class="muted small" style="font-weight: 600; font-size: 12px;">Sugerencias rápidas:</span>
+            <div class="quick-tags" id="quick-taller-tags">
+              <button type="button" class="area-chip" data-taller="Emprendimiento Comunitario" data-horas="20">+ Emprendimiento</button>
+              <button type="button" class="area-chip" data-taller="Oficio Productivo" data-horas="15">+ Oficio</button>
+              <button type="button" class="area-chip" data-taller="Servicio Comunitario" data-horas="120">+ Servicio Comunitario</button>
+              <button type="button" class="area-chip" data-taller="Marketing Digital y Redes" data-horas="10">+ Marketing Digital</button>
+              <button type="button" class="area-chip" data-taller="Finanzas para Emprendedores" data-horas="8">+ Finanzas</button>
+              <button type="button" class="area-chip" data-taller="Barbería y Oficios" data-horas="30">+ Barbería</button>
+              <button type="button" class="area-chip" data-taller="Repostería y Pastelería" data-horas="25">+ Repostería</button>
+            </div>
           </div>
         </form>
       </div>
@@ -392,20 +430,31 @@
         </div>
       </div>
       <div class="users-toolbar reveal">
-        <input id="usuarios-buscar" class="search" type="search" placeholder="Buscar por cédula, nombre, correo o taller…">
+        <div class="user-filter-tabs" id="user-filter-tabs">
+          <button type="button" class="user-filter-btn active" data-filter="all">Todos <span class="filter-count" id="fcount-all">0</span></button>
+          <button type="button" class="user-filter-btn" data-filter="pending">⏳ Con pendientes <span class="filter-count" id="fcount-pending">0</span></button>
+          <button type="button" class="user-filter-btn" data-filter="enabled">✓ Habilitados <span class="filter-count" id="fcount-enabled">0</span></button>
+        </div>
+        <div class="users-toolbar-actions">
+          <input id="usuarios-buscar" class="search" type="search" placeholder="Buscar por cédula, nombre, correo o taller…">
+          <button type="button" class="btn btn-light btn-sm btn-cat-trigger" id="btn-open-catalogo" title="Administrar catálogo de talleres y cursos en oferta">
+            <svg class="i"><use href="#i-award"/></svg>
+            <span>Catálogo de Talleres</span>
+          </button>
+          <button type="button" class="btn btn-primary btn-sm btn-import-trigger" id="btn-open-import-excel" title="Importar estudiantes y talleres desde Excel (.xlsx, .xls o .csv)">
+            <svg class="i"><use href="#i-upload"/></svg>
+            <span>Importar Excel / CSV</span>
+          </button>
+        </div>
       </div>
       <div class="card no-pad reveal">
         <div class="table-wrap">
-          <table class="table">
+          <table class="table table-users">
             <thead>
               <tr>
-                <th>Cédula</th>
-                <th>Nombre y Apellido</th>
-                <th>Correo</th>
-                <th>Talleres y Estado</th>
-                <th>Habilitación</th>
-                <th>Fecha Registro</th>
-                <th>Acciones</th>
+                <th class="th-user">Participante</th>
+                <th class="th-talleres">Talleres y Certificaciones</th>
+                <th class="th-actions">Acciones</th>
               </tr>
             </thead>
             <tbody id="usuarios-body"></tbody>
@@ -414,13 +463,13 @@
       </div>
     </section>
 
-    <!-- ===== Admin: diseño ===== -->
+    <!-- ===== Admin: Modelo PDF ===== -->
     <section id="view-config" class="view hidden">
       <div class="page-head">
         <div>
           <p class="eyebrow">Administración</p>
-          <h2>Diseño del <em>certificado</em></h2>
-          <p class="lead">Usa el diseño institucional predeterminado o sube tu modelo genérico en PDF: los datos de cada estudiante se sustituyen automáticamente.</p>
+          <h2>Modelo del <em>Certificado</em></h2>
+          <p class="lead">Selecciona el modelo institucional activo o sube tu propio archivo PDF diseñado. El sistema integra el nombre, cédula, taller y fecha automáticamente.</p>
         </div>
       </div>
 
@@ -447,17 +496,6 @@
                 </div>
                 <div class="model-picker-title">Modelo 2 · Convenio UCV / FaCES</div>
                 <div class="model-picker-sub">Fecha arriba · Logos UCV en base</div>
-              </div>
-
-              <div class="model-picker-card" data-modelo="digital">
-                <span class="model-badge-active">Activo</span>
-                <div class="model-picker-thumb model-picker-thumb--digital">
-                  <div class="digital-mini-preview">
-                    <span>✦ CHACAO DIGITAL ✦</span>
-                  </div>
-                </div>
-                <div class="model-picker-title">Diseño Digital Clásico</div>
-                <div class="model-picker-sub">Marco, logos e institución editables</div>
               </div>
 
               <div class="model-picker-card hidden" id="model-picker-custom" data-modelo="custom">
@@ -497,151 +535,12 @@
               <div class="pdf-page-tabs" id="pdf-page-tabs"></div>
             </div>
           </div>
-
-          <fieldset id="tpl-controls" class="hidden">
-            <legend>Posición y estilo de los campos editables</legend>
-            <p class="muted small" style="margin-top:-6px;margin-bottom:12px;">Haz clic en el campo que deseas ajustar, o arrástralo directamente sobre el certificado a la derecha:</p>
-            <div class="campo-chips" id="campo-chips">
-              <button type="button" class="campo-chip" data-campo="nombre">👤 Nombre y Apellido</button>
-              <button type="button" class="campo-chip" data-campo="cedula">🪪 Cédula</button>
-              <button type="button" class="campo-chip" data-campo="curso">🎓 Taller y Horas</button>
-              <button type="button" class="campo-chip" data-campo="fecha">📅 Día, Mes y Año</button>
-              <button type="button" class="campo-chip" data-campo="intro">📝 Encabezado</button>
-            </div>
-
-            <label class="check" style="margin-top:12px;"><input type="checkbox" data-f="visible"> Mostrar este dato en el certificado</label>
-
-            <!-- Campo especial para Encabezado (intro) -->
-            <div id="wrap-textoFijo" class="hidden" style="margin-top:8px;">
-              <label class="field">
-                <span>Texto del encabezado <em>— usa **texto** para destacarlo en azul Chacao</em></span>
-                <textarea data-f="textoFijo" rows="3"></textarea>
-              </label>
-            </div>
-
-            <!-- Campo especial para Formato de Fecha -->
-            <div id="wrap-formatoFecha" class="hidden" style="margin-top:8px;">
-              <label class="field">
-                <span>Formato de Día, Mes y Año</span>
-                <select data-f="formatoFecha">
-                  <option value="completo">Día de mes de año (Ej: 10 de noviembre de 2026)</option>
-                  <option value="mes_anio">Solo mes y año (Ej: noviembre de 2026)</option>
-                  <option value="numerico">Numérico (Ej: 10/11/2026)</option>
-                </select>
-              </label>
-            </div>
-
-            <!-- Prefijo y Sufijo contextuales -->
-            <div class="grid-2" id="wrap-afijos" style="margin-top:8px;">
-              <label class="field" id="wrap-prefijo">
-                <span>Texto delante (prefijo)</span>
-                <textarea data-f="prefijo" rows="2" placeholder="Ej: Por su participación en el taller&#10;“ o Chacao,"></textarea>
-              </label>
-              <label class="field" id="wrap-sufijo">
-                <span>Texto después (sufijo) <em>— usa {horas} para duración</em></span>
-                <textarea data-f="sufijo" rows="2" placeholder="Ej: ” con una duración de ({horas}) horas"></textarea>
-              </label>
-            </div>
-
-            <div class="grid-2" style="margin-top:8px;">
-              <label class="field"><span>Tamaño de letra <output data-out="size"></output></span><input type="range" data-f="size" min="8" max="140" step="1"></label>
-              <label class="field"><span>Ancho máximo <output data-out="ancho"></output></span><input type="range" data-f="ancho" min="10" max="100" step="1"></label>
-              <label class="field"><span>Tipo de letra</span>
-                <select data-f="fuente">
-                  <option value="sans">Moderna Negrita (Geist / Sans-serif)</option>
-                  <option value="arial">Arial / Trebuchet</option>
-                  <option value="serif">Clásica (Playfair)</option>
-                  <option value="times">Times New Roman</option>
-                  <option value="script">Manuscrita (Elegante)</option>
-                </select>
-              </label>
-              <label class="field"><span>Alineación</span>
-                <select data-f="align">
-                  <option value="center">Centrado</option>
-                  <option value="left">Izquierda</option>
-                  <option value="right">Derecha</option>
-                </select>
-              </label>
-              <label class="field"><span>Color del texto</span><input type="color" data-f="color"></label>
-            </div>
-            <label class="check"><input type="checkbox" data-f="mayus"> Escribir en MAYÚSCULAS</label>
-            <label class="check"><input type="checkbox" data-f="tapar"> Tapar lo que el modelo tiene debajo <em class="muted small">(por si tu PDF subido tenía texto preescrito)</em></label>
-            <label class="field" id="campo-parche"><span>Alto de la zona tapada <output data-out="taparEscala"></output></span><input type="range" data-f="taparEscala" min="60" max="400" step="10"></label>
-          </fieldset>
-
-          <fieldset id="default-controls">
-            <legend>Diseño clásico personalizable</legend>
-            <div class="field">
-              <span>Logos institucionales en el certificado</span>
-              <div class="logo-preset-grid" id="logo-presets">
-                <button type="button" class="preset-btn active" data-preset="duo">
-                  <div class="preset-thumbs">
-                    <img src="assets/logo-alcaldia.png" alt="" class="preset-thumb">
-                    <img src="assets/logo-desarrollo-social.png" alt="" class="preset-thumb">
-                  </div>
-                  <span>Alcaldía + Desarrollo</span>
-                </button>
-                <button type="button" class="preset-btn" data-preset="bienestar">
-                  <div class="preset-thumbs">
-                    <img src="assets/logo-bienestar.png" alt="" class="preset-thumb">
-                  </div>
-                  <span>Chacao Bienestar</span>
-                </button>
-                <button type="button" class="preset-btn" data-preset="emprende">
-                  <div class="preset-thumbs">
-                    <img src="assets/logo-emprende.png" alt="" class="preset-thumb">
-                  </div>
-                  <span>Chacao Emprende</span>
-                </button>
-                <button type="button" class="preset-btn" data-preset="alcaldia">
-                  <div class="preset-thumbs">
-                    <img src="assets/logo-alcaldia.png" alt="" class="preset-thumb">
-                  </div>
-                  <span>Solo Alcaldía</span>
-                </button>
-              </div>
-            </div>
-            <div class="row">
-              <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Subir otro logo
-                <input type="file" id="in-logo" accept="image/*" hidden>
-              </label>
-              <button type="button" class="btn btn-danger btn-sm hidden" id="btn-quitar-logo"><svg class="i"><use href="#i-trash"/></svg>Quitar logo subido</button>
-            </div>
-            <label class="field"><span>Institución</span><input name="institucion"></label>
-            <div class="grid-2">
-              <label class="field"><span>Título</span><input name="titulo"></label>
-              <label class="field"><span>Subtítulo</span><input name="subtitulo"></label>
-            </div>
-            <label class="field"><span>Texto antes del nombre</span><input name="textoA"></label>
-            <label class="field"><span>Texto antes del curso</span><input name="textoB"></label>
-            <label class="field"><span>Lugar <em>— aparece antes de la fecha</em></span><input name="lugar" placeholder="Ej: Caracas"></label>
-            <div class="grid-2">
-              <label class="field"><span>Firma 1 — nombre</span><input name="firma1Nombre"></label>
-              <label class="field"><span>Firma 1 — cargo</span><input name="firma1Cargo"></label>
-              <label class="field"><span>Firma 2 — nombre</span><input name="firma2Nombre" placeholder="Opcional"></label>
-              <label class="field"><span>Firma 2 — cargo</span><input name="firma2Cargo"></label>
-            </div>
-            <label class="field"><span>Letra del nombre</span>
-              <select name="fuenteNombre">
-                <option value="script">Manuscrita (elegante)</option>
-                <option value="serif">Clásica</option>
-                <option value="sans">Moderna</option>
-              </select>
-            </label>
-            <label class="check"><input type="checkbox" name="mostrarCedula"> Mostrar la cédula debajo del nombre</label>
-          </fieldset>
-
-          <div class="row">
-            <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Guardar diseño</button>
-            <button type="button" class="btn btn-light" id="btn-restablecer"><svg class="i"><use href="#i-refresh"/></svg>Restablecer al Modelo 1 Oficial</button>
-          </div>
         </form>
 
         <aside class="stack sticky reveal">
           <div class="card">
             <h3 class="card-title">Vista previa en tiempo real</h3>
             <div class="cert-frame" id="config-preview"></div>
-            <p class="muted small hidden" id="editor-ayuda">💡 <strong>Interactivo:</strong> Arrastra cualquier dato sobre el certificado para moverlo. Haz clic en cualquiera para cambiar su texto, tamaño, color y formato.</p>
           </div>
 
           <!-- Tarjeta de prueba y edición rápida de datos en tiempo real -->
@@ -691,42 +590,6 @@
               <label class="btn btn-light btn-sm btn-file"><svg class="i"><use href="#i-upload"/></svg>Restaurar respaldo
                 <input type="file" id="in-import" accept=".json,application/json" hidden>
               </label>
-            </div>
-          </div>
-          <div class="card palette-card">
-            <h3 class="card-title">Paleta de Colores Oficial</h3>
-            <p class="muted small">Identidad corporativa e institucional de la Alcaldía de Chacao aplicada en esta plataforma.</p>
-            <div class="palette-swatches">
-              <div class="swatch" style="--swatch:#38b6ff" title="Celeste Brillante">
-                <span class="swatch-color"></span>
-                <span class="swatch-hex">#38b6ff</span>
-                <span class="swatch-name">Celeste</span>
-              </div>
-              <div class="swatch" style="--swatch:#0096f2" title="Azul Chacao">
-                <span class="swatch-color"></span>
-                <span class="swatch-hex">#0096f2</span>
-                <span class="swatch-name">Azul Chacao</span>
-              </div>
-              <div class="swatch" style="--swatch:#004fc8" title="Azul Institucional">
-                <span class="swatch-color"></span>
-                <span class="swatch-hex">#004fc8</span>
-                <span class="swatch-name">Azul Real</span>
-              </div>
-              <div class="swatch" style="--swatch:#00bf63" title="Verde Acción">
-                <span class="swatch-color"></span>
-                <span class="swatch-hex">#00bf63</span>
-                <span class="swatch-name">Verde Éxito</span>
-              </div>
-              <div class="swatch" style="--swatch:#666666" title="Gris Neutro">
-                <span class="swatch-color"></span>
-                <span class="swatch-hex">#666666</span>
-                <span class="swatch-name">Gris Medio</span>
-              </div>
-              <div class="swatch" style="--swatch:#353535" title="Gris Carbón">
-                <span class="swatch-color"></span>
-                <span class="swatch-hex">#353535</span>
-                <span class="swatch-name">Carbón</span>
-              </div>
             </div>
           </div>
         </aside>
@@ -928,9 +791,136 @@
   </div>
 </div>
 
+<!-- ================= MODAL: catálogo de talleres dinámico ================= -->
+<div class="modal hidden" id="modal-catalogo-talleres" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width: 720px;">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Oferta Dinámica de Formación</p>
+        <h3>Catálogo de Talleres y Cursos</h3>
+        <p class="muted small">Agrega, edita o elimina los talleres vigentes. Los estudiantes verán estas opciones actualizadas al instante.</p>
+      </div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <!-- Formulario de nuevo taller -->
+      <form id="form-cat-nuevo" class="cat-add-card" novalidate>
+        <span class="cat-add-title">+ Agregar nuevo taller a la oferta:</span>
+        <div class="cat-add-inputs">
+          <label class="field" style="flex: 2; min-width: 200px;">
+            <span>Nombre del taller o curso</span>
+            <input id="cat-in-nombre" placeholder="Ej: Inteligencia Artificial para Emprendedores" required>
+          </label>
+          <label class="field" style="flex: 0 0 90px;">
+            <span>Horas</span>
+            <input id="cat-in-horas" type="number" min="1" max="500" value="16" required>
+          </label>
+          <label class="field" style="flex: 1.4; min-width: 170px;">
+            <span>Modelo Oficial</span>
+            <select id="cat-in-modelo">
+              <option value="emprende1">Modelo 1 · Chacao Emprende</option>
+              <option value="emprende2">Modelo 2 · Convenio UCV / FaCES</option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-primary" style="align-self: flex-end; padding: 11px 18px;">
+            <svg class="i"><use href="#i-plus"/></svg> Agregar
+          </button>
+        </div>
+      </form>
+
+      <!-- Lista de talleres vigentes -->
+      <div class="cat-list-section">
+        <div class="cat-list-header">
+          <strong>Talleres vigentes en catálogo (<span id="cat-count">0</span>):</strong>
+          <span class="muted small">Haz clic en el modelo para cambiarlo o en la papelera para retirarlo.</span>
+        </div>
+        <div id="cat-items-list" class="cat-items-list"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-light" data-close>Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: Importar desde Excel / CSV ================= -->
+<div class="modal hidden" id="modal-import-excel" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width: 820px;">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Alimentación Masiva de Datos</p>
+        <h3>Importar Estudiantes desde Excel / CSV</h3>
+        <p class="muted small">Sube tu archivo de Excel (.xlsx, .xls o .csv) para registrar estudiantes y preparar sus certificados automáticamente.</p>
+      </div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <!-- Dropzone / Selector de archivo -->
+      <div class="excel-dropzone" id="excel-dropzone">
+        <svg class="dropzone-svg-icon" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <line x1="9" y1="15" x2="12" y2="12"></line>
+          <line x1="15" y1="15" x2="12" y2="12"></line>
+        </svg>
+        <div class="dropzone-info">
+          <strong>Haz clic para elegir tu archivo de Excel</strong>
+          <span>o arrástralo y suéltalo aquí (.xlsx, .xls, .csv)</span>
+        </div>
+        <input type="file" id="in-excel-file" accept=".xlsx,.xls,.csv" style="display:none;">
+        <button type="button" class="btn btn-light btn-sm" id="btn-browse-excel">Buscar en mi equipo</button>
+      </div>
+
+      <!-- Opciones y Plantilla de ejemplo -->
+      <div class="excel-options-bar">
+        <label class="excel-opt-check">
+          <input type="checkbox" id="chk-auto-hab" checked>
+          <span><strong>Habilitar automáticamente:</strong> Los certificados quedarán listos para descarga.</span>
+        </label>
+        <button type="button" class="link-btn-template" id="btn-download-template" title="Descargar plantilla de Excel de ejemplo">
+          <svg class="i" style="width:14px;height:14px;"><use href="#i-download"/></svg>
+          <span>Descargar plantilla de ejemplo (.csv)</span>
+        </button>
+      </div>
+
+      <!-- Vista previa de los datos -->
+      <div id="excel-preview-box" class="hidden">
+        <div class="excel-preview-meta">
+          <strong>Vista previa de datos (<span id="excel-count-preview">0</span> participantes detectados):</strong>
+          <span class="muted small" id="excel-file-badge"></span>
+        </div>
+        <div class="table-wrap excel-table-scroll">
+          <table class="table" style="font-size: 13px;">
+            <thead>
+              <tr>
+                <th>Cédula</th>
+                <th>Nombre y Apellido</th>
+                <th>Correo</th>
+                <th>Taller / Curso</th>
+                <th>Horas</th>
+                <th>Modelo</th>
+              </tr>
+            </thead>
+            <tbody id="excel-preview-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-light" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btn-do-import" disabled>
+        <svg class="i"><use href="#i-check"/></svg>
+        <span>Importar y Registrar (<span id="excel-btn-count">0</span>)</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="print-area"></div>
 <div id="toasts"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="js/assets-data.js"></script>
 <script src="js/app.js"></script>

@@ -514,6 +514,60 @@
   }
 
   // Genera automáticamente un certificado (pendiente por defecto) por cada taller registrado del usuario usando sus propios datos
+  /* ---------------- Catálogo Dinámico de Talleres en Oferta ---------------- */
+  const KEY_CATALOGO = 'sc_catalogo_talleres_v1';
+  const DEFAULT_CATALOGO = [
+    { id: 'cat-1', taller: 'Emprendimiento Comunitario', horas: 20, modelo: 'emprende1', activo: true },
+    { id: 'cat-2', taller: 'Oficio Productivo', horas: 15, modelo: 'emprende1', activo: true },
+    { id: 'cat-3', taller: 'Servicio Comunitario', horas: 120, modelo: 'emprende1', activo: true },
+    { id: 'cat-4', taller: 'Marketing Digital y Redes', horas: 10, modelo: 'emprende1', activo: true },
+    { id: 'cat-5', taller: 'Finanzas para Emprendedores', horas: 8, modelo: 'emprende1', activo: true },
+    { id: 'cat-6', taller: 'Convenio FaCES · Formación Comunitaria', horas: 40, modelo: 'emprende2', activo: true },
+    { id: 'cat-7', taller: 'Barbería y Oficios', horas: 30, modelo: 'emprende1', activo: true },
+    { id: 'cat-8', taller: 'Repostería y Pastelería', horas: 25, modelo: 'emprende1', activo: true },
+  ];
+  function getCatalogoTalleres() {
+    return store.read(KEY_CATALOGO, DEFAULT_CATALOGO);
+  }
+  function setCatalogoTalleres(list) {
+    return store.write(KEY_CATALOGO, list);
+  }
+
+  function renderCatalogoTalleres() {
+    const catalogo = getCatalogoTalleres();
+    const activos = catalogo.filter(c => c.activo !== false);
+
+    // Sugerencias en el formulario de solicitud del estudiante
+    const quickTagsEl = $('#quick-taller-tags');
+    if (quickTagsEl) {
+      quickTagsEl.innerHTML = activos.map(c => {
+        const isM2 = c.modelo === 'emprende2';
+        return `<button type="button" class="area-chip" data-taller="${esc(c.taller)}" data-horas="${c.horas || 10}" data-modelo="${c.modelo || 'emprende1'}">
+          + ${esc(c.taller)}
+          <span class="chip-model-sub ${isM2 ? 'is-m2' : 'is-m1'}">${isM2 ? 'UCV' : 'Emprende'}</span>
+        </button>`;
+      }).join('');
+    }
+
+    // Sugerencias en el formulario de registro
+    const regAreaChips = $('#reg-area-chips');
+    if (regAreaChips) {
+      regAreaChips.innerHTML = activos.map(c => {
+        return `<button type="button" class="area-chip" data-tag="${esc(c.taller)}">+ ${esc(c.taller)}</button>`;
+      }).join('');
+    }
+
+    // Datalist de cursos para autocompletar
+    const dlCursos = $('#dl-cursos');
+    if (dlCursos) {
+      const cursosSet = new Set(activos.map(c => c.taller));
+      getCerts().forEach(c => { if (c.curso) cursosSet.add(c.curso); });
+      dlCursos.innerHTML = [...cursosSet].map(c => `<option value="${esc(c)}"></option>`).join('');
+    }
+
+    if ($('#cat-count')) $('#cat-count').textContent = catalogo.length;
+  }
+
   function sincronizarCertificadosUsuario(user, opts = {}) {
     if (!user || user.role === 'admin') return 0;
     const talleres = parseTalleres(user.areas);
@@ -532,17 +586,21 @@
         clean(c.curso).toLowerCase() === k || (c.area && clean(c.area).toLowerCase() === k)
       );
       if (yaExiste) return;
+      const catItem = getCatalogoTalleres().find(x => x.taller.toLowerCase() === k);
+      const mod = modelo || (catItem ? (catItem.modelo || 'emprende1') : 'emprende1');
+      const h = opts.horas ? horas : (catItem?.horas || horas);
       const nuevo = {
         id: uid(),
         cedula: user.cedula,
         nombre: user.nombre,
         curso: taller,
         area: taller,
-        horas,
+        horas: h,
         dia: hoy.getDate(),
         mes: hoy.getMonth() + 1,
         anio: hoy.getFullYear(),
-        modelo,
+        modelo: mod,
+        modeloManual: true,
         habilitado,
         origen: 'registro',
         creado: Date.now() + idx,
@@ -1760,6 +1818,7 @@
   function renderMis() {
     const u = currentUser();
     if (!u) return;
+    renderCatalogoTalleres();
     $('#hello-name').textContent = clean(u.nombre).split(' ')[0];
 
     // Talleres o áreas registradas del usuario
@@ -1849,6 +1908,26 @@
 
   // Registro rápido de un taller adicional por parte del usuario (queda pendiente hasta que el admin lo habilite)
   const formUserSolicitar = $('#form-user-solicitar');
+
+  $('#quick-taller-tags')?.addEventListener('click', e => {
+    const chip = e.target.closest('.area-chip');
+    if (!chip) return;
+    const taller = chip.dataset.taller;
+    const horas = chip.dataset.horas || '10';
+    const modelo = chip.dataset.modelo || 'emprende1';
+    const inpCurso = $('#in-user-curso');
+    const inpHoras = $('#in-user-horas');
+    const inpModelo = $('#in-user-modelo');
+    if (inpCurso) {
+      inpCurso.value = taller;
+      inpCurso.focus();
+    }
+    if (inpHoras) inpHoras.value = horas;
+    if (inpModelo) inpModelo.value = modelo;
+    const modTxt = modelo === 'emprende2' ? 'Modelo 2 · Convenio UCV' : 'Modelo 1 · Chacao Emprende';
+    toast(`Seleccionado: ${taller} (${modTxt})`);
+  });
+
   formUserSolicitar?.addEventListener('submit', e => {
     e.preventDefault();
     const u = currentUser();
@@ -1856,6 +1935,7 @@
     const f = formUserSolicitar;
     const curso = clean(f.curso?.value || '');
     const horas = Math.min(500, Math.max(1, +f.horas?.value || 5));
+    const modelo = f.modelo?.value || 'emprende1';
 
     if (curso.length < 3) {
       toast('Escribe el nombre del taller o curso que realizaste.', 'error');
@@ -1880,7 +1960,7 @@
       return;
     }
 
-    sincronizarCertificadosUsuario(user, { habilitado: false, horas });
+    sincronizarCertificadosUsuario(user, { habilitado: false, horas, modelo });
     const certsNow = getCerts();
     if (!certsNow.some(c => c.cedula === user.cedula && clean(c.curso).toLowerCase() === curso.toLowerCase())) {
       const hoy = new Date();
@@ -1894,7 +1974,8 @@
         dia: hoy.getDate(),
         mes: hoy.getMonth() + 1,
         anio: hoy.getFullYear(),
-        modelo: '',
+        modelo,
+        modeloManual: true,
         habilitado: false,
         origen: 'solicitud',
         creado: Date.now(),
@@ -1902,7 +1983,8 @@
       if (!setCerts(certsNow)) return;
     }
 
-    toast('Solicitud enviada al administrador. En cuanto sea habilitado podrás descargar tu certificado.');
+    const modLabel = modelo === 'emprende2' ? 'Modelo 2 (UCV)' : 'Modelo 1 (Emprende)';
+    toast(`Solicitud enviada (${modLabel}). En cuanto el administrador la habilite podrás descargar tu certificado.`);
     f.curso.value = '';
     if (f.horas) f.horas.value = 5;
     renderMis();
@@ -1914,13 +1996,381 @@
     if (u) openEditAreasModal(u);
   });
 
+  /* ---------------- Admin: Catálogo de Talleres Dinámico ---------------- */
+  function renderCatalogoModalItems() {
+    const listEl = $('#cat-items-list');
+    if (!listEl) return;
+    const catalogo = getCatalogoTalleres();
+    if ($('#cat-count')) $('#cat-count').textContent = catalogo.length;
+    if (!catalogo.length) {
+      listEl.innerHTML = '<div class="muted small" style="text-align:center;padding:24px;">No hay talleres en el catálogo de oferta. Agrega uno arriba.</div>';
+      return;
+    }
+    listEl.innerHTML = catalogo.map(c => {
+      const isM2 = c.modelo === 'emprende2';
+      return `<div class="cat-item" data-cat-id="${c.id}">
+        <div class="cat-item-main">
+          <strong class="cat-item-name">${esc(c.taller)}</strong>
+          <span class="cat-item-sub">${c.horas || 5} horas académicas</span>
+        </div>
+        <div class="cat-item-actions">
+          <button type="button" class="cat-model-pill ${isM2 ? 'is-m2' : 'is-m1'}" data-cat-act="toggle-model" data-id="${c.id}" title="Clic para alternar entre Modelo 1 y Modelo 2">
+            ${isM2 ? 'Modelo 2 · UCV / FaCES' : 'Modelo 1 · Chacao Emprende'}
+          </button>
+          <button type="button" class="btn btn-danger btn-icon cat-item-del" data-cat-act="del" data-id="${c.id}" title="Eliminar taller del catálogo" aria-label="Eliminar">
+            ${ic('trash')}
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('#btn-open-catalogo')?.addEventListener('click', () => {
+    renderCatalogoModalItems();
+    openModal('#modal-catalogo-talleres');
+  });
+
+  $('#form-cat-nuevo')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const nombre = clean($('#cat-in-nombre')?.value || '');
+    const horas = Math.min(500, Math.max(1, +$('#cat-in-horas')?.value || 10));
+    const modelo = $('#cat-in-modelo')?.value || 'emprende1';
+    if (nombre.length < 3) {
+      toast('Ingresa un nombre válido para el taller.', 'error');
+      return;
+    }
+    const cat = getCatalogoTalleres();
+    if (cat.some(c => c.taller.toLowerCase() === nombre.toLowerCase())) {
+      toast('Ese taller ya existe en el catálogo.', 'error');
+      return;
+    }
+    cat.unshift({
+      id: uid(),
+      taller: nombre,
+      horas,
+      modelo,
+      activo: true,
+      creado: Date.now()
+    });
+    setCatalogoTalleres(cat);
+    $('#cat-in-nombre').value = '';
+    renderCatalogoModalItems();
+    renderCatalogoTalleres();
+    toast(`Taller "${nombre}" agregado a la oferta.`);
+  });
+
+  $('#cat-items-list')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-cat-act]');
+    if (!btn) return;
+    const { catAct, id } = btn.dataset;
+    const cat = getCatalogoTalleres();
+    const item = cat.find(c => c.id === id);
+    if (!item) return;
+
+    if (catAct === 'toggle-model') {
+      item.modelo = item.modelo === 'emprende2' ? 'emprende1' : 'emprende2';
+      setCatalogoTalleres(cat);
+      renderCatalogoModalItems();
+      renderCatalogoTalleres();
+      toast(`Modelo actualizado para "${item.taller}": ${item.modelo === 'emprende2' ? 'Modelo 2 (UCV)' : 'Modelo 1 (Emprende)'}`);
+    }
+    if (catAct === 'del') {
+      if (confirm(`¿Retirar el taller "${item.taller}" de la oferta actual?`)) {
+        setCatalogoTalleres(cat.filter(c => c.id !== id));
+        renderCatalogoModalItems();
+        renderCatalogoTalleres();
+        toast(`Taller "${item.taller}" retirado del catálogo.`);
+      }
+    }
+  });
+
+  /* ---------------- Admin: Importador de Excel y CSV ---------------- */
+  let excelParsedData = [];
+
+  function normalizarCedula(val) {
+    if (!val) return '';
+    const cleanStr = String(val).replace(/^[vV][-\s]?/, '').replace(/[^0-9]/g, '');
+    return cleanStr;
+  }
+
+  // Descargar plantilla de Excel (.csv) de muestra
+  $('#btn-download-template')?.addEventListener('click', () => {
+    const csvContent = "\uFEFF" +
+      "Cedula,Nombre y Apellido,Correo,Taller,Horas,Modelo\n" +
+      "12345678,Maria Perez,maria.perez@correo.com,Marketing Digital y Redes,10,Modelo 1\n" +
+      "24567890,Carlos Eduardo Silva,carlos.silva@correo.com,Convenio FaCES · Formacion Comunitaria,40,Modelo 2\n" +
+      "15890123,Ana Rodriguez,ana.rodriguez@correo.com,Emprendimiento Comunitario,20,Modelo 1\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla_estudiantes_chacao.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Plantilla de ejemplo descargada.');
+  });
+
+  $('#btn-open-import-excel')?.addEventListener('click', () => {
+    excelParsedData = [];
+    $('#excel-preview-box')?.classList.add('hidden');
+    if ($('#btn-do-import')) $('#btn-do-import').disabled = true;
+    if ($('#in-excel-file')) $('#in-excel-file').value = '';
+    openModal('#modal-import-excel');
+  });
+
+  const excelDropzone = $('#excel-dropzone');
+  const inExcelFile = $('#in-excel-file');
+
+  excelDropzone?.addEventListener('click', e => {
+    if (e.target !== inExcelFile) inExcelFile?.click();
+  });
+  $('#btn-browse-excel')?.addEventListener('click', e => {
+    e.stopPropagation();
+    inExcelFile?.click();
+  });
+
+  ['dragenter', 'dragover'].forEach(name => {
+    excelDropzone?.addEventListener(name, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      excelDropzone.classList.add('is-dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(name => {
+    excelDropzone?.addEventListener(name, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      excelDropzone.classList.remove('is-dragover');
+    });
+  });
+
+  excelDropzone?.addEventListener('drop', e => {
+    const files = e.dataTransfer?.files;
+    if (files && files.length) handleExcelFile(files[0]);
+  });
+
+  inExcelFile?.addEventListener('change', e => {
+    const files = e.target.files;
+    if (files && files.length) handleExcelFile(files[0]);
+  });
+
+  // Parser de CSV puro como respaldo por si SheetJS no está cargado
+  function parseCSVText(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (!lines.length) return [];
+    const firstLine = lines[0];
+    const delim = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
+
+    function parseLine(line) {
+      const res = [];
+      let cur = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') {
+          inQuotes = !inQuotes;
+        } else if (c === delim && !inQuotes) {
+          res.push(cur.trim().replace(/^"|"$/g, ''));
+          cur = '';
+        } else {
+          cur += c;
+        }
+      }
+      res.push(cur.trim().replace(/^"|"$/g, ''));
+      return res;
+    }
+
+    const headers = parseLine(lines[0]).map(h => h.toLowerCase().trim());
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const vals = parseLine(lines[i]);
+      if (vals.some(v => v.length > 0)) {
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
+        rows.push(row);
+      }
+    }
+    return rows;
+  }
+
+  async function handleExcelFile(file) {
+    if (!file) return;
+    toast(`Leyendo archivo: ${file.name}…`);
+    try {
+      let rawRows = [];
+      const ext = file.name.split('.').pop().toLowerCase();
+
+      if (window.XLSX && (ext === 'xlsx' || ext === 'xls')) {
+        const data = await file.arrayBuffer();
+        const workbook = window.XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        rawRows = window.XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      } else {
+        const text = await file.text();
+        rawRows = parseCSVText(text);
+      }
+
+      if (!rawRows.length) {
+        toast('El archivo no contiene filas legibles.', 'error');
+        return;
+      }
+
+      // Mapeo inteligente de encabezados de columna
+      excelParsedData = rawRows.map(row => {
+        let cedula = '', nombre = '', email = '', taller = '', horas = 10, modelo = 'emprende1';
+
+        for (const [k, v] of Object.entries(row)) {
+          const key = clean(k).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const val = String(v).trim();
+          if (!val) continue;
+
+          if (/^(cedula|ci|c\.i|documento|dni|id|v)$/.test(key) || key.includes('cedula') || key.includes('identificacion')) {
+            cedula = normalizarCedula(val);
+          } else if (key.includes('nombre') || key.includes('participante') || key.includes('estudiante') || key.includes('alumno')) {
+            nombre = val;
+          } else if (key.includes('correo') || key.includes('email') || key.includes('mail')) {
+            email = val;
+          } else if (key.includes('taller') || key.includes('curso') || key.includes('programa') || key.includes('area') || key.includes('formacion')) {
+            taller = val;
+          } else if (key.includes('hora') || key.includes('duracion') || key.includes('hrs')) {
+            const h = parseInt(val, 10);
+            if (!isNaN(h) && h > 0) horas = h;
+          } else if (key.includes('modelo') || key.includes('tipo') || key.includes('convenio') || key.includes('plantilla')) {
+            if (/2|ucv|faces/i.test(val)) modelo = 'emprende2';
+            else modelo = 'emprende1';
+          }
+        }
+
+        if (taller && modelo === 'emprende1') {
+          const catItem = getCatalogoTalleres().find(c => c.taller.toLowerCase() === taller.toLowerCase());
+          if (catItem && catItem.modelo) modelo = catItem.modelo;
+        }
+
+        return { cedula, nombre, email, taller, horas, modelo };
+      }).filter(r => r.cedula && r.cedula.length >= 4);
+
+      if (!excelParsedData.length) {
+        toast('No se encontraron registros con número de cédula en el archivo.', 'error');
+        return;
+      }
+
+      // Vista previa de filas
+      const previewBox = $('#excel-preview-box');
+      const previewRows = $('#excel-preview-rows');
+      if (previewBox && previewRows) {
+        previewBox.classList.remove('hidden');
+        $('#excel-count-preview').textContent = excelParsedData.length;
+        $('#excel-btn-count').textContent = excelParsedData.length;
+        $('#excel-file-badge').textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+        const sample = excelParsedData.slice(0, 25);
+        previewRows.innerHTML = sample.map(r => `
+          <tr>
+            <td class="nowrap"><strong>${fmtCedula(r.cedula)}</strong></td>
+            <td>${esc(r.nombre || 'Sin nombre')}</td>
+            <td class="small muted">${esc(r.email || '—')}</td>
+            <td>${esc(r.taller || 'Taller general')}</td>
+            <td>${r.horas} hrs</td>
+            <td>
+              <span class="pill-model-badge ${r.modelo === 'emprende2' ? 'mod-m2' : 'mod-m1'}">
+                ${r.modelo === 'emprende2' ? 'M2 · UCV' : 'M1 · Emprende'}
+              </span>
+            </td>
+          </tr>
+        `).join('') + (excelParsedData.length > 25 ? `<tr><td colspan="6" class="small muted" style="text-align:center;">… y ${excelParsedData.length - 25} participante(s) más listos para registrar.</td></tr>` : '');
+      }
+
+      if ($('#btn-do-import')) $('#btn-do-import').disabled = false;
+      toast(`¡Archivo leído! Se detectaron ${excelParsedData.length} participantes listos para importar.`);
+    } catch (err) {
+      console.error(err);
+      toast('No se pudo procesar el archivo. Asegúrate de que sea un Excel o CSV válido.', 'error');
+    }
+  }
+
+  // Confirmar y procesar la importación masiva
+  $('#btn-do-import')?.addEventListener('click', async () => {
+    if (!excelParsedData || !excelParsedData.length) return;
+    const btn = $('#btn-do-import');
+    btn.disabled = true;
+    btn.textContent = 'Procesando importación…';
+
+    const autoHab = !!$('#chk-auto-hab')?.checked;
+    const users = getUsers();
+    const certs = getCerts();
+    const hoy = new Date();
+    let nuevosUsuarios = 0;
+    let nuevosCerts = 0;
+
+    for (const item of excelParsedData) {
+      let u = users.find(x => x.cedula === item.cedula);
+      if (!u) {
+        const defaultPassHash = await hashPass(item.cedula, item.cedula);
+        u = {
+          cedula: item.cedula,
+          nombre: item.nombre || `Participante C.I. ${item.cedula}`,
+          email: item.email || '',
+          pass: defaultPassHash,
+          role: 'user',
+          areas: item.taller || '',
+          creado: Date.now() + nuevosUsuarios,
+        };
+        users.push(u);
+        nuevosUsuarios++;
+      } else {
+        if (!u.email && item.email) u.email = item.email;
+        if (item.taller) {
+          const areasArr = parseTalleres(u.areas || '');
+          if (!areasArr.some(a => a.toLowerCase() === item.taller.toLowerCase())) {
+            areasArr.push(item.taller);
+            u.areas = areasArr.join(', ');
+          }
+        }
+      }
+
+      if (item.taller) {
+        const yaCert = certs.find(c => c.cedula === item.cedula && clean(c.curso).toLowerCase() === item.taller.toLowerCase());
+        if (!yaCert) {
+          certs.push({
+            id: uid(),
+            cedula: item.cedula,
+            nombre: u.nombre,
+            curso: item.taller,
+            area: item.taller,
+            horas: item.horas || 10,
+            dia: hoy.getDate(),
+            mes: hoy.getMonth() + 1,
+            anio: hoy.getFullYear(),
+            modelo: item.modelo || 'emprende1',
+            modeloManual: true,
+            habilitado: autoHab,
+            origen: 'import_excel',
+            creado: Date.now() + nuevosCerts,
+          });
+          nuevosCerts++;
+        }
+      }
+    }
+
+    setUsers(users);
+    setCerts(certs);
+    closeModals();
+    renderUsuarios();
+    renderCatalogoTalleres();
+    if (!$('#view-lista').classList.contains('hidden')) renderLista();
+    updatePendingBadge();
+    updateStats();
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg class="i"><use href="#i-check"/></svg><span>Importar y Registrar</span>`;
+    toast(`¡Importación completada! Se registraron ${nuevosUsuarios} nuevo(s) estudiante(s) y ${nuevosCerts} certificado(s).`);
+  });
+
   /* ---------------- Admin: utilidades y listas ---------------- */
   function fillDatalists() {
-    const dlCursos = $('#dl-cursos');
-    if (dlCursos) {
-      dlCursos.innerHTML = [...new Set(getCerts().map(c => c.curso))]
-        .map(c => `<option value="${esc(c)}"></option>`).join('');
-    }
+    renderCatalogoTalleres();
   }
 
   function updateStats() {
@@ -1970,16 +2420,44 @@
   }
   $('#lista-buscar').addEventListener('input', renderLista);
 
+  let userFilterCurrent = 'all';
+
   /* ---------------- Admin: usuarios ---------------- */
   function renderUsuarios() {
     const certs = getCerts();
     const me = currentUser();
     const q = clean($('#usuarios-buscar')?.value || '').toLowerCase();
     const allUsers = getUsers().sort((a, b) => (b.role === 'admin') - (a.role === 'admin') || b.creado - a.creado);
+
+    // Conteo para los botones de filtro rápido
+    let countAll = 0, countPending = 0, countEnabled = 0;
+    allUsers.forEach(u => {
+      if (u.role === 'admin') return;
+      countAll++;
+      const uCerts = certs.filter(c => c.cedula === u.cedula);
+      const hasPend = uCerts.some(c => c.habilitado === false);
+      const hasEnabled = uCerts.some(c => c.habilitado !== false);
+      if (hasPend) countPending++;
+      if (hasEnabled && !hasPend) countEnabled++;
+    });
+
+    if ($('#fcount-all')) $('#fcount-all').textContent = countAll;
+    if ($('#fcount-pending')) $('#fcount-pending').textContent = countPending;
+    if ($('#fcount-enabled')) $('#fcount-enabled').textContent = countEnabled;
+
     const users = allUsers.filter(u => {
-      if (!q) return true;
-      const uCerts = certs.filter(c => c.cedula === u.cedula).map(c => c.curso).join(' ');
-      return `${u.cedula} ${u.nombre} ${u.email || ''} ${u.areas || ''} ${uCerts}`.toLowerCase().includes(q);
+      if (q) {
+        const uCerts = certs.filter(c => c.cedula === u.cedula).map(c => c.curso).join(' ');
+        if (!`${u.cedula} ${u.nombre} ${u.email || ''} ${u.areas || ''} ${uCerts}`.toLowerCase().includes(q)) return false;
+      }
+      if (userFilterCurrent === 'pending') {
+        return certs.some(c => c.cedula === u.cedula && c.habilitado === false);
+      }
+      if (userFilterCurrent === 'enabled') {
+        const uC = certs.filter(c => c.cedula === u.cedula);
+        return uC.length > 0 && uC.every(c => c.habilitado !== false);
+      }
+      return true;
     });
     updateStats();
 
@@ -1989,7 +2467,6 @@
       const hab = userCerts.length - pend;
       const isMe = u.cedula === me.cedula;
       const userAreas = parseTalleres(u.areas || '');
-      const emailTxt = u.email ? `<span class="user-email">${esc(u.email)}</span>` : '<span class="muted small">—</span>';
 
       // Pills interactivos de talleres/certificados (clic directo habilita o pausa)
       const certKeys = new Set(userCerts.map(c => clean(c.curso).toLowerCase()));
@@ -1999,43 +2476,88 @@
         talleresHtml = `<div class="user-certs-pills">` +
           userCerts.map(c => {
             const on = c.habilitado !== false;
-            return `<button type="button" class="cert-status-pill ${on ? 'is-enabled' : 'is-pending'}" data-act="toggle-hab" data-id="${c.id}" title="${on ? 'Habilitado · clic para pausar' : 'Pendiente · clic para habilitar'}">${on ? '✓' : '⏳'} ${esc(c.curso)}</button>`;
+            const isM2 = c.modelo === 'emprende2';
+            const modLabel = isM2 ? 'M2 · UCV' : 'M1 · Emprende';
+            return `<button type="button" class="cert-status-pill ${on ? 'is-enabled' : 'is-pending'}" data-act="toggle-hab" data-id="${c.id}" title="${on ? 'Habilitado · Clic para pausar' : 'Pendiente · Clic para habilitar'}">
+              <span class="pill-icon">${on ? '✓' : '⏳'}</span>
+              <span>${esc(c.curso)}</span>
+              <span class="pill-model-badge ${isM2 ? 'mod-m2' : 'mod-m1'}" title="Certificado con ${isM2 ? 'Modelo 2 Convenio FaCES/UCV' : 'Modelo 1 Chacao Emprende'}">${modLabel}</span>
+            </button>`;
           }).join('') +
-          extraAreas.map(a => `<span class="user-area-pill">${esc(a)}</span>`).join('') +
+          extraAreas.map(a => `<span class="user-area-pill" title="Área o taller registrado">+ ${esc(a)}</span>`).join('') +
           `</div>`;
       } else {
         talleresHtml = u.role === 'admin'
-          ? '<span class="muted small">Administración</span>'
-          : '<span class="muted small">Sin talleres registrados</span>';
+          ? '<span class="user-empty-hint">Perfil administrativo</span>'
+          : '<span class="user-empty-hint">Sin talleres registrados aún</span>';
       }
 
-      const statusCol = u.role === 'admin' && !userCerts.length
-        ? '<span class="muted small">—</span>'
-        : userCerts.length
-          ? `<span class="cert-status-pill cert-status-pill--static ${pend ? 'is-pending' : 'is-enabled'}">${hab}/${userCerts.length} ${pend ? `(${pend} pend.)` : 'listo'}</span>`
-          : '<span class="muted small">0 certificados</span>';
+      // Summary status pill
+      let statusBadge = '';
+      if (u.role === 'admin' && !userCerts.length) {
+        statusBadge = '<span class="status-summary-badge status-admin">Administrador</span>';
+      } else if (pend > 0) {
+        statusBadge = `<span class="status-summary-badge status-pending">⏳ ${pend} por habilitar · (${hab}/${userCerts.length} listos)</span>`;
+      } else if (userCerts.length > 0) {
+        statusBadge = `<span class="status-summary-badge status-enabled">✓ ${userCerts.length} habilitado${userCerts.length > 1 ? 's' : ''} (Listo)</span>`;
+      } else {
+        statusBadge = '<span class="status-summary-badge status-empty">0 certificados</span>';
+      }
 
-      const actions = isMe ? '<span class="muted small">Sesión activa</span>' : `
-        ${pend > 0 ? `<button class="btn btn-sm btn-enable-ok" data-act="habilitar-todo" data-id="${esc(u.cedula)}" title="Habilitar los ${pend} certificado(s) pendiente(s)">${ic('check')}Habilitar (${pend})</button>` : ''}
-        <button class="btn btn-light btn-sm" data-act="gestionar-certs" data-id="${esc(u.cedula)}" title="Gestionar y habilitar talleres">${ic('list')}Gestionar</button>
-        <button class="btn btn-light btn-sm" data-act="editareas" data-id="${esc(u.cedula)}" title="Editar talleres registrados">${ic('pen')}Talleres</button>
-        <button class="btn btn-light btn-sm btn-icon" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer contraseña a la cédula" aria-label="Restablecer clave">${ic('refresh')}</button>
-        <button class="btn btn-light btn-sm btn-icon" data-act="role" data-id="${esc(u.cedula)}" title="${u.role === 'admin' ? 'Quitar rol administrador' : 'Hacer administrador'}" aria-label="Rol">${ic('shield')}</button>
-        <button class="btn btn-danger btn-icon" data-act="deluser" data-id="${esc(u.cedula)}" title="Eliminar cuenta" aria-label="Eliminar">${ic('trash')}</button>`;
-      return `<tr>
-        <td class="nowrap">${fmtCedula(u.cedula)}</td>
-        <td class="strong">${esc(u.nombre)} ${u.role === 'admin' ? '<span class="badge">Admin</span>' : ''}</td>
-        <td>${emailTxt}</td>
-        <td>${talleresHtml}</td>
-        <td>${statusCol}</td>
-        <td class="nowrap">${new Date(u.creado).toLocaleDateString('es-VE')}</td>
-        <td><div class="t-actions">${actions}</div></td>
+      const actions = isMe ? '<span class="session-active-tag">Sesión actual</span>' : `
+        <div class="user-action-cluster">
+          <div class="user-action-row-main">
+            ${pend > 0 ? `<button class="btn btn-sm btn-enable-ok" data-act="habilitar-todo" data-id="${esc(u.cedula)}" title="Habilitar todos los certificados pendientes de ${esc(u.nombre)}">${ic('check')}<span>Habilitar todo (${pend})</span></button>` : ''}
+            <button class="btn btn-light btn-sm btn-gestionar" data-act="gestionar-certs" data-id="${esc(u.cedula)}" title="Gestionar talleres y habilitaciones">${ic('list')}<span>Gestionar</span></button>
+          </div>
+          <div class="user-action-row-sub">
+            <button class="action-sub-btn" data-act="editareas" data-id="${esc(u.cedula)}" title="Editar talleres registrados">${ic('pen')}<span>Talleres</span></button>
+            <button class="action-sub-btn" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer contraseña a la cédula">${ic('refresh')}<span>Clave</span></button>
+            <button class="action-sub-btn" data-act="role" data-id="${esc(u.cedula)}" title="${u.role === 'admin' ? 'Quitar rol administrador' : 'Hacer administrador'}">${ic('shield')}<span>${u.role === 'admin' ? 'Quitar' : 'Admin'}</span></button>
+            <button class="action-sub-btn action-sub-btn-del" data-act="deluser" data-id="${esc(u.cedula)}" title="Eliminar cuenta participante">${ic('trash')}</button>
+          </div>
+        </div>`;
+
+      return `<tr class="user-table-row">
+        <td class="col-user">
+          <div class="user-profile-meta">
+            <div class="user-name-line">
+              <strong class="user-display-name">${esc(u.nombre)}</strong>
+              ${u.role === 'admin' ? '<span class="badge badge-admin">Admin</span>' : ''}
+            </div>
+            <div class="user-badges-line">
+              <span class="user-ci-tag">C.I. ${fmtCedula(u.cedula)}</span>
+              ${u.email ? `<span class="user-email-tag" title="${esc(u.email)}">${ic('mail')}<span class="email-text">${esc(u.email)}</span></span>` : ''}
+            </div>
+            <div class="user-date-line">
+              <span class="user-reg-date">Registrado el ${new Date(u.creado).toLocaleDateString('es-VE')}</span>
+            </div>
+          </div>
+        </td>
+        <td class="col-talleres">
+          <div class="user-talleres-cell">
+            <div class="user-status-summary-bar">
+              ${statusBadge}
+            </div>
+            ${talleresHtml}
+          </div>
+        </td>
+        <td class="col-actions">
+          <div class="t-actions-clean">${actions}</div>
+        </td>
       </tr>`;
     }).join('')
-      : `<tr><td colspan="7" class="t-empty">No se encontraron participantes con "${esc(q)}".</td></tr>`;
+      : `<tr><td colspan="3" class="t-empty">No se encontraron participantes con "${esc(q)}".</td></tr>`;
     updatePendingBadge();
   }
   $('#usuarios-buscar')?.addEventListener('input', renderUsuarios);
+  $('#user-filter-tabs')?.addEventListener('click', e => {
+    const btn = e.target.closest('.user-filter-btn');
+    if (!btn) return;
+    $$('.user-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    userFilterCurrent = btn.dataset.filter || 'all';
+    renderUsuarios();
+  });
 
   /* ---------------- Admin: diseño ---------------- */
   let draft = getSettings();
@@ -2077,7 +2599,7 @@
 
   function renderConfig(d = getSettings()) {
     draft = d;
-    for (const el of formConfig.elements) {
+    for (const el of (formConfig?.elements || [])) {
       if (!el.name || !(el.name in draft) || el.type === 'file') continue;
       if (el.type === 'checkbox') el.checked = !!draft[el.name];
       else el.value = draft[el.name];
@@ -2089,13 +2611,13 @@
 
   function syncConfig() {
     const tpl = !!draft.plantilla;
-    $('#tpl-controls').classList.toggle('hidden', !tpl);
-    $('#default-controls').classList.toggle('hidden', tpl);
-    $('#btn-quitar-plantilla').classList.toggle('hidden', draft.modeloPreset === 'emprende1');
-    $('#btn-quitar-logo').classList.toggle('hidden', !draft.logo);
-    $('#editor-ayuda').classList.toggle('hidden', !tpl);
+    $('#tpl-controls')?.classList.toggle('hidden', true);
+    $('#default-controls')?.classList.toggle('hidden', true);
+    $('#btn-quitar-plantilla')?.classList.toggle('hidden', draft.modeloPreset === 'emprende1');
+    $('#btn-quitar-logo')?.classList.toggle('hidden', !draft.logo);
+    $('#editor-ayuda')?.classList.toggle('hidden', true);
 
-    const activeModel = tpl ? (MODELOS_OFICIALES[draft.modeloPreset] ? draft.modeloPreset : 'custom') : 'digital';
+    const activeModel = tpl ? (MODELOS_OFICIALES[draft.modeloPreset] ? draft.modeloPreset : 'custom') : 'emprende1';
     const customCard = $('#model-picker-custom');
     if (customCard) {
       customCard.classList.toggle('hidden', activeModel !== 'custom');
@@ -2113,15 +2635,17 @@
     });
 
     const vista = $('#config-preview');
-    vista.classList.toggle('editor', tpl);
-    mount(vista, SAMPLE, draft);
-    if (tpl) sincronizarPanel();
+    if (vista) {
+      vista.classList.remove('editor');
+      mount(vista, SAMPLE, draft);
+    }
   }
 
   /* ---------------- Editor visual del modelo ---------------- */
   let campoActivo = 'nombre';
 
   function sincronizarPanel() {
+    if (!$('#tpl-controls')) return;
     if (!draft.campos || !draft.campos[campoActivo]) campoActivo = 'nombre';
     const f = draft.campos[campoActivo];
     $$('.campo-chip').forEach(b => {
@@ -2142,10 +2666,13 @@
     $('#wrap-formatoFecha')?.classList.toggle('hidden', !isFecha);
     $('#wrap-afijos')?.classList.toggle('hidden', isIntro);
 
-    $('[data-out="size"]').textContent = `${f.size}`;
-    $('[data-out="ancho"]').textContent = `${f.ancho}%`;
-    $('[data-out="taparEscala"]').textContent = `${f.taparEscala || 100}%`;
-    $('#campo-parche').classList.toggle('hidden', !f.tapar);
+    const outSize = $('[data-out="size"]');
+    if (outSize) outSize.textContent = `${f.size}`;
+    const outAncho = $('[data-out="ancho"]');
+    if (outAncho) outAncho.textContent = `${f.ancho}%`;
+    const outTapar = $('[data-out="taparEscala"]');
+    if (outTapar) outTapar.textContent = `${f.taparEscala || 100}%`;
+    $('#campo-parche')?.classList.toggle('hidden', !f.tapar);
     $$('#config-preview .tpl-field').forEach(el => el.classList.toggle('sel', el.dataset.campo === campoActivo));
   }
 
@@ -2156,17 +2683,17 @@
     if (key === 'custom') return;
     seleccionarPresetOficial(key);
     setSettings(draft);
-    toast(key === 'digital' ? 'Diseño Digital Clásico activado.' : `Activado: ${MODELOS_OFICIALES[key]?.nombre || key}`);
+    toast(`Activado: ${MODELOS_OFICIALES[key]?.nombre || key}`);
   });
 
-  $('#campo-chips').addEventListener('click', e => {
+  $('#campo-chips')?.addEventListener('click', e => {
     const b = e.target.closest('.campo-chip');
     if (!b) return;
     campoActivo = b.dataset.campo;
     sincronizarPanel();
   });
 
-  $('#tpl-controls').addEventListener('input', e => {
+  $('#tpl-controls')?.addEventListener('input', e => {
     const el = e.target;
     const prop = el.dataset.f;
     if (!prop) return;
@@ -2205,27 +2732,12 @@
   // Arrastrar o hacer doble clic para editar sobre la vista previa
   const vistaEditor = $('#config-preview');
   let arrastre = null;
-  vistaEditor.addEventListener('pointerdown', e => {
-    const el = e.target.closest('.tpl-field');
-    if (!el || !draft.plantilla) return;
-    e.preventDefault();
-    campoActivo = el.dataset.campo;
-    const r = vistaEditor.getBoundingClientRect();
-    const f = draft.campos[campoActivo];
-    arrastre = { el, f, r, dx: e.clientX - (r.left + f.x / 100 * r.width), dy: e.clientY - (r.top + f.y / 100 * r.height) };
-    vistaEditor.setPointerCapture(e.pointerId);
-    sincronizarPanel();
+  vistaEditor?.addEventListener('pointerdown', e => {
+    // El diseño viene listo del PDF, no se arrastra ni edita desde el portal
+    return;
   });
-  vistaEditor.addEventListener('dblclick', e => {
-    const el = e.target.closest('.tpl-field');
-    if (!el || !draft.plantilla) return;
-    const c = el.dataset.campo;
-    const mapFocus = { nombre: '#test-nombre', cedula: '#test-cedula', curso: '#test-curso', fecha: '#test-dia', intro: '[data-f="textoFijo"]' };
-    const target = $(mapFocus[c]);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => { target.focus(); target.select?.(); }, 180);
-    }
+  vistaEditor?.addEventListener('dblclick', e => {
+    return;
   });
   vistaEditor.addEventListener('pointermove', e => {
     if (!arrastre) return;
@@ -2438,19 +2950,19 @@
     return marcadores.length;
   }
 
-  formConfig.addEventListener('input', e => {
+  formConfig?.addEventListener('input', e => {
     const el = e.target;
     if (!el.name || el.type === 'file') return;
     draft[el.name] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value;
     syncConfig();
   });
 
-  formConfig.addEventListener('submit', e => {
+  formConfig?.addEventListener('submit', e => {
     e.preventDefault();
     if (setSettings(draft)) toast('Diseño guardado. Todos los certificados usan este modelo.');
   });
 
-  $('#btn-restablecer').addEventListener('click', () => {
+  $('#btn-restablecer')?.addEventListener('click', () => {
     seleccionarPresetOficial('emprende1');
     setSettings(draft);
     toast('Restablecido al Modelo 1 Oficial Chacao Emprende.');
@@ -2794,13 +3306,13 @@
       toast('No se pudo leer el archivo. Si es PDF, revisa tu conexión a internet.', 'error');
     }
   });
-  $('#btn-quitar-plantilla').addEventListener('click', () => {
+  $('#btn-quitar-plantilla')?.addEventListener('click', () => {
     seleccionarPresetOficial('emprende1');
     setSettings(draft);
     toast('Restablecido al Modelo 1 Oficial Chacao Emprende.');
   });
 
-  $('#in-logo').addEventListener('change', async e => {
+  $('#in-logo')?.addEventListener('change', async e => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
@@ -2811,7 +3323,7 @@
       toast('No se pudo leer la imagen.', 'error');
     }
   });
-  $('#btn-quitar-logo').addEventListener('click', () => {
+  $('#btn-quitar-logo')?.addEventListener('click', () => {
     draft.logo = '';
     draft.logoPreset = 'duo';
     syncConfig();
@@ -3047,6 +3559,7 @@
     }
     listEl.innerHTML = certs.map(c => {
       const hab = c.habilitado !== false;
+      const isM2 = c.modelo === 'emprende2';
       return `<div class="mhu-item ${hab ? 'is-enabled' : 'is-pending'}" data-cert-id="${c.id}">
         <div class="mhu-info">
           <div class="mhu-title-row">
@@ -3054,14 +3567,30 @@
             <span class="muted small">${c.descargadoEn ? `· Descargado el ${fechaTimestamp(c.descargadoEn)}` : '· Fecha automática al descargar'}</span>
           </div>
           <div class="mhu-controls">
-            <label>Horas: <input type="number" min="1" max="500" value="${c.horas || 5}" data-mhu-horas></label>
-            <label>Modelo:
-              <select data-mhu-modelo>
-                <option value="" ${!c.modelo ? 'selected' : ''}>Predeterminado</option>
-                <option value="emprende1" ${c.modelo === 'emprende1' ? 'selected' : ''}>Modelo 1 · Chacao Emprende</option>
-                <option value="emprende2" ${c.modelo === 'emprende2' ? 'selected' : ''}>Modelo 2 · Convenio UCV / FaCES</option>
-              </select>
-            </label>
+            <div class="mhu-ctrl-group">
+              <span class="mhu-ctrl-lbl">Horas:</span>
+              <input type="number" min="1" max="500" value="${c.horas || 5}" data-mhu-horas class="mhu-in-horas">
+            </div>
+            <div class="mhu-ctrl-group">
+              <span class="mhu-ctrl-lbl">Modelo:</span>
+              <div class="mhu-segmented-models">
+                <button type="button" class="mhu-seg-btn ${!isM2 ? 'is-active is-m1' : ''}" data-set-modelo="emprende1" title="Modelo 1 Oficial Chacao Emprende">
+                  <span class="seg-dot"></span>
+                  <span>M1 · Emprende</span>
+                </button>
+                <button type="button" class="mhu-seg-btn ${isM2 ? 'is-active is-m2' : ''}" data-set-modelo="emprende2" title="Modelo 2 Convenio UCV / FaCES">
+                  <span class="seg-dot"></span>
+                  <span>M2 · UCV / FaCES</span>
+                </button>
+                <select data-mhu-modelo class="sr-only">
+                  <option value="emprende1" ${!isM2 ? 'selected' : ''}>Modelo 1 · Chacao Emprende</option>
+                  <option value="emprende2" ${isM2 ? 'selected' : ''}>Modelo 2 · Convenio UCV / FaCES</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn btn-light btn-sm mhu-preview-btn" data-mhu-preview="${c.id}" title="Ver vista previa de cómo saldrá el certificado con este modelo">
+              ${ic('eye')} <span>Vista previa</span>
+            </button>
           </div>
         </div>
         <label class="mhu-switch">
@@ -3072,6 +3601,43 @@
       </div>`;
     }).join('');
   }
+
+  $('#mhu-list')?.addEventListener('click', e => {
+    // Manejo de cambio de modelo en el selector segmentado
+    const segBtn = e.target.closest('[data-set-modelo]');
+    if (segBtn) {
+      const segGroup = segBtn.closest('.mhu-segmented-models');
+      const val = segBtn.dataset.setModelo;
+      const sel = segGroup?.querySelector('select[data-mhu-modelo]');
+      if (sel) sel.value = val;
+      segGroup?.querySelectorAll('.mhu-seg-btn').forEach(b => {
+        const isThis = b.dataset.setModelo === val;
+        b.classList.toggle('is-active', isThis);
+        b.classList.toggle('is-m1', isThis && val === 'emprende1');
+        b.classList.toggle('is-m2', isThis && val === 'emprende2');
+      });
+      const modName = val === 'emprende2' ? 'Modelo 2 · Convenio UCV' : 'Modelo 1 · Chacao Emprende';
+      toast(`Cambiado a: ${modName}`);
+      return;
+    }
+
+    // Manejo de vista previa
+    const btn = e.target.closest('[data-mhu-preview]');
+    if (!btn) return;
+    const certId = btn.dataset.mhuPreview;
+    const cert = getCerts().find(c => c.id === certId);
+    if (!cert) return;
+    const itemEl = btn.closest('.mhu-item');
+    const sel = itemEl?.querySelector('select[data-mhu-modelo]');
+    const horasInp = itemEl?.querySelector('input[data-mhu-horas]');
+    const previewCert = {
+      ...cert,
+      modelo: sel?.value || cert.modelo || 'emprende1',
+      horas: +horasInp?.value || cert.horas || 5,
+      modeloManual: true
+    };
+    viewCert(previewCert);
+  });
 
   function openHabilitarUserModal(user) {
     const m = $('#modal-habilitar-user');
@@ -3347,5 +3913,8 @@
   $$('.in-horas').forEach(inp => { if (!inp.value) inp.value = 5; });
   $$('.footer-year, #year').forEach(el => { el.textContent = now.getFullYear(); });
 
-  seedAdmin().then(startApp);
+  seedAdmin().then(() => {
+    renderCatalogoTalleres();
+    startApp();
+  });
 })();
