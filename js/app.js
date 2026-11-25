@@ -3579,6 +3579,19 @@
     }
     return m;
   }
+  function closeModal(modalEl) {
+    if (!modalEl) return;
+    const done = () => {
+      modalEl.classList.add('hidden');
+      const otherOpen = $$('.modal:not(.hidden)');
+      if (!otherOpen.length) document.body.classList.remove('no-scroll');
+      if (G) G.set(modalEl, { clearProps: 'opacity' });
+    };
+    if (!G) return done();
+    G.to($('.modal-box', modalEl), { y: 20, scale: .98, opacity: 0, duration: .2, ease: 'power2.in' });
+    G.to(modalEl, { opacity: 0, duration: .22, ease: 'power2.in', onComplete: done });
+  }
+
   function closeModals() {
     const open = $$('.modal:not(.hidden)');
     if (!open.length) return;
@@ -3592,9 +3605,18 @@
     G.to(open, { opacity: 0, duration: .3, ease: 'power2.in', onComplete: done });
   }
   $$('.modal').forEach(m => m.addEventListener('click', e => {
-    if (e.target === m || e.target.closest('[data-close]')) closeModals();
+    if (e.target === m || e.target.closest('[data-close]')) {
+      e.stopPropagation();
+      closeModal(m);
+    }
   }));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const topModal = $('#modal-cert:not(.hidden)');
+      if (topModal) closeModal(topModal);
+      else closeModals();
+    }
+  });
 
   function canSee(cert) {
     const u = currentUser();
@@ -3611,6 +3633,7 @@
     $('#mc-sub').textContent = `${resolved.nombre} · C.I. ${fmtCedula(resolved.cedula)}`;
     openModal('#modal-cert');
     mount($('#mc-frame'), resolved);
+    requestAnimationFrame(() => fitFrame($('#mc-frame')));
   }
   $('#mc-pdf').addEventListener('click', () => { if (modalCert) printCert(modalCert); });
 
@@ -3823,9 +3846,12 @@
     const itemEl = btn.closest('.mhu-item');
     const sel = itemEl?.querySelector('select[data-mhu-modelo]');
     const horasInp = itemEl?.querySelector('input[data-mhu-horas]');
+    const activeSegBtn = itemEl?.querySelector('.mhu-seg-btn.is-active');
+    const modeloVal = activeSegBtn?.dataset.setModelo || sel?.value || cert.modelo || 'emprende1';
+
     const previewCert = {
       ...cert,
-      modelo: sel?.value || cert.modelo || 'emprende1',
+      modelo: modeloVal,
       horas: +horasInp?.value || cert.horas || 5,
       modeloManual: true
     };
