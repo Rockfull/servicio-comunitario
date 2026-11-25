@@ -200,6 +200,9 @@
           <div class="avatar" id="nav-avatar"></div>
           <div class="nav-user-info"><strong id="nav-name"></strong><small id="nav-role"></small></div>
           <div class="nav-user-actions">
+            <button class="icon-btn admin-only" id="btn-nav-respaldo" title="Centro de Seguridad y Respaldo" aria-label="Seguridad y Respaldo">
+              <svg class="i"><use href="#i-shield"/></svg>
+            </button>
             <button class="icon-btn" id="btn-pass" title="Cambiar contraseña" aria-label="Cambiar contraseña">
               <svg class="i"><use href="#i-key"/></svg>
             </button>
@@ -241,14 +244,6 @@
             <span class="nav-link-text">
               <strong>Modelo PDF</strong>
               <small class="nav-link-desc">Plantilla oficial del certificado</small>
-            </span>
-            <span class="nav-chevron">›</span>
-          </a>
-          <a href="#" class="nav-link admin-only" data-view="respaldo">
-            <span class="nav-icon-wrap"><svg class="i"><use href="#i-shield"/></svg></span>
-            <span class="nav-link-text">
-              <strong>Seguridad y Respaldo</strong>
-              <small class="nav-link-desc">Copias de seguridad y protección</small>
             </span>
             <span class="nav-chevron">›</span>
           </a>
@@ -609,6 +604,9 @@
     <section id="view-respaldo" class="view hidden">
       <div class="page-head">
         <div>
+          <button type="button" class="btn btn-light btn-sm btn-respaldo-back" id="btn-respaldo-back" onclick="window.showView ? window.showView('usuarios') : null" style="margin-bottom: 14px; font-weight: 700; cursor: pointer;">
+            <svg class="i" style="transform: rotate(180deg);"><use href="#i-arrow"/></svg> <span>Volver a Estudiantes</span>
+          </button>
           <p class="eyebrow">Seguridad & Resguardo Institucional</p>
           <h2>Centro de Seguridad y <em>Respaldo de Datos</em></h2>
           <p class="lead">Garantiza la protección de los estudiantes registrados, conserva copias de seguridad de las certificaciones y gestiona el acceso administrativo seguro de la Alcaldía de Chacao.</p>

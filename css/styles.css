@@ -636,7 +636,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
 /* Elementos del menú responsive enriquecido */
 .nav-backdrop { display: none; }
 .nav-icon-wrap { display: inline-flex; align-items: center; justify-content: center; }
-.nav-link-text { display: inline-flex; flex-direction: column; text-align: left; }
+.nav-link-text { display: inline-flex; flex-direction: column; text-align: left; white-space: nowrap; }
 .nav-link-desc { display: none; }
 .nav-chevron { display: none; }
 .nav-user-actions { display: flex; align-items: center; gap: 8px; }
@@ -646,6 +646,7 @@ legend { font-size: 13.5px; font-weight: 600; padding: 0 8px; color: var(--blue-
   position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px;
   padding: 9px 16px; border-radius: 999px; text-decoration: none;
   color: rgba(244, 248, 252, .75); font-weight: 400; font-size: 14.5px; transition: color .35s;
+  white-space: nowrap;
 }
 .nav-link .i { width: 16px; height: 16px; opacity: .75; transition: opacity .35s, color .35s; }
 .nav-link:hover .i, .nav-link.active .i { opacity: 1; color: var(--blue-sky); }
@@ -2310,6 +2311,33 @@ select:focus, .field select:focus {
 .btn-respaldo-trigger:hover {
   background: rgba(0, 79, 200, 0.08) !important;
   border-color: var(--blue-royal) !important;
+}
+
+#btn-respaldo-back {
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all .2s ease !important;
+  background: #ffffff !important;
+  border: 1.5px solid var(--line) !important;
+  box-shadow: 0 2px 8px rgba(0, 30, 80, 0.06) !important;
+}
+#btn-respaldo-back:hover {
+  background: var(--blue-royal) !important;
+  color: #ffffff !important;
+  border-color: var(--blue-royal) !important;
+  transform: translateX(-2px);
+  box-shadow: 0 4px 14px rgba(0, 79, 200, 0.25) !important;
+}
+#btn-respaldo-back:hover .i {
+  color: #ffffff !important;
+}
+
+#btn-nav-respaldo.active {
+  background: rgba(0, 150, 242, 0.22) !important;
+  color: var(--blue-sky) !important;
+  box-shadow: 0 0 10px rgba(0, 150, 242, 0.45) !important;
 }
 
 .config-sec-card {
