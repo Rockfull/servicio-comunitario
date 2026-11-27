@@ -537,16 +537,57 @@
     const catalogo = getCatalogoTalleres();
     const activos = catalogo.filter(c => c.activo !== false);
 
-    // Sugerencias en el formulario de solicitud del estudiante
+    // Selector oficial en el formulario de solicitud del estudiante (nativo sincronizado)
+    const userSel = $('#in-user-curso-sel');
+    if (userSel) {
+      const curVal = userSel.value;
+      userSel.innerHTML = `<option value="">-- Elige un taller de la oferta oficial --</option>` +
+        `<optgroup label="Talleres vigentes en catálogo">` +
+        activos.map(c => `<option value="${esc(c.taller)}" data-horas="${c.horas || 10}" data-modelo="${c.modelo || 'emprende1'}">${esc(c.taller)} (${c.horas || 10}h)</option>`).join('') +
+        `</optgroup>` +
+        `<optgroup label="Talleres anteriores o no listados">` +
+        `<option value="__historico__">📜 Solicitar taller histórico / Curso de fechas anteriores no listado...</option>` +
+        `</optgroup>`;
+      if (curVal) userSel.value = curVal;
+    }
+
+    // Selector moderno y elegante (Custom Select para el estudiante)
+    const optionsContainer = $('#user-curso-options');
+    if (optionsContainer) {
+      let optHtml = `<div class="cs-group-title">Talleres Vigentes en Oferta Oficial</div>`;
+      activos.forEach(c => {
+        const horas = c.horas || 10;
+        const isSel = userSel && userSel.value === c.taller;
+        optHtml += `<div class="cs-option ${isSel ? 'is-selected' : ''}" data-val="${esc(c.taller)}" data-horas="${horas}" data-modelo="${c.modelo || 'emprende1'}" role="option">
+          <span class="cs-opt-name">${esc(c.taller)}</span>
+          <span class="cs-opt-tag">${horas}h</span>
+        </div>`;
+      });
+      optHtml += `<div class="cs-group-title" style="margin-top:6px;">Talleres Anteriores o No Listados</div>`;
+      optHtml += `<div class="cs-option is-hist ${userSel && userSel.value === '__historico__' ? 'is-selected' : ''}" data-val="__historico__" data-horas="10" role="option">
+        <span class="cs-opt-name">📜 Solicitar taller histórico / Período anterior no listado...</span>
+        <span class="cs-opt-tag" style="background:#fef3c7;color:#92400e;">Histórico</span>
+      </div>`;
+      optionsContainer.innerHTML = optHtml;
+      syncCustomSelectTrigger();
+    }
+
+    // Sugerencias en el formulario de solicitud del estudiante (solo nombre de taller, el modelo lo decide el admin)
     const quickTagsEl = $('#quick-taller-tags');
     if (quickTagsEl) {
       quickTagsEl.innerHTML = activos.map(c => {
-        const isM2 = c.modelo === 'emprende2';
         return `<button type="button" class="area-chip" data-taller="${esc(c.taller)}" data-horas="${c.horas || 10}" data-modelo="${c.modelo || 'emprende1'}">
           + ${esc(c.taller)}
-          <span class="chip-model-sub ${isM2 ? 'is-m2' : 'is-m1'}">${isM2 ? 'UCV' : 'Emprende'}</span>
         </button>`;
       }).join('');
+    }
+
+    // Selector en el formulario de registro de nuevos estudiantes
+    const regSel = $('#reg-taller-select');
+    if (regSel) {
+      regSel.innerHTML = `<option value="">-- Elige un taller de la oferta oficial --</option>` +
+        activos.map(c => `<option value="${esc(c.taller)}">${esc(c.taller)}</option>`).join('') +
+        `<option value="__otro__">Otro taller / Curso histórico...</option>`;
     }
 
     // Sugerencias en el formulario de registro
@@ -801,7 +842,14 @@
     } else if (clave === 'nombre') {
       t = c.nombre || '';
     } else if (clave === 'curso') {
-      t = c.curso || '';
+      let rawCurso = clean(c.curso || '');
+      // Evitar comillas dobles accidentales si el administrador ya las escribió
+      rawCurso = rawCurso.replace(/^["“'”]+|["“'”]+$/g, '').trim();
+      if (c.historico && c.fechaHistorica && !rawCurso.toLowerCase().includes(c.fechaHistorica.toLowerCase())) {
+        t = `${rawCurso} (Período: ${c.fechaHistorica})`;
+      } else {
+        t = rawCurso;
+      }
     } else if (clave === 'cedula') {
       const ci = normCedula(c.cedula);
       t = /^\d+$/.test(ci) ? fmtCedula(ci) : (c.cedula || '');
@@ -831,16 +879,19 @@
     return f.mayus ? res.toUpperCase() : res;
   }
 
-  // Renderiza texto seguro manteniendo saltos de línea y negrita Chacao (**texto**) en el encabezado
+  // Renderiza texto seguro manteniendo saltos de línea, negrita Chacao (**texto**) y nombres de curso destacados
   function renderCampoTextoHTML(clave, texto) {
     let html = esc(texto);
     if (clave === 'intro') {
       html = html.replace(/\*\*([\s\S]+?)\*\*/g, '<strong style="color:#2d4fca;font-weight:700;">$1</strong>');
+    } else if (clave === 'curso') {
+      // Destacar el nombre del curso entre comillas en negrita de alta definición
+      html = html.replace(/“([\s\S]+?)”/, '<strong style="color:inherit;font-weight:700;">“$1”</strong>');
     }
     return html;
   }
 
-  // Reduce la letra si el texto no cabe en el ancho del campo (soporta saltos de línea y marcas **)
+  // Reduce la letra proporcionalmente si el texto es largo para que quepa perfectamente sin salirse
   const medidor = document.createElement('canvas').getContext('2d');
   function letraQueCabe(texto, f, anchoPx) {
     const familia = FUENTES[f.fuente] || FUENTES.sans;
@@ -852,7 +903,7 @@
       const w = medidor.measureText(l).width;
       if (w > maxW) maxW = w;
     }
-    return maxW > anchoPx ? Math.max(f.size * 0.4, f.size * anchoPx / maxW * 0.98) : f.size;
+    return maxW > anchoPx ? Math.max(f.size * 0.45, f.size * anchoPx / maxW * 0.96) : f.size;
   }
 
   function cajaParche(f, h) {
@@ -1831,16 +1882,22 @@
     renderCatalogoTalleres();
     $('#hello-name').textContent = clean(u.nombre).split(' ')[0];
 
-    // Talleres o áreas registradas del usuario
+    const certs = getCerts().filter(c => c.cedula === u.cedula).sort(byDate);
+    const histCerts = new Map(certs.filter(c => c.historico).map(c => [clean(c.curso).toLowerCase(), c.fechaHistorica]));
+
+    // Talleres o áreas registradas del usuario (con distintivo dorado si fue histórico)
     const userAreas = parseTalleres(u.areas || '');
     const areasList = $('#mis-areas-list');
     if (areasList) {
       areasList.innerHTML = userAreas.length
-        ? userAreas.map(a => `<span class="badge-area">${esc(a)}</span>`).join('')
+        ? userAreas.map(a => {
+            const isHist = histCerts.has(clean(a).toLowerCase());
+            const fHist = histCerts.get(clean(a).toLowerCase());
+            return `<span class="badge-area ${isHist ? 'badge-area-hist' : ''}">${isHist ? '📜 ' : ''}${esc(a)}${isHist && fHist ? ` (Histórico ${esc(fHist)})` : ''}</span>`;
+          }).join('')
         : '<span class="muted small">Sin talleres registrados aún</span>';
     }
 
-    const certs = getCerts().filter(c => c.cedula === u.cedula).sort(byDate);
     const habilitados = certs.filter(c => c.habilitado !== false);
     const pendientes = certs.filter(c => c.habilitado === false);
 
@@ -1866,15 +1923,16 @@
     } else {
       const resueltos = habilitados.map(c => datosCertificado(c, hoy));
       grid.innerHTML = resueltos.map((c, i) => `
-        <article class="cert-card">
+        <article class="cert-card ${c.historico ? 'is-cert-historico' : ''}">
           <div class="cert-frame" data-act="ver" data-id="${c.id}"></div>
           <div class="cert-card-body">
             <div>
               <span class="cert-card-index">Nº ${String(resueltos.length - i).padStart(2, '0')}</span>
+              ${c.historico ? `<span class="badge-cert-hist" title="Acreditación de taller cursado en fecha anterior">📜 Histórico (${esc(c.fechaHistorica || 'Anterior')})</span>` : ''}
               ${c.area ? `<span class="cert-card-area">${esc(c.area)}</span>` : ''}
             </div>
             <h3>${esc(c.curso)}</h3>
-            <p>${c.descargadoEn ? `Descargado el ${fechaTimestamp(c.descargadoEn)}` : `Listo · se emite con fecha ${fecha(c)}`}${c.horas ? ` · ${c.horas} horas` : ''}</p>
+            <p>${c.descargadoEn ? `Descargado el ${fechaTimestamp(c.descargadoEn)}` : `Listo · se emite con fecha ${fecha(c)}`}${c.horas ? ` · ${c.horas} horas` : ''}${c.historico && c.fechaHistorica ? ` · <span class="cert-hist-note">📜 Cursado en: ${esc(c.fechaHistorica)}</span>` : ''}</p>
             <div class="cert-card-actions">
               <button class="btn btn-light" data-act="ver" data-id="${c.id}">${ic('eye')}Ver</button>
               <button class="btn btn-primary" data-act="pdf" data-id="${c.id}">${ic('download')}Descargar PDF</button>
@@ -1892,22 +1950,29 @@
       pendSec.classList.toggle('hidden', pendientes.length === 0);
       if (pendientes.length) {
         pendGrid.innerHTML = pendientes.map((c, i) => `
-          <article class="cert-card cert-pending-card">
+          <article class="cert-card cert-pending-card ${c.historico ? 'is-pending-hist' : ''}">
             <div class="cert-pending-preview">
-              <div class="cert-pending-icon">${ic('shield')}</div>
-              <span class="cert-pending-badge">En espera de habilitación</span>
-              <p class="cert-pending-note">Datos vinculados: <strong>${esc(u.nombre)}</strong> · C.I. ${fmtCedula(u.cedula)}</p>
+              <div class="cert-pending-icon">${c.historico ? '📜' : ic('shield')}</div>
+              <span class="cert-pending-badge ${c.historico ? 'badge-pending-hist' : ''}">
+                ${c.historico ? `📜 Solicitud Histórica (${esc(c.fechaHistorica || 'Anterior')})` : 'En espera de habilitación'}
+              </span>
+              <p class="cert-pending-note">${c.historico
+                ? `Solicitud de taller cursado en <strong>${esc(c.fechaHistorica || 'período anterior')}</strong>. La administración validará las listas de asistencia.`
+                : `Datos vinculados: <strong>${esc(u.nombre)}</strong> · C.I. ${fmtCedula(u.cedula)}`}</p>
             </div>
             <div class="cert-card-body">
               <div>
                 <span class="cert-card-index">Taller #${i + 1}</span>
+                ${c.historico ? `<span class="badge-cert-hist">📜 Histórico</span>` : ''}
                 ${c.area ? `<span class="cert-card-area">${esc(c.area)}</span>` : ''}
               </div>
               <h3>${esc(c.curso)}</h3>
-              <p>Pendiente · Fecha automática al descargar${c.horas ? ` · ${c.horas} horas` : ''}</p>
+              <p>Pendiente · Fecha automática al descargar${c.horas ? ` · ${c.horas} horas` : ''}${c.historico && c.fechaHistorica ? ` · Cursado en: ${esc(c.fechaHistorica)}` : ''}</p>
             </div>
             <div class="cert-pending-foot">
-              El administrador solo debe habilitar este taller para activar tu descarga.
+              ${c.historico
+                ? 'El facilitador revisará las actas de asistencia históricas para habilitar tu certificado.'
+                : 'El administrador solo debe habilitar este taller para activar tu descarga.'}
             </div>
           </article>`).join('');
       } else {
@@ -1916,41 +1981,182 @@
     }
   }
 
-  // Registro rápido de un taller adicional por parte del usuario (queda pendiente hasta que el admin lo habilite)
+  // Registro y solicitud de taller por parte del estudiante
   const formUserSolicitar = $('#form-user-solicitar');
 
+  // Sincronización del selector moderno con el select nativo
+  function syncCustomSelectTrigger() {
+    const sel = $('#in-user-curso-sel');
+    const txtEl = $('#user-curso-trigger-text');
+    const badgeEl = $('#user-curso-trigger-badge');
+    if (!sel || !txtEl) return;
+    const val = sel.value;
+    if (!val) {
+      txtEl.textContent = '-- Elige un taller de la oferta oficial --';
+      badgeEl?.classList.add('hidden');
+    } else if (val === '__historico__') {
+      txtEl.textContent = '📜 Solicitar taller histórico / Período anterior';
+      if (badgeEl) {
+        badgeEl.textContent = 'Histórico';
+        badgeEl.classList.remove('hidden');
+      }
+    } else {
+      txtEl.textContent = val;
+      const opt = sel.selectedOptions[0];
+      const h = opt?.dataset.horas || $('#in-user-horas')?.value;
+      if (badgeEl && h) {
+        badgeEl.textContent = `${h}h`;
+        badgeEl.classList.remove('hidden');
+      } else {
+        badgeEl?.classList.add('hidden');
+      }
+    }
+    $$('#user-curso-options .cs-option').forEach(op => {
+      op.classList.toggle('is-selected', op.dataset.val === val);
+    });
+  }
+
+  // Cambio en el selector de talleres del estudiante
+  $('#in-user-curso-sel')?.addEventListener('change', e => {
+    const val = e.target.value;
+    const isHist = val === '__historico__';
+    const histBox = $('#box-taller-historico');
+    if (histBox) histBox.classList.toggle('hidden', !isHist);
+
+    if (!isHist && val) {
+      const opt = e.target.selectedOptions[0];
+      const horas = opt?.dataset.horas || 10;
+      if ($('#in-user-horas')) $('#in-user-horas').value = horas;
+    } else if (isHist) {
+      if ($('#in-user-horas')) $('#in-user-horas').value = 10;
+      $('#in-hist-nombre')?.focus();
+    }
+    syncCustomSelectTrigger();
+  });
+
+  // Eventos del Selector Moderno Personalizado (Custom Select)
+  $('#user-curso-trigger')?.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const wrap = $('#user-curso-custom-select');
+    const menu = $('#user-curso-menu');
+    const isOpen = wrap?.classList.contains('is-open');
+    if (isOpen) {
+      wrap.classList.remove('is-open');
+      menu?.classList.add('hidden');
+    } else {
+      wrap?.classList.add('is-open');
+      menu?.classList.remove('hidden');
+      const searchInp = $('#cs-search-input');
+      if (searchInp) {
+        searchInp.value = '';
+        $$('#user-curso-options .cs-option').forEach(o => o.classList.remove('hidden'));
+        setTimeout(() => searchInp.focus(), 60);
+      }
+    }
+  });
+
+  $('#cs-search-input')?.addEventListener('input', e => {
+    const q = clean(e.target.value).toLowerCase();
+    $$('#user-curso-options .cs-option').forEach(o => {
+      const match = o.textContent.toLowerCase().includes(q);
+      o.classList.toggle('hidden', !match);
+    });
+  });
+
+  $('#user-curso-options')?.addEventListener('click', e => {
+    const opt = e.target.closest('.cs-option');
+    if (!opt) return;
+    const val = opt.dataset.val;
+    const sel = $('#in-user-curso-sel');
+    if (sel) {
+      sel.value = val;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    $('#user-curso-custom-select')?.classList.remove('is-open');
+    $('#user-curso-menu')?.classList.add('hidden');
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#user-curso-custom-select')) {
+      $('#user-curso-custom-select')?.classList.remove('is-open');
+      $('#user-curso-menu')?.classList.add('hidden');
+    }
+  });
+
+  // Sugerencias de talleres en oferta
   $('#quick-taller-tags')?.addEventListener('click', e => {
     const chip = e.target.closest('.area-chip');
     if (!chip) return;
     const taller = chip.dataset.taller;
     const horas = chip.dataset.horas || '10';
-    const modelo = chip.dataset.modelo || 'emprende1';
-    const inpCurso = $('#in-user-curso');
-    const inpHoras = $('#in-user-horas');
-    const inpModelo = $('#in-user-modelo');
-    if (inpCurso) {
-      inpCurso.value = taller;
-      inpCurso.focus();
+    const sel = $('#in-user-curso-sel');
+    if (sel) {
+      sel.value = taller;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      $('#box-taller-historico')?.classList.add('hidden');
     }
+    const inpHoras = $('#in-user-horas');
     if (inpHoras) inpHoras.value = horas;
-    if (inpModelo) inpModelo.value = modelo;
-    const modTxt = modelo === 'emprende2' ? 'Modelo 2 · Convenio UCV' : 'Modelo 1 · Chacao Emprende';
-    toast(`Seleccionado: ${taller} (${modTxt})`);
+    syncCustomSelectTrigger();
+    toast(`Taller seleccionado: ${taller}`);
+  });
+
+  // Añadir taller oficial en el formulario de registro
+  $('#btn-reg-add-taller')?.addEventListener('click', () => {
+    const sel = $('#reg-taller-select');
+    if (!sel || !sel.value) return;
+    const val = sel.value === '__otro__' ? '' : sel.value;
+    const inp = $('#reg-areas');
+    if (!inp) return;
+    if (val) {
+      const actuales = inp.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (!actuales.includes(val)) {
+        actuales.push(val);
+        inp.value = actuales.join(', ');
+        toast(`Añadido: ${val}`);
+      }
+    } else {
+      inp.focus();
+      toast('Escribe el nombre del taller en el campo.');
+    }
   });
 
   formUserSolicitar?.addEventListener('submit', e => {
     e.preventDefault();
     const u = currentUser();
     if (!u) return;
-    const f = formUserSolicitar;
-    const curso = clean(f.curso?.value || '');
-    const horas = Math.min(500, Math.max(1, +f.horas?.value || 5));
-    const modelo = f.modelo?.value || 'emprende1';
 
-    if (curso.length < 3) {
-      toast('Escribe el nombre del taller o curso que realizaste.', 'error');
-      f.curso?.focus();
-      return;
+    const selVal = $('#in-user-curso-sel')?.value || '';
+    const isHist = selVal === '__historico__';
+
+    let curso = '';
+    let horas = 10;
+    let modelo = 'emprende1';
+    let historico = false;
+    let fechaHistorica = '';
+    let nota = '';
+
+    if (isHist) {
+      curso = clean($('#in-hist-nombre')?.value || '');
+      fechaHistorica = clean($('#in-hist-fecha')?.value || 'Fecha anterior');
+      nota = clean($('#in-hist-nota')?.value || '');
+      historico = true;
+      if (curso.length < 3) {
+        toast('Por favor escribe el nombre del taller histórico que realizaste.', 'error');
+        $('#in-hist-nombre')?.focus();
+        return;
+      }
+    } else {
+      curso = clean(selVal);
+      if (!curso) {
+        toast('Por favor selecciona un taller de la lista oficial.', 'error');
+        $('#in-user-curso-sel')?.focus();
+        return;
+      }
+      const opt = $('#in-user-curso-sel')?.selectedOptions[0];
+      horas = Math.min(500, Math.max(1, +(opt?.dataset.horas || $('#in-user-horas')?.value || 10)));
+      modelo = opt?.dataset.modelo || 'emprende1';
     }
 
     const users = getUsers();
@@ -1970,33 +2176,40 @@
       return;
     }
 
-    sincronizarCertificadosUsuario(user, { habilitado: false, horas, modelo });
-    const certsNow = getCerts();
-    if (!certsNow.some(c => c.cedula === user.cedula && clean(c.curso).toLowerCase() === curso.toLowerCase())) {
-      const hoy = new Date();
-      certsNow.push({
-        id: uid(),
-        cedula: user.cedula,
-        nombre: user.nombre,
-        curso,
-        area: curso,
-        horas,
-        dia: hoy.getDate(),
-        mes: hoy.getMonth() + 1,
-        anio: hoy.getFullYear(),
-        modelo,
-        modeloManual: true,
-        habilitado: false,
-        origen: 'solicitud',
-        creado: Date.now(),
-      });
-      if (!setCerts(certsNow)) return;
+    const hoy = new Date();
+    certs.push({
+      id: uid(),
+      cedula: user.cedula,
+      nombre: user.nombre,
+      curso,
+      area: curso,
+      horas,
+      dia: hoy.getDate(),
+      mes: hoy.getMonth() + 1,
+      anio: hoy.getFullYear(),
+      modelo,
+      modeloManual: true,
+      habilitado: false,
+      origen: isHist ? 'solicitud-historico' : 'solicitud',
+      historico,
+      fechaHistorica,
+      nota,
+      creado: Date.now(),
+    });
+    if (!setCerts(certs)) return;
+
+    if (isHist) {
+      toast(`Solicitud de taller histórico enviada. La administración validará las listas de asistencia de "${fechaHistorica}" y habilitará tu certificado.`);
+      $('#box-taller-historico')?.classList.add('hidden');
+      if ($('#in-hist-nombre')) $('#in-hist-nombre').value = '';
+      if ($('#in-hist-fecha')) $('#in-hist-fecha').value = '';
+      if ($('#in-hist-nota')) $('#in-hist-nota').value = '';
+    } else {
+      toast(`Solicitud de "${curso}" enviada. En cuanto la Dirección de Desarrollo Social la habilite podrás descargar tu certificado.`);
     }
 
-    const modLabel = modelo === 'emprende2' ? 'Modelo 2 (UCV)' : 'Modelo 1 (Emprende)';
-    toast(`Solicitud enviada (${modLabel}). En cuanto el administrador la habilite podrás descargar tu certificado.`);
-    f.curso.value = '';
-    if (f.horas) f.horas.value = 5;
+    if ($('#in-user-curso-sel')) $('#in-user-curso-sel').value = '';
+    syncCustomSelectTrigger();
     renderMis();
   });
 
@@ -2007,6 +2220,8 @@
   });
 
   /* ---------------- Admin: Catálogo de Talleres Dinámico ---------------- */
+  let editingCatId = null;
+
   function renderCatalogoModalItems() {
     const listEl = $('#cat-items-list');
     if (!listEl) return;
@@ -2018,6 +2233,38 @@
     }
     listEl.innerHTML = catalogo.map(c => {
       const isM2 = c.modelo === 'emprende2';
+      const isEditing = c.id === editingCatId;
+
+      if (isEditing) {
+        return `<div class="cat-item is-editing" data-cat-id="${c.id}">
+          <div class="cat-edit-form">
+            <div class="cat-edit-row">
+              <div class="field" style="flex: 2.2; min-width: 200px;">
+                <span class="field-label-sm">Nombre del taller o curso (oficial)</span>
+                <input type="text" class="cat-edit-in-name" id="cat-edit-name-${c.id}" value="${esc(c.taller)}" placeholder="Ej: Oratoria y Liderazgo 2026">
+              </div>
+              <div class="field" style="flex: 0 0 90px;">
+                <span class="field-label-sm">Horas</span>
+                <input type="number" class="cat-edit-in-horas" id="cat-edit-horas-${c.id}" min="1" max="500" value="${c.horas || 10}">
+              </div>
+              <div class="field" style="flex: 1.4; min-width: 170px;">
+                <span class="field-label-sm">Modelo Oficial</span>
+                <select class="cat-edit-in-modelo" id="cat-edit-modelo-${c.id}">
+                  <option value="emprende1" ${!isM2 ? 'selected' : ''}>Modelo 1 · Chacao Emprende</option>
+                  <option value="emprende2" ${isM2 ? 'selected' : ''}>Modelo 2 · Convenio UCV / FaCES</option>
+                </select>
+              </div>
+            </div>
+            <div class="cat-edit-btns">
+              <button type="button" class="btn btn-light btn-sm" data-cat-act="cancel-edit" data-id="${c.id}">Cancelar</button>
+              <button type="button" class="btn btn-primary btn-sm" data-cat-act="save-edit" data-id="${c.id}">
+                ${ic('check')} <span>Guardar cambios</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+      }
+
       return `<div class="cat-item" data-cat-id="${c.id}">
         <div class="cat-item-main">
           <strong class="cat-item-name">${esc(c.taller)}</strong>
@@ -2026,6 +2273,9 @@
         <div class="cat-item-actions">
           <button type="button" class="cat-model-pill ${isM2 ? 'is-m2' : 'is-m1'}" data-cat-act="toggle-model" data-id="${c.id}" title="Clic para alternar entre Modelo 1 y Modelo 2">
             ${isM2 ? 'Modelo 2 · UCV / FaCES' : 'Modelo 1 · Chacao Emprende'}
+          </button>
+          <button type="button" class="btn btn-light btn-sm btn-icon cat-item-edit" data-cat-act="edit" data-id="${c.id}" title="Editar nombre, horas o modelo de este taller" aria-label="Editar">
+            ${ic('pen')}
           </button>
           <button type="button" class="btn btn-danger btn-icon cat-item-del" data-cat-act="del" data-id="${c.id}" title="Eliminar taller del catálogo" aria-label="Eliminar">
             ${ic('trash')}
@@ -2036,6 +2286,7 @@
   }
 
   $('#btn-open-catalogo')?.addEventListener('click', () => {
+    editingCatId = null;
     renderCatalogoModalItems();
     openModal('#modal-catalogo-talleres');
   });
@@ -2076,6 +2327,66 @@
     const cat = getCatalogoTalleres();
     const item = cat.find(c => c.id === id);
     if (!item) return;
+
+    if (catAct === 'edit') {
+      editingCatId = id;
+      renderCatalogoModalItems();
+      const inName = $(`#cat-edit-name-${id}`);
+      if (inName) { inName.focus(); inName.select(); }
+      return;
+    }
+
+    if (catAct === 'cancel-edit') {
+      editingCatId = null;
+      renderCatalogoModalItems();
+      return;
+    }
+
+    if (catAct === 'save-edit') {
+      const inName = $(`#cat-edit-name-${id}`);
+      const inHoras = $(`#cat-edit-horas-${id}`);
+      const inModelo = $(`#cat-edit-modelo-${id}`);
+      const nuevoNombre = clean(inName?.value || '');
+      const nuevasHoras = Math.min(500, Math.max(1, +(inHoras?.value || 10)));
+      const nuevoModelo = inModelo?.value || 'emprende1';
+
+      if (nuevoNombre.length < 3) {
+        toast('El nombre del taller debe tener al menos 3 caracteres.', 'error');
+        inName?.focus();
+        return;
+      }
+
+      const viejoNombre = item.taller;
+      item.taller = nuevoNombre;
+      item.horas = nuevasHoras;
+      item.modelo = nuevoModelo;
+      setCatalogoTalleres(cat);
+
+      // Si el nombre cambió, actualizamos también las solicitudes pendientes que tengan ese taller
+      if (viejoNombre.toLowerCase() !== nuevoNombre.toLowerCase()) {
+        const certs = getCerts();
+        let certsUpdated = 0;
+        certs.forEach(c => {
+          if (clean(c.curso).toLowerCase() === clean(viejoNombre).toLowerCase() && c.habilitado === false) {
+            c.curso = nuevoNombre;
+            c.area = nuevoNombre;
+            c.horas = nuevasHoras;
+            certsUpdated++;
+          }
+        });
+        if (certsUpdated) {
+          setCerts(certs);
+          renderUsuarios();
+          if (!$('#view-lista').classList.contains('hidden')) renderLista();
+        }
+      }
+
+      editingCatId = null;
+      renderCatalogoModalItems();
+      renderCatalogoTalleres();
+      toast(`✓ Taller actualizado: "${nuevoNombre}". Los certificados saldrán con este nombre oficial.`);
+      return;
+    }
 
     if (catAct === 'toggle-model') {
       item.modelo = item.modelo === 'emprende2' ? 'emprende1' : 'emprende2';
@@ -2411,7 +2722,7 @@
       <tr>
         <td class="nowrap">${fmtCedula(d.cedula)}</td>
         <td class="strong">${esc(d.nombre)}</td>
-        <td>${esc(d.curso)}${d.horas ? ` <span class="muted small">(${d.horas}h)</span>` : ''}</td>
+        <td>${esc(d.curso)}${c.historico ? ` <span class="pill-hist-tag" title="Taller histórico cursado en ${esc(c.fechaHistorica || 'período anterior')}">📜 Histórico${c.fechaHistorica ? ` (${esc(c.fechaHistorica)})` : ''}</span>` : ''}${d.horas ? ` <span class="muted small">(${d.horas}h)</span>` : ''}</td>
         <td class="nowrap">${fechaCol}</td>
         <td>
           <button class="cert-status-pill ${hab ? 'is-enabled' : 'is-pending'}" data-act="toggle-hab" data-id="${c.id}" title="${hab ? 'Habilitado · clic para pausar' : 'Pendiente · clic para habilitar'}">
@@ -2431,6 +2742,8 @@
   $('#lista-buscar').addEventListener('input', renderLista);
 
   let userFilterCurrent = 'all';
+  let userCurrentPage = 1;
+  const usersPerPage = 25;
 
   /* ---------------- Admin: usuarios ---------------- */
   function renderUsuarios() {
@@ -2471,7 +2784,13 @@
     });
     updateStats();
 
-    $('#usuarios-body').innerHTML = users.length ? users.map(u => {
+    const totalUsers = users.length;
+    const totalPages = Math.ceil(totalUsers / usersPerPage) || 1;
+    if (userCurrentPage > totalPages) userCurrentPage = totalPages;
+    if (userCurrentPage < 1) userCurrentPage = 1;
+    const paginatedUsers = users.slice((userCurrentPage - 1) * usersPerPage, userCurrentPage * usersPerPage);
+
+    $('#usuarios-body').innerHTML = paginatedUsers.length ? paginatedUsers.map(u => {
       const userCerts = certs.filter(c => c.cedula === u.cedula).sort((a, b) => (a.habilitado === false ? -1 : 1) || byDate(a, b));
       const pend = userCerts.filter(c => c.habilitado === false).length;
       const hab = userCerts.length - pend;
@@ -2488,9 +2807,11 @@
             const on = c.habilitado !== false;
             const isM2 = c.modelo === 'emprende2';
             const modLabel = isM2 ? 'M2 · UCV' : 'M1 · Emprende';
-            return `<button type="button" class="cert-status-pill ${on ? 'is-enabled' : 'is-pending'}" data-act="toggle-hab" data-id="${c.id}" title="${on ? 'Habilitado · Clic para pausar' : 'Pendiente · Clic para habilitar'}">
-              <span class="pill-icon">${on ? '✓' : '⏳'}</span>
+            const histLabel = c.historico ? `<span class="pill-hist-tag" title="Taller histórico cursado en ${esc(c.fechaHistorica || 'período anterior')}">📜 Histórico${c.fechaHistorica ? ` (${esc(c.fechaHistorica)})` : ''}</span>` : '';
+            return `<button type="button" class="cert-status-pill ${on ? 'is-enabled' : 'is-pending'} ${c.historico ? 'is-historico' : ''}" data-act="toggle-hab" data-id="${c.id}" title="${on ? 'Habilitado · Clic para pausar' : 'Pendiente · Clic para habilitar'}">
+              <span class="pill-icon">${on ? '✓' : (c.historico ? '📜' : '⏳')}</span>
               <span>${esc(c.curso)}</span>
+              ${histLabel}
               <span class="pill-model-badge ${isM2 ? 'mod-m2' : 'mod-m1'}" title="Certificado con ${isM2 ? 'Modelo 2 Convenio FaCES/UCV' : 'Modelo 1 Chacao Emprende'}">${modLabel}</span>
             </button>`;
           }).join('') +
@@ -2514,6 +2835,7 @@
         statusBadge = '<span class="status-summary-badge status-empty">0 certificados</span>';
       }
 
+      const isProtectedAdmin = u.role === 'admin' && (u.cedula === me.cedula || u.cedula === ADMIN_CEDULA);
       const actions = isMe ? '<span class="session-active-tag">Sesión actual</span>' : `
         <div class="user-action-cluster">
           <div class="user-action-row-main">
@@ -2522,9 +2844,9 @@
           </div>
           <div class="user-action-row-sub">
             <button class="action-sub-btn" data-act="editareas" data-id="${esc(u.cedula)}" title="Editar talleres registrados">${ic('pen')}<span>Talleres</span></button>
-            <button class="action-sub-btn" data-act="reset" data-id="${esc(u.cedula)}" title="Restablecer contraseña a la cédula">${ic('refresh')}<span>Clave</span></button>
-            <button class="action-sub-btn" data-act="role" data-id="${esc(u.cedula)}" title="${u.role === 'admin' ? 'Quitar rol administrador' : 'Hacer administrador'}">${ic('shield')}<span>${u.role === 'admin' ? 'Quitar' : 'Admin'}</span></button>
-            <button class="action-sub-btn action-sub-btn-del" data-act="deluser" data-id="${esc(u.cedula)}" title="Eliminar cuenta participante">${ic('trash')}</button>
+            <button class="action-sub-btn" data-act="cambiar-clave-user" data-id="${esc(u.cedula)}" title="Cambiar o restablecer contraseña">${ic('key')}<span>Clave</span></button>
+            ${isProtectedAdmin ? '' : `<button class="action-sub-btn" data-act="role" data-id="${esc(u.cedula)}" title="${u.role === 'admin' ? 'Quitar rol administrador' : 'Hacer administrador'}">${ic('shield')}<span>${u.role === 'admin' ? 'Quitar' : 'Admin'}</span></button>`}
+            ${isProtectedAdmin ? '' : `<button class="action-sub-btn action-sub-btn-del" data-act="deluser" data-id="${esc(u.cedula)}" title="Eliminar cuenta participante">${ic('trash')}</button>`}
           </div>
         </div>`;
 
@@ -2558,15 +2880,56 @@
       </tr>`;
     }).join('')
       : `<tr><td colspan="3" class="t-empty">No se encontraron participantes con "${esc(q)}".</td></tr>`;
+
+    // Renderizado de la barra de paginación
+    const pagEl = $('#usuarios-pagination');
+    if (pagEl) {
+      if (totalUsers > usersPerPage) {
+        const start = (userCurrentPage - 1) * usersPerPage + 1;
+        const end = Math.min(userCurrentPage * usersPerPage, totalUsers);
+        pagEl.innerHTML = `
+          <span class="pagination-info">Mostrando <strong>${start} - ${end}</strong> de <strong>${totalUsers}</strong> estudiantes</span>
+          <div class="pagination-controls">
+            <button type="button" class="pagination-btn" id="btn-users-prev" ${userCurrentPage <= 1 ? 'disabled' : ''}>← Anterior</button>
+            <span style="font-weight:600;padding:0 8px;">Página ${userCurrentPage} de ${totalPages}</span>
+            <button type="button" class="pagination-btn" id="btn-users-next" ${userCurrentPage >= totalPages ? 'disabled' : ''}>Siguiente →</button>
+          </div>
+        `;
+      } else {
+        pagEl.innerHTML = totalUsers > 0
+          ? `<span class="pagination-info">Total: <strong>${totalUsers}</strong> estudiante${totalUsers > 1 ? 's' : ''} registrado${totalUsers > 1 ? 's' : ''}</span>`
+          : '';
+      }
+    }
     updatePendingBadge();
   }
-  $('#usuarios-buscar')?.addEventListener('input', renderUsuarios);
+  $('#usuarios-buscar')?.addEventListener('input', () => {
+    userCurrentPage = 1;
+    renderUsuarios();
+  });
   $('#user-filter-tabs')?.addEventListener('click', e => {
     const btn = e.target.closest('.user-filter-btn');
     if (!btn) return;
     $$('.user-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
     userFilterCurrent = btn.dataset.filter || 'all';
+    userCurrentPage = 1;
     renderUsuarios();
+  });
+
+  $('#usuarios-pagination')?.addEventListener('click', e => {
+    if (e.target.closest('#btn-users-prev')) {
+      if (userCurrentPage > 1) {
+        userCurrentPage--;
+        renderUsuarios();
+      }
+    } else if (e.target.closest('#btn-users-next')) {
+      const allU = getUsers();
+      const totalPages = Math.ceil(allU.length / usersPerPage);
+      if (userCurrentPage < totalPages) {
+        userCurrentPage++;
+        renderUsuarios();
+      }
+    }
   });
 
   /* ---------------- Admin: diseño ---------------- */
@@ -3629,8 +3992,10 @@
     modalCert = cert;
     const resolved = datosCertificado(cert);
     $('#mc-title').textContent = resolved.curso;
-    $('#mc-date').textContent = `Fecha al descargar: ${fecha(resolved)}`;
-    $('#mc-sub').textContent = `${resolved.nombre} · C.I. ${fmtCedula(resolved.cedula)}`;
+    $('#mc-date').textContent = resolved.historico && resolved.fechaHistorica
+      ? `Acreditación Histórica (${resolved.fechaHistorica}) · Descargado: ${fecha(resolved)}`
+      : `Fecha al descargar: ${fecha(resolved)}`;
+    $('#mc-sub').textContent = `${resolved.nombre} · C.I. ${fmtCedula(resolved.cedula)}${resolved.historico ? ' · 📜 Taller Histórico' : ''}`;
     openModal('#modal-cert');
     mount($('#mc-frame'), resolved);
     requestAnimationFrame(() => fitFrame($('#mc-frame')));
@@ -3706,22 +4071,102 @@
       return;
     }
 
-    if (act === 'reset' && confirm(`¿Restablecer la contraseña de ${user.nombre}? Su nueva contraseña será su número de cédula.`)) {
-      user.pass = await hashPass(user.cedula, user.cedula);
-      setUsers(users);
-      toast(`Listo. La contraseña de ${user.nombre} ahora es su cédula: ${user.cedula}`);
+    if (act === 'cambiar-clave-user' || act === 'reset') {
+      openAdminChangePassModal(user);
+      return;
     }
     if (act === 'role') {
+      const cur = currentUser();
+      if (user.role === 'admin' && (user.cedula === cur?.cedula || user.cedula === ADMIN_CEDULA)) {
+        toast('No puedes quitarte el permiso de administrador ni revocar a la cuenta principal.', 'error');
+        return;
+      }
       user.role = user.role === 'admin' ? 'user' : 'admin';
       setUsers(users);
       toast(`${user.nombre} ahora es ${user.role === 'admin' ? 'administrador' : 'usuario normal'}.`);
       renderUsuarios();
+      return;
     }
-    if (act === 'deluser' && confirm(`¿Eliminar la cuenta de ${user.nombre}? Sus certificados se conservan y volverá a verlos si se registra de nuevo.`)) {
-      setUsers(users.filter(u => u.cedula !== id));
-      toast('Usuario eliminado.');
-      renderUsuarios();
+    if (act === 'deluser') {
+      const cur = currentUser();
+      if (user.cedula === cur?.cedula || user.cedula === ADMIN_CEDULA) {
+        toast('No puedes eliminar tu propia cuenta ni la cuenta principal de administrador.', 'error');
+        return;
+      }
+      if (confirm(`¿Eliminar la cuenta de ${user.nombre}? Sus certificados se conservan y volverá a verlos si se registra de nuevo.`)) {
+        setUsers(users.filter(u => u.cedula !== id));
+        toast('Usuario eliminado.');
+        renderUsuarios();
+      }
+      return;
     }
+  });
+
+  /* Modal admin: cambiar contraseña a un estudiante */
+  function openAdminChangePassModal(user) {
+    if (!user) return;
+    const cedInp = $('#maup-cedula');
+    const title = $('#maup-title');
+    const sub = $('#maup-sub');
+    const passInp = $('#maup-new-pass');
+    const err = $('#maup-error');
+    const ciDisplay = $('#maup-ci-display');
+    if (cedInp) cedInp.value = user.cedula;
+    if (ciDisplay) ciDisplay.textContent = user.cedula;
+    if (title) title.textContent = `Clave de ${user.nombre}`;
+    if (sub) sub.textContent = `Cédula: ${fmtCedula(user.cedula)}${user.email ? ' · ' + user.email : ''}`;
+    if (passInp) passInp.value = '';
+    if (err) err.textContent = '';
+    openModal('#modal-admin-user-pass');
+    setTimeout(() => passInp?.focus(), 150);
+  }
+
+  $('#maup-btn-reset-ci-direct')?.addEventListener('click', async () => {
+    const ced = clean($('#maup-cedula')?.value || '');
+    const users = getUsers();
+    const user = users.find(u => u.cedula === ced);
+    if (!user) return;
+    user.pass = await hashPass(user.cedula, user.cedula);
+    setUsers(users);
+    closeModal($('#modal-admin-user-pass'));
+    toast(`✓ Contraseña restablecida. La clave de ${user.nombre} ahora es su cédula: ${user.cedula} (sin puntos).`);
+  });
+
+  $('#maup-btn-use-ci')?.addEventListener('click', () => {
+    const ced = $('#maup-cedula')?.value || '';
+    const passInp = $('#maup-new-pass');
+    if (passInp && ced) {
+      passInp.value = ced;
+      toast(`Número de cédula colocado como clave: ${ced}`);
+      passInp.focus();
+    }
+  });
+
+  $('#form-admin-user-pass')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const ced = clean($('#maup-cedula')?.value || '');
+    const nueva = clean($('#maup-new-pass')?.value || '');
+    const err = $('#maup-error');
+    if (!nueva || nueva.length < 4) {
+      if (err) err.textContent = 'La contraseña debe tener al menos 4 caracteres.';
+      return;
+    }
+    const users = getUsers();
+    const user = users.find(u => u.cedula === ced);
+    if (!user) {
+      if (err) err.textContent = 'Estudiante no encontrado.';
+      return;
+    }
+    user.pass = await hashPass(user.cedula, nueva);
+    setUsers(users);
+    closeModal($('#modal-admin-user-pass'));
+    toast(`✓ Contraseña de ${user.nombre} actualizada a: "${nueva}". Ya puede iniciar sesión.`);
+  });
+
+  $('#mhu-btn-cambiar-clave')?.addEventListener('click', () => {
+    const ced = $('#mhu-cedula')?.value;
+    const user = getUsers().find(u => u.cedula === ced);
+    if (user) openAdminChangePassModal(user);
   });
 
   /* Modal de edición de áreas / talleres */
@@ -3782,6 +4227,30 @@
             <span class="mhu-curso">${esc(c.curso)}</span>
             <span class="muted small">${c.descargadoEn ? `· Descargado el ${fechaTimestamp(c.descargadoEn)}` : '· Fecha automática al descargar'}</span>
           </div>
+          ${c.historico ? `
+            <div class="mhu-hist-banner">
+              <svg class="i"><use href="#i-award"/></svg>
+              <div>
+                <strong>Solicitud de Taller Histórico:</strong> Cursado en <em>"${esc(c.fechaHistorica || 'período anterior')}"</em>
+                ${c.nota ? ` · <span class="muted small">${esc(c.nota)}</span>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Sección de edición: permite al admin corregir nombre y fecha -->
+          <div class="mhu-edit-section">
+            <div>
+              <label class="mhu-field-label">Nombre del taller / curso (editable):</label>
+              <input type="text" class="mhu-in-curso" data-mhu-curso value="${esc(c.curso)}" title="Modifica el nombre si tiene error o typo">
+            </div>
+            ${c.historico ? `
+              <div>
+                <label class="mhu-field-label">Año o Período cursado (Histórico):</label>
+                <input type="text" class="mhu-in-fecha-hist" data-mhu-fecha-hist value="${esc(c.fechaHistorica || '')}" placeholder="Ej: Noviembre 2024, Año 2023...">
+              </div>
+            ` : ''}
+          </div>
+
           <div class="mhu-controls">
             <div class="mhu-ctrl-group">
               <span class="mhu-ctrl-lbl">Horas:</span>
@@ -3804,8 +4273,14 @@
                 </select>
               </div>
             </div>
+          </div>
+
+          <div class="mhu-actions-bottom">
             <button type="button" class="btn btn-light btn-sm mhu-preview-btn" data-mhu-preview="${c.id}" title="Ver vista previa de cómo saldrá el certificado con este modelo">
               ${ic('eye')} <span>Vista previa</span>
+            </button>
+            <button type="button" class="mhu-del-btn" data-mhu-del="${c.id}" title="Eliminar esta solicitud si el estudiante no cursó el taller">
+              ${ic('trash')} <span>Eliminar solicitud</span>
             </button>
           </div>
         </div>
@@ -3837,6 +4312,34 @@
       return;
     }
 
+    // Manejo de eliminación de solicitud de taller (por ejemplo si el alumno no realizó el curso)
+    const delBtn = e.target.closest('[data-mhu-del]');
+    if (delBtn) {
+      const certId = delBtn.dataset.mhuDel;
+      const certs = getCerts();
+      const cert = certs.find(c => c.id === certId);
+      if (!cert) return;
+      const users = getUsers();
+      const user = users.find(u => u.cedula === cert.cedula);
+      const nombre = user ? user.nombre : 'este estudiante';
+      if (!confirm(`¿Eliminar la solicitud del taller "${cert.curso}" para ${nombre}?\n\nEsta acción quitará el taller de su perfil y certificados.`)) {
+        return;
+      }
+      const newCerts = certs.filter(c => c.id !== certId);
+      setCerts(newCerts);
+      if (user && user.areas) {
+        const areas = parseTalleres(user.areas).filter(a => clean(a).toLowerCase() !== clean(cert.curso).toLowerCase());
+        user.areas = areas.join(', ');
+        setUsers(users);
+      }
+      renderMhuList(cert.cedula);
+      renderUsuarios();
+      if (!$('#view-lista').classList.contains('hidden')) renderLista();
+      updatePendingBadge();
+      toast(`✓ Solicitud de "${cert.curso}" eliminada correctamente.`);
+      return;
+    }
+
     // Manejo de vista previa
     const btn = e.target.closest('[data-mhu-preview]');
     if (!btn) return;
@@ -3846,11 +4349,15 @@
     const itemEl = btn.closest('.mhu-item');
     const sel = itemEl?.querySelector('select[data-mhu-modelo]');
     const horasInp = itemEl?.querySelector('input[data-mhu-horas]');
+    const cursoInp = itemEl?.querySelector('input[data-mhu-curso]');
+    const fechaHistInp = itemEl?.querySelector('input[data-mhu-fecha-hist]');
     const activeSegBtn = itemEl?.querySelector('.mhu-seg-btn.is-active');
     const modeloVal = activeSegBtn?.dataset.setModelo || sel?.value || cert.modelo || 'emprende1';
 
     const previewCert = {
       ...cert,
+      curso: (cursoInp && clean(cursoInp.value)) ? clean(cursoInp.value) : cert.curso,
+      fechaHistorica: fechaHistInp ? clean(fechaHistInp.value) : cert.fechaHistorica,
       modelo: modeloVal,
       horas: +horasInp?.value || cert.horas || 5,
       modeloManual: true
@@ -3934,19 +4441,44 @@
     const cedula = $('#mhu-cedula')?.value;
     if (!cedula) return;
     const certs = getCerts();
+    const users = getUsers();
+    const user = users.find(u => u.cedula === cedula);
+    let userAreasModified = false;
+
     $$('#mhu-list .mhu-item[data-cert-id]').forEach(item => {
       const cert = certs.find(c => c.id === item.dataset.certId);
       if (!cert) return;
       const chk = $('input[data-mhu-check]', item);
       const horasInp = $('input[data-mhu-horas]', item);
       const modeloSel = $('select[data-mhu-modelo]', item);
+      const cursoInp = $('input[data-mhu-curso]', item);
+      const fechaHistInp = $('input[data-mhu-fecha-hist]', item);
+
       cert.habilitado = forceEnableAll ? true : !!chk?.checked;
       if (horasInp) cert.horas = Math.min(500, Math.max(1, +horasInp.value || 5));
       if (modeloSel) {
         cert.modelo = modeloSel.value || '';
         cert.modeloManual = !!cert.modelo;
       }
+      if (cursoInp && clean(cursoInp.value)) {
+        const nuevoCurso = clean(cursoInp.value);
+        const viejoCurso = cert.curso;
+        if (nuevoCurso !== viejoCurso) {
+          cert.curso = nuevoCurso;
+          cert.area = nuevoCurso;
+          if (user && user.areas) {
+            const areas = parseTalleres(user.areas).map(a => clean(a).toLowerCase() === clean(viejoCurso).toLowerCase() ? nuevoCurso : a);
+            user.areas = [...new Set(areas)].join(', ');
+            userAreasModified = true;
+          }
+        }
+      }
+      if (fechaHistInp) {
+        cert.fechaHistorica = clean(fechaHistInp.value);
+      }
     });
+
+    if (userAreasModified) setUsers(users);
     if (!setCerts(certs)) return;
     closeModals();
     renderUsuarios();

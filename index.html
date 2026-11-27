@@ -33,6 +33,8 @@
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
 </svg>
 
 <!-- ================= LOGIN / REGISTRO ================= -->
@@ -106,8 +108,8 @@
       </div>
 
       <form id="form-login" class="form" novalidate>
-        <label class="field"><span>Cédula</span>
-          <input name="cedula" inputmode="numeric" autocomplete="username" placeholder="Ej: 12345678" required>
+        <label class="field"><span>Cédula o Usuario</span>
+          <input name="cedula" autocomplete="username" autocapitalize="none" placeholder="Ej: 12345678 o ADMIN" required>
         </label>
         <label class="field">
           <div class="field-label-row">
@@ -136,19 +138,23 @@
           <input name="email" type="email" autocomplete="email" placeholder="ejemplo@correo.com" required>
         </label>
         <label class="field">
-          <span>Taller(es) o Área(s) que realizaste <em class="muted">(uno o varios separados por coma)</em></span>
-          <input name="areas" id="reg-areas" placeholder="Ej: Marketing Digital, Emprendimiento, Servicio Comunitario" required autocomplete="off">
-          <div class="area-tag-chips" id="reg-area-chips">
-            <button type="button" class="area-chip" data-tag="Emprendimiento">+ Emprendimiento</button>
-            <button type="button" class="area-chip" data-tag="Oficio">+ Oficio</button>
+          <span>Taller(es) o Área(s) que realizaste</span>
+          <div class="reg-taller-picker-row">
+            <select id="reg-taller-select" class="in-select" style="flex: 1;">
+              <option value="">-- Elige un taller de la oferta oficial --</option>
+            </select>
+            <button type="button" class="btn btn-light btn-sm" id="btn-reg-add-taller">+ Añadir</button>
+          </div>
+          <input name="areas" id="reg-areas" placeholder="Talleres seleccionados (o escribe si cursaste uno histórico)" required autocomplete="off" style="margin-top: 8px;">
+          <div class="area-tag-chips" id="reg-area-chips" style="margin-top: 8px;">
+            <button type="button" class="area-chip" data-tag="Emprendimiento Comunitario">+ Emprendimiento</button>
             <button type="button" class="area-chip" data-tag="Servicio Comunitario">+ Servicio Comunitario</button>
             <button type="button" class="area-chip" data-tag="Marketing Digital">+ Marketing Digital</button>
-            <button type="button" class="area-chip" data-tag="Finanzas para Emprendedores">+ Finanzas</button>
-            <button type="button" class="area-chip" data-tag="Barbería y Oficios">+ Barbería y Oficios</button>
+            <button type="button" class="area-chip" data-tag="Oficio Productivo">+ Oficio</button>
+            <button type="button" class="area-chip" data-tag="Barbería y Oficios">+ Barbería</button>
             <button type="button" class="area-chip" data-tag="Repostería">+ Repostería</button>
-            <button type="button" class="area-chip" data-tag="Bienestar Social">+ Bienestar Social</button>
           </div>
-          <p class="form-hint small">Escribe el taller que hiciste o pulsa las sugerencias; tus certificados se prepararán con estos datos.</p>
+          <p class="form-hint small">Selecciona de la lista oficial de la Alcaldía o pulsa las sugerencias; tus certificados se prepararán con estos datos.</p>
         </label>
         <div class="grid-2">
           <label class="field"><span>Contraseña</span>
@@ -347,37 +353,69 @@
         </div>
         <form id="form-user-solicitar" class="form" novalidate>
           <div class="solicitar-row">
-            <label class="field" style="flex:2;min-width:200px;">
-              <span>Nombre del Taller / Curso realizado</span>
-              <input name="curso" list="dl-cursos" id="in-user-curso" placeholder="Ej: Emprendimiento Comunitario o Marketing Digital" required>
-            </label>
-            <label class="field" style="flex:0 0 100px;">
+            <div class="field custom-select-field" style="flex: 2.5; min-width: 250px;">
+              <span>Selecciona el Taller / Curso realizado</span>
+              <div class="custom-select-wrap" id="user-curso-custom-select">
+                <button type="button" class="custom-select-trigger" id="user-curso-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="cs-trigger-icon"><svg class="i"><use href="#i-award"/></svg></span>
+                  <span class="cs-trigger-text" id="user-curso-trigger-text">-- Elige un taller de la oferta oficial --</span>
+                  <span class="cs-trigger-badge hidden" id="user-curso-trigger-badge"></span>
+                  <span class="cs-trigger-arrow"><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                </button>
+                <div class="custom-select-menu hidden" id="user-curso-menu" role="listbox">
+                  <div class="cs-search-box">
+                    <svg class="i"><use href="#i-search"/></svg>
+                    <input type="text" class="cs-search-input" id="cs-search-input" placeholder="Buscar taller o curso..." autocomplete="off">
+                  </div>
+                  <div class="cs-options-container" id="user-curso-options">
+                    <!-- Opciones inyectadas dinámicamente con diseño moderno -->
+                  </div>
+                </div>
+                <!-- Select nativo oculto sincronizado para accesibilidad y envío de formulario -->
+                <select name="curso_sel" id="in-user-curso-sel" class="sr-only" required tabindex="-1" aria-hidden="true">
+                  <option value="">-- Elige un taller de la oferta oficial --</option>
+                </select>
+              </div>
+            </div>
+            <label class="field" style="flex: 0 0 110px;">
               <span>Horas</span>
-              <input name="horas" type="number" min="1" max="500" value="5" class="in-horas" id="in-user-horas">
+              <input name="horas" type="number" min="1" max="500" value="5" class="in-horas" id="in-user-horas" readonly title="Horas académicas establecidas para este taller">
             </label>
-            <label class="field" style="flex:1.4;min-width:180px;">
-              <span>Modelo Oficial</span>
-              <select name="modelo" id="in-user-modelo">
-                <option value="emprende1">Modelo 1 · Chacao Emprende</option>
-                <option value="emprende2">Modelo 2 · Convenio UCV / FaCES</option>
-              </select>
-            </label>
-            <button class="btn btn-primary" type="submit" style="align-self:flex-end;">
-              <svg class="i"><use href="#i-plus"/></svg>Solicitar certificado
+            <button class="btn btn-primary" type="submit" style="align-self: flex-end;">
+              <svg class="i"><use href="#i-plus"/></svg> Solicitar certificado
             </button>
+          </div>
+
+          <!-- Caja expandible de Solicitud de Taller Histórico / Cursos Anteriores -->
+          <div id="box-taller-historico" class="historical-request-box hidden">
+            <div class="hist-box-header">
+              <span class="hist-badge"><svg class="i"><use href="#i-award"/></svg> Solicitud de Taller Histórico</span>
+              <span class="muted small">Para talleres culminados en años anteriores que no figuran en la oferta actual</span>
+            </div>
+            <div class="grid-2" style="gap: 12px; margin-top: 10px;">
+              <label class="field">
+                <span>Nombre exacto del taller que cursaste</span>
+                <input id="in-hist-nombre" placeholder="Ej: Panadería Artesanal Navideña o Barbería 2024">
+              </label>
+              <label class="field">
+                <span>Año o fecha aproximada en que lo cursaste</span>
+                <input id="in-hist-fecha" placeholder="Ej: Noviembre 2024, Año 2023...">
+              </label>
+            </div>
+            <label class="field" style="margin-top: 10px;">
+              <span>Observación o facilitador (opcional)</span>
+              <input id="in-hist-nota" placeholder="Ej: Facilitador Prof. García, sede Bello Campo">
+            </label>
+            <p class="form-hint small" style="margin-top: 8px;">
+              ℹ️ Tu solicitud será enviada a la Dirección de Desarrollo Social con la etiqueta de <strong>Taller Histórico</strong>. El administrador validará las listas de asistencia de ese período y habilitará tu certificado oficial con el modelo correspondiente.
+            </p>
           </div>
 
           <!-- Sugerencias de talleres rápidos -->
           <div class="quick-suggest-row">
-            <span class="muted small" style="font-weight: 600; font-size: 12px;">Sugerencias rápidas:</span>
+            <span class="muted small" style="font-weight: 600; font-size: 12px;">Talleres vigentes en catálogo:</span>
             <div class="quick-tags" id="quick-taller-tags">
-              <button type="button" class="area-chip" data-taller="Emprendimiento Comunitario" data-horas="20">+ Emprendimiento</button>
-              <button type="button" class="area-chip" data-taller="Oficio Productivo" data-horas="15">+ Oficio</button>
-              <button type="button" class="area-chip" data-taller="Servicio Comunitario" data-horas="120">+ Servicio Comunitario</button>
-              <button type="button" class="area-chip" data-taller="Marketing Digital y Redes" data-horas="10">+ Marketing Digital</button>
-              <button type="button" class="area-chip" data-taller="Finanzas para Emprendedores" data-horas="8">+ Finanzas</button>
-              <button type="button" class="area-chip" data-taller="Barbería y Oficios" data-horas="30">+ Barbería</button>
-              <button type="button" class="area-chip" data-taller="Repostería y Pastelería" data-horas="25">+ Repostería</button>
+              <!-- Renderizado dinámicamente desde el catálogo -->
             </div>
           </div>
         </form>
@@ -467,6 +505,7 @@
             <tbody id="usuarios-body"></tbody>
           </table>
         </div>
+        <div id="usuarios-pagination" class="table-pagination-bar"></div>
       </div>
     </section>
 
@@ -920,7 +959,12 @@
         <h3 id="mhu-title">Certificados del Participante</h3>
         <p class="muted small" id="mhu-sub">Solo activa los talleres realizados. El certificado sale con los datos del usuario y la fecha del día de descarga.</p>
       </div>
-      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="btn btn-light btn-sm" id="mhu-btn-cambiar-clave" title="Cambiar contraseña de este estudiante">
+          <svg class="i"><use href="#i-key"/></svg><span>Cambiar Clave</span>
+        </button>
+        <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
     </div>
     <form id="form-habilitar-user" class="form modal-body" novalidate>
       <input type="hidden" id="mhu-cedula">
@@ -940,6 +984,56 @@
         <button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-check"/></svg>Guardar cambios</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: Administrador Cambiar Contraseña de Estudiante ================= -->
+<div class="modal hidden" id="modal-admin-user-pass" role="dialog" aria-modal="true" style="z-index: 280;">
+  <div class="modal-box sm">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Seguridad de Acceso</p>
+        <h3 id="maup-title">Cambiar o Restablecer Clave</h3>
+        <p class="muted small" id="maup-sub">Asigna una nueva clave para este estudiante.</p>
+      </div>
+      <button class="close" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body" style="padding: 16px 22px 20px;">
+      <input type="hidden" id="maup-cedula">
+      
+      <!-- Opción rápida y recomendada: Restablecer a su Cédula -->
+      <div class="pass-reset-notice-box">
+        <div class="p-notice-header">
+          <svg class="i"><use href="#i-shield"/></svg>
+          <strong>Restablecer con Cédula (Recomendado)</strong>
+        </div>
+        <p class="p-notice-desc">
+          La nueva contraseña del estudiante será su número de <strong>cédula: <span id="maup-ci-display" class="p-notice-ci">--</span></strong> (solo números, sin puntos).
+        </p>
+        <p class="p-notice-sub">
+          El estudiante solo deberá ingresar su cédula en ambos campos (usuario y contraseña) para iniciar sesión de inmediato.
+        </p>
+        <button type="button" class="btn btn-primary btn-block" id="maup-btn-reset-ci-direct" style="margin-top: 10px;">
+          <svg class="i"><use href="#i-refresh"/></svg> Restablecer clave a su Cédula
+        </button>
+      </div>
+
+      <div class="pass-custom-divider">
+        <span>O escribir una contraseña personalizada</span>
+      </div>
+
+      <form id="form-admin-user-pass" class="form" novalidate style="margin-top: 10px;">
+        <label class="field">
+          <span>Nueva contraseña personalizada</span>
+          <input name="nueva_pass" id="maup-new-pass" type="text" placeholder="Escribe aquí la nueva clave" autocomplete="off" style="font-weight: 600; font-size: 15px;">
+        </label>
+        <p class="form-error" aria-live="polite" id="maup-error"></p>
+        <div class="row" style="margin-top: 10px;">
+          <button type="button" class="btn btn-light" data-close>Cancelar</button>
+          <button class="btn btn-secondary" type="submit" style="flex: 1;">Guardar clave manual</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
